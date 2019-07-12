@@ -10,7 +10,6 @@ void checkret(char* name, int32_t actual, int32_t expected)
 		printf("%s: FAIL, returned %d\n",name, actual);
 }
 
-
 int main()
 {
 	TypeSW_t statusCode;
@@ -22,6 +21,10 @@ int main()
 	TypeChipInformation_t chipInfo;
 	TypeAttackLog_t attackLog;
 	uint8_t phase;
+	uint8_t dataStorage_write[V2XSE_MAX_DATA_SIZE_GSA];
+	uint8_t dataStorage_read[V2XSE_MAX_DATA_SIZE_GSA];
+
+	TypeLen_t size;
 
 	printf("testprog: start\n");
 
@@ -190,6 +193,40 @@ int main()
 		printf("Garbage collection OK\n");
 	else
 		printf("Error collecting garbage\n");
+
+	memcpy(dataStorage_write, "Hi there\n", 10);
+	printf("Saved str length: %ld\n",strlen((char*)dataStorage_write));
+	if (v2xSe_storeData(0, 10, dataStorage_write, &statusCode) == V2XSE_SUCCESS)
+		printf("Store index 0 OK\n");
+	else
+		printf("Error storing in index 0\n");
+
+	if (v2xSe_getData(0, &size, dataStorage_read, &statusCode) == V2XSE_SUCCESS)
+		printf("Get index 0 OK, size: %d, strlen: %ld, str: %s\n",size, strlen((char*)dataStorage_read), dataStorage_read);
+	else
+		printf("Error getting index 0\n");
+
+	if (v2xSe_deleteData(0, &statusCode) == V2XSE_SUCCESS)
+		printf("OK deleting index 0\n");
+	else
+		printf("Error deleting index 0\n");
+
+	if (v2xSe_deleteData(0, &statusCode) != V2XSE_SUCCESS)
+		printf("Second delete of index 0 failed as expected\n");
+	else
+		printf("Error: deleted index 0 twice!\n");
+
+	printf("Saved str length: %ld\n",strlen((char*)dataStorage_write));
+	if (v2xSe_storeData(1234, 10, dataStorage_write, &statusCode) == V2XSE_SUCCESS)
+		printf("Store index 1234 OK\n");
+	else
+		printf("Error storing in index 1234\n");
+
+	if (v2xSe_getData(1234, &size, dataStorage_read, &statusCode) == V2XSE_SUCCESS)
+		printf("Get index 1234 OK, size: %d, strlen: %ld, str: %s\n",size, strlen((char*)dataStorage_read), dataStorage_read);
+	else
+		printf("Error getting index 1234\n");
+
 
 	printf("testprog: DONE\n");
 	return 0;
