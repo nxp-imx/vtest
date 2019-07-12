@@ -23,8 +23,10 @@ int main()
 	uint8_t phase;
 	uint8_t dataStorage_write[V2XSE_MAX_DATA_SIZE_GSA];
 	uint8_t dataStorage_read[V2XSE_MAX_DATA_SIZE_GSA];
-
 	TypeLen_t size;
+	uint32_t remainingNvm;
+	int32_t keyLen;
+	int32_t sigLen;
 
 	printf("testprog: start\n");
 
@@ -227,6 +229,22 @@ int main()
 	else
 		printf("Error getting index 1234\n");
 
+	if (v2xSe_getRemainingNvm(&remainingNvm, &statusCode) == V2XSE_SUCCESS)
+		printf("Remaining NVM: %u\n",remainingNvm);
+	else
+		printf("Error getting remaining NVM\n");
+
+	keyLen = v2xSe_getKeyLenFromCurveID(V2XSE_CURVE_NISTP256);
+	if (keyLen != V2XSE_FAILURE)
+		printf("Key length for NISTP256: %d\n",keyLen);
+	else
+		printf("Error getting key length\n");
+
+	sigLen = v2xSe_getSigLenFromHashLen(V2XSE_384_EC_HASH_SIZE);
+	if (sigLen != V2XSE_FAILURE)
+		printf("Signature length for 384 bit hash: %d\n",sigLen);
+	else
+		printf("Error getting signature length\n");
 
 	printf("testprog: DONE\n");
 	return 0;
