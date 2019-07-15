@@ -246,6 +246,20 @@ int main()
 	else
 		printf("Error getting signature length\n");
 
+	printf("Reset, simulate normal operation\n");
+	checkret("v2xSe_reset",
+			v2xSe_reset(),
+			V2XSE_SUCCESS);
+	checkret("v2xSe_activate",
+			v2xSe_activate(e_EU_AND_GS, &statusCode),
+			V2XSE_SUCCESS);
+
+	printf("Final teardown\n");
+	checkret("v2xSe_deactivate",
+			v2xSe_deactivate(),
+			V2XSE_SUCCESS);
+
+
 	printf("testprog: DONE\n");
 	return 0;
 }
