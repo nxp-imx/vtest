@@ -28,6 +28,7 @@ int main()
 	int32_t keyLen;
 	int32_t sigLen;
 	TypePublicKey_t pubKey;
+	TypeCurveId_t curveId;
 
 	printf("testprog: start\n");
 
@@ -260,10 +261,16 @@ int main()
 			v2xSe_activate(e_EU_AND_GS, &statusCode),
 			V2XSE_SUCCESS);
 
+	checkret("v2xSe_getMaEccPublicKey",
+			v2xSe_getMaEccPublicKey(&statusCode, &curveId, &pubKey),
+			V2XSE_SUCCESS);
+	printf("!!!NOTE: failing above test OK if first run since factory reset\n");
+	printf("ma pubkey set to %x, curve %d\n",pubKey.x[0], curveId);
+
 	checkret("v2xSe_generateMaEccKeyPair",
-			v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP384, &statusCode, &pubKey),
 			V2XSE_FAILURE);
-	printf("NOTE: failing above test OK if first run since factory reset\n");
+	printf("!!!NOTE: failing above test OK if first run since factory reset\n");
 
 	checkret("v2xSe_generateRtEccKeyPair",
 			v2xSe_generateRtEccKeyPair(0, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
@@ -271,27 +278,55 @@ int main()
 	printf("rt[0] pubkey set to %x\n",pubKey.x[0]);
 
 	checkret("v2xSe_generateRtEccKeyPair",
-			v2xSe_generateRtEccKeyPair(4321, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			v2xSe_generateRtEccKeyPair(4321, V2XSE_CURVE_BP256R1, &statusCode, &pubKey),
 			V2XSE_SUCCESS);
 	printf("rt[4321] pubkey set to %x\n",pubKey.x[0]);
+
+	checkret("v2xSe_getRtEccPublicKey",
+			v2xSe_getRtEccPublicKey(0, &statusCode, &curveId, &pubKey),
+			V2XSE_SUCCESS);
+	printf("rt[0] pubkey retrieved as %x, curve %d\n",pubKey.x[0], curveId);
+
+	checkret("v2xSe_getRtEccPublicKey",
+			v2xSe_getRtEccPublicKey(4321, &statusCode, &curveId, &pubKey),
+			V2XSE_SUCCESS);
+	printf("rt[4321] pubkey retrieved as %x, curve %d\n",pubKey.x[0], curveId);
 
 	checkret("v2xSe_deleteRtEccPrivateKey",
 			v2xSe_deleteRtEccPrivateKey(0, &statusCode),
 			V2XSE_SUCCESS);
 
+	checkret("v2xSe_getRtEccPublicKey",
+			v2xSe_getRtEccPublicKey(0, &statusCode, &curveId, &pubKey),
+			V2XSE_FAILURE);
+
 	checkret("v2xSe_generateBaEccKeyPair",
-			v2xSe_generateBaEccKeyPair(0, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			v2xSe_generateBaEccKeyPair(0, V2XSE_CURVE_BP256T1, &statusCode, &pubKey),
 			V2XSE_SUCCESS);
 	printf("ba[0] pubkey set to %x\n",pubKey.x[0]);
 
 	checkret("v2xSe_generateBaEccKeyPair",
-			v2xSe_generateBaEccKeyPair(7765, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			v2xSe_generateBaEccKeyPair(7765, V2XSE_CURVE_BP384T1, &statusCode, &pubKey),
 			V2XSE_SUCCESS);
 	printf("ba[7765] pubkey set to %x\n",pubKey.x[0]);
+
+	checkret("v2xSe_getBaEccPublicKey",
+			v2xSe_getBaEccPublicKey(0, &statusCode, &curveId, &pubKey),
+			V2XSE_SUCCESS);
+	printf("ba[0] pubkey retrieved as %x, curve %d\n",pubKey.x[0], curveId);
+
+	checkret("v2xSe_getBaEccPublicKey",
+			v2xSe_getBaEccPublicKey(7765, &statusCode, &curveId, &pubKey),
+			V2XSE_SUCCESS);
+	printf("ba[7765] pubkey retrieved as %x, curve %d\n",pubKey.x[0], curveId);
 
 	checkret("v2xSe_deleteBaEccPrivateKey",
 			v2xSe_deleteBaEccPrivateKey(7765, &statusCode),
 			V2XSE_SUCCESS);
+
+	checkret("v2xSe_getBaEccPublicKey",
+			v2xSe_getBaEccPublicKey(7765, &statusCode, &curveId, &pubKey),
+			V2XSE_FAILURE);
 
 	printf("Final teardown\n");
 	checkret("v2xSe_deactivate",
