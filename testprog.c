@@ -29,6 +29,7 @@ int main()
 	int32_t sigLen;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
+	uint32_t random_num;
 
 	printf("testprog: start\n");
 
@@ -327,6 +328,11 @@ int main()
 	checkret("v2xSe_getBaEccPublicKey",
 			v2xSe_getBaEccPublicKey(7765, &statusCode, &curveId, &pubKey),
 			V2XSE_FAILURE);
+
+	checkret("v2xSe_getRandomNumber",
+			v2xSe_getRandomNumber(sizeof(random_num), &statusCode, (TypeRandomNumber_t*)&random_num),
+			V2XSE_SUCCESS);
+	printf("Random num was %x\n", random_num);
 
 	printf("Final teardown\n");
 	checkret("v2xSe_deactivate",
