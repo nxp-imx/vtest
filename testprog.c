@@ -27,6 +27,7 @@ int main()
 	uint32_t remainingNvm;
 	int32_t keyLen;
 	int32_t sigLen;
+	TypePublicKey_t pubKey;
 
 	printf("testprog: start\n");
 
@@ -39,7 +40,8 @@ int main()
 			V2XSE_FAILURE_INIT);
 
 	printf("Test expected fails in connected state:\n");
-	v2xSe_connect();
+	if (v2xSe_connect() != V2XSE_SUCCESS)
+		printf("Error in test sequence: v2xSe_connect\n");
 	checkret("v2xSe_connect",
 			v2xSe_connect(),
 			V2XSE_FAILURE_CONNECTED);
@@ -53,8 +55,10 @@ int main()
 			V2XSE_FAILURE_CONNECTED);
 
 	printf("Test expected fails in activated state:\n");
-	v2xSe_reset();
-	v2xSe_activate(e_EU_AND_GS, &statusCode);
+	if (v2xSe_reset() != V2XSE_SUCCESS)
+		printf("Error in test sequence: v2xSe_reset\n");
+	if (v2xSe_activate(e_EU_AND_GS, &statusCode) != V2XSE_SUCCESS)
+		printf("Error in test sequence: v2xSe_activate\n");
 	checkret("v2xSe_connect",
 			v2xSe_connect(),
 			V2XSE_FAILURE_ACTIVATED);
@@ -74,8 +78,10 @@ int main()
 							version.data[2]);
 	else
 		printf("Error getting EU applet version\n");
-	v2xSe_reset();
-	v2xSe_activate(e_US_AND_GS, &statusCode);
+	if (v2xSe_reset() != V2XSE_SUCCESS)
+		printf("Error in test sequence: v2xSe_reset\n");
+	if (v2xSe_activate(e_US_AND_GS, &statusCode) != V2XSE_SUCCESS)
+		printf("Error in test sequence: v2xSe_activate\n");
 	if (v2xSe_getAppletVersion(e_V2X, &statusCode, &version) ==
 							V2XSE_SUCCESS)
 		printf("US applet version: %d.%d.%d\n",version.data[0],
@@ -252,6 +258,39 @@ int main()
 			V2XSE_SUCCESS);
 	checkret("v2xSe_activate",
 			v2xSe_activate(e_EU_AND_GS, &statusCode),
+			V2XSE_SUCCESS);
+
+	checkret("v2xSe_generateMaEccKeyPair",
+			v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			V2XSE_FAILURE);
+	printf("NOTE: failing above test OK if first run since factory reset\n");
+
+	checkret("v2xSe_generateRtEccKeyPair",
+			v2xSe_generateRtEccKeyPair(0, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			V2XSE_SUCCESS);
+	printf("rt[0] pubkey set to %x\n",pubKey.x[0]);
+
+	checkret("v2xSe_generateRtEccKeyPair",
+			v2xSe_generateRtEccKeyPair(4321, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			V2XSE_SUCCESS);
+	printf("rt[4321] pubkey set to %x\n",pubKey.x[0]);
+
+	checkret("v2xSe_deleteRtEccPrivateKey",
+			v2xSe_deleteRtEccPrivateKey(0, &statusCode),
+			V2XSE_SUCCESS);
+
+	checkret("v2xSe_generateBaEccKeyPair",
+			v2xSe_generateBaEccKeyPair(0, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			V2XSE_SUCCESS);
+	printf("ba[0] pubkey set to %x\n",pubKey.x[0]);
+
+	checkret("v2xSe_generateBaEccKeyPair",
+			v2xSe_generateBaEccKeyPair(7765, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			V2XSE_SUCCESS);
+	printf("ba[7765] pubkey set to %x\n",pubKey.x[0]);
+
+	checkret("v2xSe_deleteBaEccPrivateKey",
+			v2xSe_deleteBaEccPrivateKey(7765, &statusCode),
 			V2XSE_SUCCESS);
 
 	printf("Final teardown\n");
