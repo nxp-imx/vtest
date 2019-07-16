@@ -30,6 +30,9 @@ int main()
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
 	uint32_t random_num;
+	TypeHash_t hash;
+	TypeSignature_t signature;
+	TypeLowlatencyIndicator_t fastIndicator;
 
 	printf("testprog: start\n");
 
@@ -334,11 +337,52 @@ int main()
 			V2XSE_SUCCESS);
 	printf("Random num was %x\n", random_num);
 
+	hash.data[0] = 13;
+	checkret("v2xSe_createMaSign",
+			v2xSe_createMaSign(48, &hash, &statusCode, &signature),
+			V2XSE_SUCCESS);
+	printf("Sig byte was %d\n",signature.r[0]);
+
+	checkret("v2xSe_createRtSign",
+			v2xSe_createRtSign(0, &hash, &statusCode, &signature),
+			V2XSE_FAILURE);
+
+	hash.data[0] = 14;
+	checkret("v2xSe_createRtSign",
+			v2xSe_createRtSign(4321, &hash, &statusCode, &signature),
+			V2XSE_SUCCESS);
+	printf("Sig byte was %d\n",signature.r[0]);
+
+	checkret("v2xSe_createBaSign",
+			v2xSe_createBaSign(7765, 32, &hash, &statusCode, &signature),
+			V2XSE_FAILURE);
+
+	hash.data[0] = 12;
+	checkret("v2xSe_createBaSign",
+			v2xSe_createBaSign(0, 32, &hash, &statusCode, &signature),
+			V2XSE_SUCCESS);
+	printf("Sig byte was %d\n",signature.r[0]);
+
+
+	checkret("v2xSe_createRtSignLowLatency",
+			v2xSe_createRtSignLowLatency(&hash, &statusCode, &signature, &fastIndicator),
+			V2XSE_FAILURE);
+
+	checkret("v2xSe_activateRtKeyForSigning",
+			v2xSe_activateRtKeyForSigning(4321, &statusCode),
+			V2XSE_SUCCESS);
+
+	hash.data[0] = 15;
+	checkret("v2xSe_createRtSignLowLatency",
+			v2xSe_createRtSignLowLatency(&hash, &statusCode, &signature, &fastIndicator),
+			V2XSE_SUCCESS);
+	printf("Sig byte was %d\n",signature.r[0]);
+
+
 	printf("Final teardown\n");
 	checkret("v2xSe_deactivate",
 			v2xSe_deactivate(),
 			V2XSE_SUCCESS);
-
 
 	printf("testprog: DONE\n");
 	return 0;
