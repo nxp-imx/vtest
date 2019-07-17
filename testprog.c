@@ -381,6 +381,18 @@ int main()
 			V2XSE_SUCCESS);
 	printf("Sig byte was %d\n",signature.r[0]);
 
+	checkret("v2xSe_deriveRtEccKeyPair",
+			v2xSe_deriveRtEccKeyPair(0, &data1, &data2, &data3, 1, V2XSE_RSP_WITH_PUBKEY, &statusCode, &curveId, &pubKey),
+			V2XSE_FAILURE);
+
+	/* Switch to US to allow derive key to work */
+	checkret("v2xSe_reset",
+			v2xSe_reset(),
+			V2XSE_SUCCESS);
+	checkret("v2xSe_activate",
+			v2xSe_activate(e_US_AND_GS, &statusCode),
+			V2XSE_SUCCESS);
+
 	data1.data[0] = 1;
 	data2.data[0] = 2;
 	data3.data[0] = 3;
@@ -388,6 +400,23 @@ int main()
 			v2xSe_deriveRtEccKeyPair(0, &data1, &data2, &data3, 1, V2XSE_RSP_WITH_PUBKEY, &statusCode, &curveId, &pubKey),
 			V2XSE_SUCCESS);
 	printf("Derived byte was %d, curveId %d\n",pubKey.x[0], curveId);
+
+	/* Test key overwrite */
+	checkret("v2xSe_generateBaEccKeyPair",
+			v2xSe_generateBaEccKeyPair(0, V2XSE_CURVE_BP256T1, &statusCode, &pubKey),
+			V2XSE_SUCCESS);
+	printf("ba[0] pubkey set to %x\n",pubKey.x[0]);
+
+	checkret("v2xSe_generateRtEccKeyPair",
+			v2xSe_generateRtEccKeyPair(1, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+			V2XSE_SUCCESS);
+	printf("rt[1] pubkey set to %x\n",pubKey.x[0]);
+
+	checkret("v2xSe_deriveRtEccKeyPair",
+			v2xSe_deriveRtEccKeyPair(0, &data1, &data2, &data3, 1, V2XSE_RSP_WITH_PUBKEY, &statusCode, &curveId, &pubKey),
+			V2XSE_SUCCESS);
+	printf("Derived byte was %d, curveId %d\n",pubKey.x[0], curveId);
+
 
 	printf("Final teardown\n");
 	checkret("v2xSe_deactivate",
