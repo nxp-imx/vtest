@@ -36,6 +36,7 @@ int main()
 	TypeInt256_t data1;
 	TypeInt256_t data2;
 	TypeInt256_t data3;
+	TypeEncryptEcies_t eciesData;
 
 	printf("testprog: start\n");
 
@@ -417,6 +418,18 @@ int main()
 			V2XSE_SUCCESS);
 	printf("Derived byte was %d, curveId %d\n",pubKey.x[0], curveId);
 
+	eciesData.pEccPublicKey = &pubKey;
+	eciesData.curveId = V2XSE_CURVE_BP256T1;
+	eciesData.kdfParamP1Len = 0;
+	eciesData.macLen = 0;
+	eciesData.macParamP2Len = 0;
+	eciesData.msgLen = 1;
+	eciesData.pMsgData = (TypePlainText_t*)(&(data2.data));
+	data2.data[0]=34;
+	checkret("v2xSe_encryptUsingEcies",
+			v2xSe_encryptUsingEcies(&eciesData, &statusCode, &size, (TypeVCTData_t*)(&(data1.data))),
+			V2XSE_SUCCESS);
+	printf("MsgData set to %d\n",data1.data[0]);
 
 	printf("Final teardown\n");
 	checkret("v2xSe_deactivate",
