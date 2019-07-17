@@ -33,6 +33,9 @@ int main()
 	TypeHash_t hash;
 	TypeSignature_t signature;
 	TypeLowlatencyIndicator_t fastIndicator;
+	TypeInt256_t data1;
+	TypeInt256_t data2;
+	TypeInt256_t data3;
 
 	printf("testprog: start\n");
 
@@ -378,6 +381,13 @@ int main()
 			V2XSE_SUCCESS);
 	printf("Sig byte was %d\n",signature.r[0]);
 
+	data1.data[0] = 1;
+	data2.data[0] = 2;
+	data3.data[0] = 3;
+	checkret("v2xSe_deriveRtEccKeyPair",
+			v2xSe_deriveRtEccKeyPair(0, &data1, &data2, &data3, 1, V2XSE_RSP_WITH_PUBKEY, &statusCode, &curveId, &pubKey),
+			V2XSE_SUCCESS);
+	printf("Derived byte was %d, curveId %d\n",pubKey.x[0], curveId);
 
 	printf("Final teardown\n");
 	checkret("v2xSe_deactivate",
