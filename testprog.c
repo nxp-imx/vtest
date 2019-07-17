@@ -36,7 +36,8 @@ int main()
 	TypeInt256_t data1;
 	TypeInt256_t data2;
 	TypeInt256_t data3;
-	TypeEncryptEcies_t eciesData;
+	TypeEncryptEcies_t enc_eciesData;
+	TypeDecryptEcies_t dec_eciesData;
 
 	printf("testprog: start\n");
 
@@ -418,18 +419,48 @@ int main()
 			V2XSE_SUCCESS);
 	printf("Derived byte was %d, curveId %d\n",pubKey.x[0], curveId);
 
-	eciesData.pEccPublicKey = &pubKey;
-	eciesData.curveId = V2XSE_CURVE_BP256T1;
-	eciesData.kdfParamP1Len = 0;
-	eciesData.macLen = 0;
-	eciesData.macParamP2Len = 0;
-	eciesData.msgLen = 1;
-	eciesData.pMsgData = (TypePlainText_t*)(&(data2.data));
+	enc_eciesData.pEccPublicKey = &pubKey;
+	enc_eciesData.curveId = V2XSE_CURVE_BP256T1;
+	enc_eciesData.kdfParamP1Len = 0;
+	enc_eciesData.macLen = 0;
+	enc_eciesData.macParamP2Len = 0;
+	enc_eciesData.msgLen = 1;
+	enc_eciesData.pMsgData = (TypePlainText_t*)(&(data2.data));
 	data2.data[0]=34;
 	checkret("v2xSe_encryptUsingEcies",
-			v2xSe_encryptUsingEcies(&eciesData, &statusCode, &size, (TypeVCTData_t*)(&(data1.data))),
+			v2xSe_encryptUsingEcies(&enc_eciesData, &statusCode, &size, (TypeVCTData_t*)(&(data1.data))),
 			V2XSE_SUCCESS);
 	printf("MsgData set to %d\n",data1.data[0]);
+
+	checkret("v2xSe_decryptUsingRtEcies",
+			v2xSe_decryptUsingRtEcies(5, &dec_eciesData, &statusCode, &size, (TypePlainText_t*)(&(data1.data))),
+			V2XSE_FAILURE);
+
+	dec_eciesData.kdfParamP1Len = 0;
+	dec_eciesData.macLen = 0;
+	dec_eciesData.macParamP2Len = 0;
+	dec_eciesData.vctLen = 1;
+	dec_eciesData.pVctData = (TypeVCTData_t*)(&(data2.data));
+	checkret("v2xSe_decryptUsingRtEcies",
+			v2xSe_decryptUsingRtEcies(1, &dec_eciesData, &statusCode, &size, (TypePlainText_t*)(&(data1.data))),
+			V2XSE_SUCCESS);
+	printf("VctData set to %d\n",data1.data[0]);
+
+	checkret("v2xSe_decryptUsingBaEcies",
+			v2xSe_decryptUsingBaEcies(5, &dec_eciesData, &statusCode, &size, (TypePlainText_t*)(&(data1.data))),
+			V2XSE_FAILURE);
+
+	data2.data[0]=5;
+	checkret("v2xSe_decryptUsingBaEcies",
+			v2xSe_decryptUsingBaEcies(0, &dec_eciesData, &statusCode, &size, (TypePlainText_t*)(&(data1.data))),
+			V2XSE_SUCCESS);
+	printf("VctData set to %d\n",data1.data[0]);
+
+	data2.data[0]=9;
+	checkret("v2xSe_decryptUsingMaEcies",
+			v2xSe_decryptUsingMaEcies(&dec_eciesData, &statusCode, &size, (TypePlainText_t*)(&(data1.data))),
+			V2XSE_SUCCESS);
+	printf("VctData set to %d\n",data1.data[0]);
 
 	printf("Final teardown\n");
 	checkret("v2xSe_deactivate",
