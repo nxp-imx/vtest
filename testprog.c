@@ -192,6 +192,11 @@ int main()
 	else
 		printf("Error: v2xSe_sendReceive did not fail\n");
 
+	if (v2xSe_reset() != V2XSE_SUCCESS)
+		printf("Error in test sequence: v2xSe_reset\n");
+	if (v2xSe_activate(e_EU_AND_GS, &statusCode) != V2XSE_SUCCESS)
+		printf("Error in test sequence: v2xSe_activate\n");
+
 	if (v2xSe_getSePhase(&phase, &statusCode) == V2XSE_SUCCESS)
 		printf("Current phase: %d\n",phase);
 	else
