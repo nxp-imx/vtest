@@ -399,6 +399,10 @@ int main()
 	checkret("v2xSe_activate",
 			v2xSe_activate(e_US_AND_GS, &statusCode),
 			V2XSE_SUCCESS);
+	checkret("v2xSe_endKeyInjection",
+			v2xSe_endKeyInjection(&statusCode),
+			V2XSE_FAILURE);
+	printf("!!!NOTE: failing above test OK if first run since factory reset\n");
 
 	data1.data[0] = 1;
 	data2.data[0] = 2;
@@ -460,6 +464,11 @@ int main()
 			v2xSe_decryptUsingBaEcies(0, &dec_eciesData, &statusCode, &size, (TypePlainText_t*)(&(data1.data))),
 			V2XSE_SUCCESS);
 	printf("VctData set to %d\n",data1.data[0]);
+
+	checkret("v2xSe_generateMaEccKeyPair",
+			v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP384, &statusCode, &pubKey),
+			V2XSE_FAILURE);
+	printf("!!!NOTE: failing above test OK if first run since factory reset\n");
 
 	data2.data[0]=9;
 	checkret("v2xSe_decryptUsingMaEcies",
