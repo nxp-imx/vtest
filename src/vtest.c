@@ -39,7 +39,7 @@ int main()
 	TypeEncryptEcies_t enc_eciesData;
 	TypeDecryptEcies_t dec_eciesData;
 
-	printf("testprog: start\n");
+	printf("vtest: start\n");
 
 	printf("Test expected fails in init state:\n");
 	checkret("v2xSe_reset",
@@ -481,6 +481,6 @@ int main()
 			v2xSe_deactivate(),
 			V2XSE_SUCCESS);
 
-	printf("testprog: DONE\n");
+	printf("vtest: DONE\n");
 	return 0;
 }

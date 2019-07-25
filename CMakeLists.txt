@@ -1,21 +1,21 @@
 
 cmake_minimum_required (VERSION 3.4)
 
-project (testprog)
+project (vtest)
 
-find_package(v2xhsm REQUIRED)
+find_package(v2xsehsm REQUIRED)
 find_package(hsmstub REQUIRED)
 
-add_executable (testprog
-	src/testprog.c
+add_executable (vtest
+	src/vtest.c
 	)
 
-target_include_directories (testprog
+target_include_directories (vtest
 	PRIVATE ../include
 	)
 
-target_link_libraries (testprog
-	v2xhsm
+target_link_libraries (vtest
+	v2xsehsm
 	hsmstub)
 
-install (TARGETS testprog RUNTIME DESTINATION bin)
+install (TARGETS vtest RUNTIME DESTINATION bin)
