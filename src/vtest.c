@@ -48,6 +48,9 @@ int main()
 	checkret("v2xSe_deactivate",
 			v2xSe_deactivate(),
 			V2XSE_FAILURE_INIT);
+	checkret("v2xSe_disconnect",
+			v2xSe_disconnect(),
+			V2XSE_FAILURE_INIT);
 
 	printf("Test expected fails in connected state:\n");
 	if (v2xSe_connect() != V2XSE_SUCCESS)
