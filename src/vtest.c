@@ -1,8 +1,42 @@
+
+/*
+ * Copyright 2019 NXP
+ */
+
+/**
+ *
+ * @file vtest.c
+ *
+ * @brief Core implementation of V2X test application
+ *
+ */
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <v2xseapi.h>
+#include "vtest.h"
+#include "SEdevicemanagement.h"
+#include "SEkeymanagement.h"
+#include "SEsignature.h"
+#include "SEecies.h"
+#include "SEdatastorage.h"
+#include "SEutility.h"
+#include "SEkeyinjection.h"
 
-void checkret(char* name, int32_t actual, int32_t expected)
+testEntry allTests[] = {
+	LEGACY_TESTS_TO_REMOVE
+	SE_DEVICE_MANAGEMENT_TESTS
+	SE_KEY_MANAGEMENT_TESTS
+	SE_SIGNATURE_TESTS
+	SE_ECIES_TESTS
+	SE_DATA_STORAGE_TESTS
+	SE_UTILITY_TESTS
+	SE_KEY_INJECTION_TESTS
+};
+
+
+static void checkret(char* name, int32_t actual, int32_t expected)
 {
 	if (actual == expected)
 		printf("%s: PASS\n",name);
@@ -10,7 +44,7 @@ void checkret(char* name, int32_t actual, int32_t expected)
 		printf("%s: FAIL, returned %d\n",name, actual);
 }
 
-int main()
+int legacy_test()
 {
 	TypeSW_t statusCode;
 	TypeVersion_t version;
@@ -38,8 +72,6 @@ int main()
 	TypeInt256_t data3;
 	TypeEncryptEcies_t enc_eciesData;
 	TypeDecryptEcies_t dec_eciesData;
-
-	printf("vtest: start\n");
 
 	printf("Test expected fails in init state:\n");
 	checkret("v2xSe_reset",
@@ -484,6 +516,114 @@ int main()
 			v2xSe_deactivate(),
 			V2XSE_SUCCESS);
 
-	printf("vtest: DONE\n");
-	return 0;
+	return VTEST_CONF;
+}
+
+int dummy_test_conf(void)
+{
+	return VTEST_CONF;
+}
+int dummy_test_pass(void)
+{
+	return VTEST_PASS;
+}
+int dummy_test_fail(void)
+{
+	return VTEST_FAIL;
+}
+int dummy_test_interr(void)
+{
+	return 13;
+}
+
+int getTestNum(const char *testStr)
+{
+	long convNum;
+
+	convNum = strtol(testStr, NULL, 10);
+	if ((convNum <= BEFORE_FIRST_TEST) ||
+		(convNum >= AFTER_LAST_TEST)) {
+		printf("ERROR: invalid test number: %s\n",testStr);
+		return VTEST_FAIL;
+	}
+
+	return (int)convNum;
+}
+
+int main(int argc, char* argv[])
+{
+	int i;
+	int minTest = BEFORE_FIRST_TEST;
+	int maxTest = AFTER_LAST_TEST;
+
+	int numTestsRun = 0;
+	int numTestsSkipped = 0;
+	int numTestsPass = 0;
+	int numTestsFail = 0;
+	int numTestsConf = 0;
+	int numInternalErrors = 0;
+
+	printf("vtest: Start\n");
+
+	if (argc == 1) {
+		printf("Running all tests\n");
+	} else if (argc == 2) {
+		printf("Running single test\n");
+		minTest = getTestNum(argv[1]);
+		maxTest = minTest;
+	} else if (argc == 3) {
+		printf("Running range of tests\n");
+		minTest = getTestNum(argv[1]);
+		maxTest = getTestNum(argv[2]);
+	} else {
+		printf("ERROR: incorrect number of parameters\n");
+		printf("USAGE: vtest\n");
+		printf("       vtest [single test num]\n");
+		printf("       vtest [first test num] [last test num]\n");
+		return -1;
+	}
+
+	if ((minTest == VTEST_FAIL) || (maxTest == VTEST_FAIL))
+		return VTEST_FAIL;
+
+	for (i = 0; i < (sizeof(allTests)/sizeof(testEntry)); i++) {
+		if ((allTests[i].testNum >= minTest) &&
+					(allTests[i].testNum <= maxTest)) {
+			int result;
+			numTestsRun++;
+			printf("Running test %06d: %s\n",allTests[i].testNum,
+							allTests[i].testName);
+			result = allTests[i].testFn();
+			switch (result) {
+				case VTEST_PASS:
+					numTestsPass++;
+					printf("Test result: PASS\n");
+					break;
+				case VTEST_FAIL:
+					numTestsFail++;
+					printf("Test result: FAIL\n");
+					break;
+				case VTEST_CONF:
+					numTestsConf++;
+					printf("Test result: CONF\n");
+					break;
+				default:
+					numInternalErrors++;
+					printf("Internal error\n");
+					break;
+			}
+		} else {
+			numTestsSkipped++;
+		}
+	}
+
+	printf("\n\nSUMMARY:\n");
+	printf("Tests RUN: %d\n",numTestsRun);
+	printf("Tests SKIPPED: %d\n",numTestsSkipped);
+	printf("Internal Errors: %d\n",numInternalErrors);
+	printf("Tests PASS: %d\n",numTestsPass);
+	printf("Tests CONF: %d\n",numTestsConf);
+	printf("Tests FAIL: %d\n",numTestsFail);
+	printf("vtest: Done\n");
+	return VTEST_PASS;
 }

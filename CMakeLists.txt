@@ -8,9 +8,17 @@ find_package(hsmstub REQUIRED)
 
 add_executable (vtest
 	src/vtest.c
+	src/SEdevicemanagement.c
+	src/SEkeymanagement.c
+	src/SEsignature.c
+	src/SEecies.c
+	src/SEdatastorage.c
+	src/SEutility.c
+	src/SEkeyinjection.c
 	)
 
 target_include_directories (vtest
+	PRIVATE include
 	PRIVATE ../include
 	)
 
