@@ -11,6 +11,7 @@
  *
  */
 
+#include <v2xseapi.h>
 #include "vtest.h"
 #include "SEkeymanagement.h"
 
