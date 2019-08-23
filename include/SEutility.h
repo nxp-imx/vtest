@@ -15,8 +15,15 @@
 #define SEUTILITY_H
 
 #define SE_UTILITY_TESTS \
-	{100101, &utility_dummy, "Utility placeholder"},\
+	{100101, &test_getRandomNumber, \
+		"Test v2xSe_getRandomNumber for expected behaviour"},\
+	{100201, &test_getKeyLenFromCurveID, \
+		"Test v2xSe_getKeyLenfromCurveID for expected behaviour"},\
+	{100301, &test_getSigLenFromHashLen, \
+		"Test v2xSe_getSigLenFromHashLen for expected behaviour"},\
 
-int utility_dummy(void);
+int test_getRandomNumber(void);
+int test_getKeyLenFromCurveID(void);
+int test_getSigLenFromHashLen(void);
 
 #endif

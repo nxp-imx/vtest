@@ -47,8 +47,6 @@ static void checkret(char* name, int32_t actual, int32_t expected)
 int legacy_test()
 {
 	TypeSW_t statusCode;
-	int32_t keyLen;
-	int32_t sigLen;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
 	uint32_t random_num;
@@ -61,18 +59,6 @@ int legacy_test()
 	TypeEncryptEcies_t enc_eciesData;
 	TypeDecryptEcies_t dec_eciesData;
 	TypeLen_t size;
-
-	keyLen = v2xSe_getKeyLenFromCurveID(V2XSE_CURVE_NISTP256);
-	if (keyLen != V2XSE_FAILURE)
-		printf("Key length for NISTP256: %d\n",keyLen);
-	else
-		printf("Error getting key length\n");
-
-	sigLen = v2xSe_getSigLenFromHashLen(V2XSE_384_EC_HASH_SIZE);
-	if (sigLen != V2XSE_FAILURE)
-		printf("Signature length for 384 bit hash: %d\n",sigLen);
-	else
-		printf("Error getting signature length\n");
 
 	printf("Reset, simulate normal operation\n");
 	checkret("v2xSe_reset",
@@ -148,11 +134,6 @@ int legacy_test()
 	checkret("v2xSe_getBaEccPublicKey",
 			v2xSe_getBaEccPublicKey(7765, &statusCode, &curveId, &pubKey),
 			V2XSE_FAILURE);
-
-	checkret("v2xSe_getRandomNumber",
-			v2xSe_getRandomNumber(sizeof(random_num), &statusCode, (TypeRandomNumber_t*)&random_num),
-			V2XSE_SUCCESS);
-	printf("Random num was %x\n", random_num);
 
 	hash.data[0] = 13;
 	checkret("v2xSe_createMaSign",

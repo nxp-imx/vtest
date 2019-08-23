@@ -22,8 +22,6 @@
 #define NON_ZERO_SLOT	1234
 #define MAX_SLOT	(seInfo.maxDataSlots - 1)
 
-#define TEST_BYTE	0x13
-
 #define SE_DATA_STORAGE_TESTS \
 	{ 90101, &test_storeData_getData, \
 		"Test v2xSe_storeData for expected behaviour"},\

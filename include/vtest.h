@@ -21,6 +21,8 @@
 #define VTEST_FAIL	(-1)
 #define VTEST_CONF	(0)
 
+#define TEST_BYTE	0x13
+
 int legacy_test();
 #define LEGACY_TESTS_TO_REMOVE \
 	{1, &legacy_test, "Legacy test - to be re-written"},\
