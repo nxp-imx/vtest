@@ -47,9 +47,6 @@ static void checkret(char* name, int32_t actual, int32_t expected)
 int legacy_test()
 {
 	TypeSW_t statusCode;
-	uint8_t dataStorage_write[V2XSE_MAX_DATA_SIZE_GSA];
-	uint8_t dataStorage_read[V2XSE_MAX_DATA_SIZE_GSA];
-	TypeLen_t size;
 	int32_t keyLen;
 	int32_t sigLen;
 	TypePublicKey_t pubKey;
@@ -63,43 +60,7 @@ int legacy_test()
 	TypeInt256_t data3;
 	TypeEncryptEcies_t enc_eciesData;
 	TypeDecryptEcies_t dec_eciesData;
-
-
-	if (v2xSe_activate(e_EU_AND_GS, &statusCode) != V2XSE_SUCCESS)
-		printf("Error in test sequence: v2xSe_activate\n");
-
-	memcpy(dataStorage_write, "Hi there\n", 10);
-	printf("Saved str length: %ld\n",strlen((char*)dataStorage_write));
-	if (v2xSe_storeData(0, 10, dataStorage_write, &statusCode) == V2XSE_SUCCESS)
-		printf("Store index 0 OK\n");
-	else
-		printf("Error storing in index 0\n");
-
-	if (v2xSe_getData(0, &size, dataStorage_read, &statusCode) == V2XSE_SUCCESS)
-		printf("Get index 0 OK, size: %d, strlen: %ld, str: %s\n",size, strlen((char*)dataStorage_read), dataStorage_read);
-	else
-		printf("Error getting index 0\n");
-
-	if (v2xSe_deleteData(0, &statusCode) == V2XSE_SUCCESS)
-		printf("OK deleting index 0\n");
-	else
-		printf("Error deleting index 0\n");
-
-	if (v2xSe_deleteData(0, &statusCode) != V2XSE_SUCCESS)
-		printf("Second delete of index 0 failed as expected\n");
-	else
-		printf("Error: deleted index 0 twice!\n");
-
-	printf("Saved str length: %ld\n",strlen((char*)dataStorage_write));
-	if (v2xSe_storeData(1234, 10, dataStorage_write, &statusCode) == V2XSE_SUCCESS)
-		printf("Store index 1234 OK\n");
-	else
-		printf("Error storing in index 1234\n");
-
-	if (v2xSe_getData(1234, &size, dataStorage_read, &statusCode) == V2XSE_SUCCESS)
-		printf("Get index 1234 OK, size: %d, strlen: %ld, str: %s\n",size, strlen((char*)dataStorage_read), dataStorage_read);
-	else
-		printf("Error getting index 1234\n");
+	TypeLen_t size;
 
 	keyLen = v2xSe_getKeyLenFromCurveID(V2XSE_CURVE_NISTP256);
 	if (keyLen != V2XSE_FAILURE)
