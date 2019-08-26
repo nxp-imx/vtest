@@ -50,10 +50,6 @@ int legacy_test()
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
-	uint32_t random_num;
-	TypeHash_t hash;
-	TypeSignature_t signature;
-	TypeLowlatencyIndicator_t fastIndicator;
 	TypeInt256_t data1;
 	TypeInt256_t data2;
 	TypeInt256_t data3;
@@ -124,47 +120,6 @@ int legacy_test()
 	checkret("v2xSe_getBaEccPublicKey",
 			v2xSe_getBaEccPublicKey(7765, &statusCode, &curveId, &pubKey),
 			V2XSE_FAILURE);
-
-	hash.data[0] = 13;
-	checkret("v2xSe_createMaSign",
-			v2xSe_createMaSign(48, &hash, &statusCode, &signature),
-			V2XSE_SUCCESS);
-	printf("Sig byte was %d\n",signature.r[0]);
-
-	checkret("v2xSe_createRtSign",
-			v2xSe_createRtSign(0, &hash, &statusCode, &signature),
-			V2XSE_FAILURE);
-
-	hash.data[0] = 14;
-	checkret("v2xSe_createRtSign",
-			v2xSe_createRtSign(4321, &hash, &statusCode, &signature),
-			V2XSE_SUCCESS);
-	printf("Sig byte was %d\n",signature.r[0]);
-
-	checkret("v2xSe_createBaSign",
-			v2xSe_createBaSign(7765, 32, &hash, &statusCode, &signature),
-			V2XSE_FAILURE);
-
-	hash.data[0] = 12;
-	checkret("v2xSe_createBaSign",
-			v2xSe_createBaSign(0, 32, &hash, &statusCode, &signature),
-			V2XSE_SUCCESS);
-	printf("Sig byte was %d\n",signature.r[0]);
-
-
-	checkret("v2xSe_createRtSignLowLatency",
-			v2xSe_createRtSignLowLatency(&hash, &statusCode, &signature, &fastIndicator),
-			V2XSE_FAILURE);
-
-	checkret("v2xSe_activateRtKeyForSigning",
-			v2xSe_activateRtKeyForSigning(4321, &statusCode),
-			V2XSE_SUCCESS);
-
-	hash.data[0] = 15;
-	checkret("v2xSe_createRtSignLowLatency",
-			v2xSe_createRtSignLowLatency(&hash, &statusCode, &signature, &fastIndicator),
-			V2XSE_SUCCESS);
-	printf("Sig byte was %d\n",signature.r[0]);
 
 	checkret("v2xSe_deriveRtEccKeyPair",
 			v2xSe_deriveRtEccKeyPair(0, &data1, &data2, &data3, 1, V2XSE_RSP_WITH_PUBKEY, &statusCode, &curveId, &pubKey),

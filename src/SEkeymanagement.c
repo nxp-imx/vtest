@@ -1622,3 +1622,62 @@ int test_deriveRtEccKeyPair_overwrite(void)
 	/* No tests failed, return PASS */
 	return VTEST_PASS;
 }
+
+/**
+ *
+ * @brief Test v2xSe_activateRtKeyForSigning for expected behaviour
+ *
+ * This function tests v2xSe_activateRtKeyForSigning for expected behaviour
+ * The following behaviours are tested:
+ *  - signature generated with valid inputs
+ * TODO: try different algs, different slots...
+ *
+ * @return VTEST_PASS, VTEST_FAIL, or VTEST_CONF
+ *
+ */
+int test_activateRtKeyForSigning(void)
+{
+	int32_t retVal;
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	TypeHash_t hash;
+	TypeSignature_t signature;
+	TypeLowlatencyIndicator_t fastIndicator;
+
+	/* Create dummy hash data */
+	hash.data[0] = 20;
+	/* Move to ACTIVATED state, normal operating mode */
+	if (setupActivatedNormalState(e_EU) != VTEST_PASS)
+		return VTEST_FAIL;
+	/* Make sure RT key exists */
+	retVal = v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT, V2XSE_CURVE_BP256R1,
+							&statusCode, &pubKey);
+	if (retVal != V2XSE_SUCCESS) {
+		printf("ERROR: v2xSe_generateRtEccKeyPair returned %d\n",
+								retVal);
+		return VTEST_FAIL;
+	}
+	/* Activate key for low latency signature */
+	retVal = v2xSe_activateRtKeyForSigning(NON_ZERO_SLOT, &statusCode);
+	if (retVal != V2XSE_SUCCESS) {
+		printf("ERROR: v2xSe_activateRtKeyForSigning returned %d\n",
+								retVal);
+		return VTEST_FAIL;
+	}
+	/* Create signature */
+	retVal = v2xSe_createRtSignLowLatency(&hash, &statusCode, &signature,
+							&fastIndicator);
+	if (retVal != V2XSE_SUCCESS) {
+		printf("ERROR: v2xSe_createRtSignLowLatency returned %d\n",
+								retVal);
+		return VTEST_FAIL;
+	}
+	if (fastIndicator != 1) {
+		printf("ERROR: Slow signature indicated\n");
+		return VTEST_FAIL;
+
+	}
+
+	/* TODO:see above - test should return CONF until all complete */
+	return VTEST_CONF;
+}
