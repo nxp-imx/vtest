@@ -16,8 +16,6 @@
 
 #define EXPECTED_VERSION_GENERATION	3
 #define V2XSE_MAX_TX_RX_SIZE 261
-#define EU_PHASE_FILENAME "/etc/v2x_hsm_adaptation/EU/v2xsePhase"
-#define US_PHASE_FILENAME "/etc/v2x_hsm_adaptation/US/v2xsePhase"
 
 #define SE_DEVICE_MANAGEMENT_TESTS \
 	{ 50102, &test_connect_negative, \

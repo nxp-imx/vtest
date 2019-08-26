@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <v2xseapi.h>
 #include "vtest.h"
 #include "SEdevicemanagement.h"
@@ -748,33 +747,6 @@ int test_getRemainingNvm(void)
 	return VTEST_PASS;
 }
 
-
-/**
- *
- * @brief Utility function to remove an NVM variable
- *
- * This function is a utility function to remove an NVM variable.  It
- * deletes the variable in the filesystem if it is present.
- *
- * @param filename the filename of the variable to remove
- *
- * @return VTEST_PASS or VTEST_FAIL
- *
- */
-static int removeNvmVariable(char *filename)
-{
-	/* Return pass if var does not exist */
-	if (access(filename, F_OK))
-		return VTEST_PASS;
-
-	/* Error if failure deleting file */
-	if (remove(filename))
-		return VTEST_FAIL;
-
-	return VTEST_PASS;
-}
-
-
 /**
  *
  * @brief Test v2xSe_getSePhase in key injection phase
@@ -802,7 +774,7 @@ int test_getSePhase_keyinject(void)
 		printf("ERROR: Failed to delete EU phase variable\n");
 		return VTEST_FAIL;
 	}
-	/* Move to ACTIVATED state with US applet */
+	/* Move to ACTIVATED state with EU applet */
 	if (setupActivatedState(e_EU) != VTEST_PASS)
 		return VTEST_FAIL;
 	/* Verify SE phase reading */

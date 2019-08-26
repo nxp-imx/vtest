@@ -18,10 +18,6 @@
 #define TEST_STRING_NON_ZERO 	"Hi there non-zero slot"
 #define TEST_STRING_MAX_SLOT	"Hi there max slot"
 
-#define SLOT_ZERO	0
-#define NON_ZERO_SLOT	1234
-#define MAX_SLOT	(seInfo.maxDataSlots - 1)
-
 #define SE_DATA_STORAGE_TESTS \
 	{ 90101, &test_storeData_getData, \
 		"Test v2xSe_storeData for expected behaviour"},\

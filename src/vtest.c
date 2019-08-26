@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <v2xseapi.h>
 #include "vtest.h"
 #include "SEdevicemanagement.h"
@@ -67,17 +68,6 @@ int legacy_test()
 	checkret("v2xSe_activate",
 			v2xSe_activate(e_EU_AND_GS, &statusCode),
 			V2XSE_SUCCESS);
-
-	checkret("v2xSe_getMaEccPublicKey",
-			v2xSe_getMaEccPublicKey(&statusCode, &curveId, &pubKey),
-			V2XSE_SUCCESS);
-	printf("!!!NOTE: failing above test OK if first run since factory reset\n");
-	printf("ma pubkey set to %x, curve %d\n",pubKey.x[0], curveId);
-
-	checkret("v2xSe_generateMaEccKeyPair",
-			v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP384, &statusCode, &pubKey),
-			V2XSE_FAILURE);
-	printf("!!!NOTE: failing above test OK if first run since factory reset\n");
 
 	checkret("v2xSe_generateRtEccKeyPair",
 			v2xSe_generateRtEccKeyPair(0, V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
@@ -195,10 +185,6 @@ int legacy_test()
 	data1.data[0] = 1;
 	data2.data[0] = 2;
 	data3.data[0] = 3;
-	checkret("v2xSe_deriveRtEccKeyPair",
-			v2xSe_deriveRtEccKeyPair(0, &data1, &data2, &data3, 1, V2XSE_RSP_WITH_PUBKEY, &statusCode, &curveId, &pubKey),
-			V2XSE_SUCCESS);
-	printf("Derived byte was %d, curveId %d\n",pubKey.x[0], curveId);
 
 	/* Test key overwrite */
 	checkret("v2xSe_generateBaEccKeyPair",
@@ -401,6 +387,32 @@ int setupActivatedNormalState(appletSelection_t appId)
 	}
 	return VTEST_PASS;
 }
+
+/**
+ *
+ * @brief Utility function to remove an NVM variable
+ *
+ * This function is a utility function to remove an NVM variable.  It
+ * deletes the variable in the filesystem if it is present.
+ *
+ * @param filename the filename of the variable to remove
+ *
+ * @return VTEST_PASS or VTEST_FAIL
+ *
+ */
+int removeNvmVariable(char *filename)
+{
+	/* Return pass if var does not exist */
+	if (access(filename, F_OK))
+		return VTEST_PASS;
+
+	/* Error if failure deleting file */
+	if (remove(filename))
+		return VTEST_FAIL;
+
+	return VTEST_PASS;
+}
+
 
 int main(int argc, char* argv[])
 {

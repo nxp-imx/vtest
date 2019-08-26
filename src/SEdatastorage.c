@@ -53,7 +53,7 @@ int test_storeData_getData(void)
 		return VTEST_FAIL;
 	}
 	if (seInfo.maxDataSlots <= NON_ZERO_SLOT) {
-		printf("ERROR: Only %d available, test needs modification\n",
+		printf("ERROR: Only %d slots, test needs modification\n",
 								retVal);
 		return VTEST_FAIL;
 	}
