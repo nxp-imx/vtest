@@ -30,10 +30,6 @@
 #define NON_ZERO_SLOT	1234
 #define MAX_SLOT	(seInfo.maxDataSlots - 1)
 
-int legacy_test();
-#define LEGACY_TESTS_TO_REMOVE \
-	{1, &legacy_test, "Legacy test - to be re-written"},\
-
 typedef struct {
 	int testNum;
 	int (*testFn)(void);

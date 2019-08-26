@@ -26,7 +26,6 @@
 #include "SEkeyinjection.h"
 
 testEntry allTests[] = {
-	LEGACY_TESTS_TO_REMOVE
 	SE_DEVICE_MANAGEMENT_TESTS
 	SE_KEY_MANAGEMENT_TESTS
 	SE_SIGNATURE_TESTS
@@ -35,41 +34,6 @@ testEntry allTests[] = {
 	SE_UTILITY_TESTS
 	SE_KEY_INJECTION_TESTS
 };
-
-
-static void checkret(char* name, int32_t actual, int32_t expected)
-{
-	if (actual == expected)
-		printf("%s: PASS\n",name);
-	else
-		printf("%s: FAIL, returned %d\n",name, actual);
-}
-
-int legacy_test()
-{
-	TypeSW_t statusCode;
-
-	/* Switch to US to allow derive key to work */
-	checkret("v2xSe_reset",
-			v2xSe_reset(),
-			V2XSE_SUCCESS);
-	checkret("v2xSe_activate",
-			v2xSe_activate(e_US_AND_GS, &statusCode),
-			V2XSE_SUCCESS);
-	checkret("v2xSe_endKeyInjection",
-			v2xSe_endKeyInjection(&statusCode),
-			V2XSE_FAILURE);
-	printf("!!!NOTE: failing above test OK if first run since factory reset\n");
-
-
-
-	printf("Final teardown\n");
-	checkret("v2xSe_deactivate",
-			v2xSe_deactivate(),
-			V2XSE_SUCCESS);
-
-	return VTEST_CONF;
-}
 
 int getTestNum(const char *testStr)
 {

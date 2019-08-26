@@ -15,8 +15,9 @@
 #define SEKEYINJECTION_H
 
 #define SE_KEY_INJECTION_TESTS \
-	{110101, &key_injection_dummy, "Key injection placeholder"},\
+	{110101, &test_endKeyInjection, \
+		"Test v2xSe_endKeyInjection for expected behaviour"},\
 
-int key_injection_dummy(void);
+int test_endKeyInjection(void);
 
 #endif
