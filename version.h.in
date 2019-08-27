@@ -1,0 +1,20 @@
+
+/*
+ * Copyright 2019 NXP
+ */
+
+/**
+ *
+ * @file version.h
+ *
+ * @brief Header file containing version information for the various elements
+ *
+ * This is a header file containing version information for the different
+ * elements in the adaptation layer.
+ *
+ * DO NOT DIRECTLY EDIT version.h, IT IS GENERATED FROM verion.h.in BY cmake
+ *
+ */
+
+/** vtest version */
+#define VERSION		"@vtest_VERSION@"

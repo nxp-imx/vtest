@@ -11,9 +11,9 @@
  *
  */
 
-#include <stdio.h>
 #include <v2xseapi.h>
 #include "vtest.h"
+#include "SEmisc.h"
 #include "SEecies.h"
 
 /**
@@ -25,12 +25,9 @@
  *  - success returned when random data provided
  * TODO!! Verify result, create normal inputs, try different curves, applets...
  *
- * @return VTEST_PASS, VTEST_FAIL, or VTEST_CONF
- *
  */
-int test_encryptUsingEcies(void)
+void test_encryptUsingEcies(void)
 {
-	int32_t retVal;
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeEncryptEcies_t enc_eciesData;
@@ -39,16 +36,10 @@ int test_encryptUsingEcies(void)
 	TypeLen_t size;
 
 	/* Move to ACTIVATED state, normal operating mode */
-	if (setupActivatedNormalState(e_EU) != VTEST_PASS)
-		return VTEST_FAIL;
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Generate an Rt key to have a public key to use */
-	retVal = v2xSe_generateRtEccKeyPair(SLOT_ZERO, V2XSE_CURVE_BP256T1,
-							&statusCode, &pubKey);
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_generateRtEccKeyPair returned %d\n",
-								retVal);
-		return VTEST_FAIL;
-	}
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Set up ECIES encrypt parameters */
 	enc_eciesData.pEccPublicKey = &pubKey;
 	enc_eciesData.curveId = V2XSE_CURVE_BP256T1;
@@ -59,16 +50,11 @@ int test_encryptUsingEcies(void)
 	enc_eciesData.pMsgData = (TypePlainText_t*)(&(msg.data));
 	msg.data[0]=34;
 	/* Perform encryption */
-	retVal = v2xSe_encryptUsingEcies(&enc_eciesData, &statusCode, &size,
-		(TypeVCTData_t*)(&(vct.data)));
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_encryptUsingEcies returned %d\n",
-								retVal);
-		return VTEST_FAIL;
-	}
+	VTEST_CHECK_RESULT(v2xSe_encryptUsingEcies(&enc_eciesData, &statusCode,
+		&size, (TypeVCTData_t*)(&(vct.data))), V2XSE_SUCCESS);
 
-	/* Only return pass when all tests implemented */
-	return VTEST_CONF;
+	/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }
 
 /**
@@ -80,12 +66,9 @@ int test_encryptUsingEcies(void)
  *  - success returned when random data provided
  * TODO!! Verify result, create normal inputs, try different curves, applets...
  *
- * @return VTEST_PASS, VTEST_FAIL, or VTEST_CONF
- *
  */
-int test_decryptUsingRtEcies(void)
+void test_decryptUsingRtEcies(void)
 {
-	int32_t retVal;
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeInt256_t msg;
@@ -94,16 +77,10 @@ int test_decryptUsingRtEcies(void)
 	TypeDecryptEcies_t dec_eciesData;
 
 	/* Move to ACTIVATED state, normal operating mode */
-	if (setupActivatedNormalState(e_EU) != VTEST_PASS)
-		return VTEST_FAIL;
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Generate an Rt key to use */
-	retVal = v2xSe_generateRtEccKeyPair(SLOT_ZERO, V2XSE_CURVE_BP256T1,
-							&statusCode, &pubKey);
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_generateRtEccKeyPair returned %d\n",
-								retVal);
-		return VTEST_FAIL;
-	}
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Set up ECIES decrypt parameters */
 	dec_eciesData.kdfParamP1Len = 0;
 	dec_eciesData.macLen = 0;
@@ -111,16 +88,12 @@ int test_decryptUsingRtEcies(void)
 	dec_eciesData.vctLen = 1;
 	dec_eciesData.pVctData = (TypeVCTData_t*)(&(vct.data));
 	/* Perform decryption */
-	retVal = v2xSe_decryptUsingRtEcies(SLOT_ZERO, &dec_eciesData,
-		&statusCode, &size, (TypePlainText_t*)(&(msg.data)));
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_decryptUsingRtEcies returned %d\n",
-								retVal);
-		return VTEST_FAIL;
-	}
+	VTEST_CHECK_RESULT(v2xSe_decryptUsingRtEcies(SLOT_ZERO, &dec_eciesData,
+			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
+								V2XSE_SUCCESS);
 
-	/* Only return pass when all tests implemented */
-	return VTEST_CONF;
+	/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }
 
 /**
@@ -132,12 +105,9 @@ int test_decryptUsingRtEcies(void)
  *  - success returned when random data provided
  * TODO!! Verify result, create normal inputs, try different curves, applets...
  *
- * @return VTEST_PASS, VTEST_FAIL, or VTEST_CONF
- *
  */
-int test_decryptUsingMaEcies(void)
+void test_decryptUsingMaEcies(void)
 {
-	int32_t retVal;
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeInt256_t msg;
@@ -146,25 +116,14 @@ int test_decryptUsingMaEcies(void)
 	TypeDecryptEcies_t dec_eciesData;
 
 	/* Move to INIT state */
-	if (setupInitState() != VTEST_PASS)
-		return VTEST_FAIL;
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force reset of all keys */
-	if (removeNvmVariable(EU_PHASE_FILENAME) != VTEST_PASS) {
-		printf("ERROR: Failed to delete EU phase variable\n");
-		return VTEST_FAIL;
-	}
+	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
 	/* Move to ACTIVATED state, normal operating mode */
-	if (setupActivatedNormalState(e_EU) != VTEST_PASS)
-		return VTEST_FAIL;
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Generate MA key of known curveId */
-	retVal = v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP256, &statusCode,
-								&pubKey);
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_generateMaEccKeyPair returned %d\n",
-								retVal);
-		return VTEST_FAIL;
-	}
-
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP256,
+		&statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Set up ECIES decrypt parameters */
 	dec_eciesData.kdfParamP1Len = 0;
 	dec_eciesData.macLen = 0;
@@ -172,16 +131,12 @@ int test_decryptUsingMaEcies(void)
 	dec_eciesData.vctLen = 1;
 	dec_eciesData.pVctData = (TypeVCTData_t*)(&(vct.data));
 	/* Perform decryption */
-	retVal = v2xSe_decryptUsingMaEcies(&dec_eciesData, &statusCode, &size,
-					(TypePlainText_t*)(&(msg.data)));
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_decryptUsingMaEcies returned %d\n",
-								retVal);
-		return VTEST_FAIL;
-	}
+	VTEST_CHECK_RESULT(v2xSe_decryptUsingMaEcies(&dec_eciesData,
+			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
+								V2XSE_SUCCESS);
 
-	/* Only return pass when all tests implemented */
-	return VTEST_CONF;
+	/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }
 
 /**
@@ -193,12 +148,9 @@ int test_decryptUsingMaEcies(void)
  *  - success returned when random data provided
  * TODO!! Verify result, create normal inputs, try different curves, applets...
  *
- * @return VTEST_PASS, VTEST_FAIL, or VTEST_CONF
- *
  */
-int test_decryptUsingBaEcies(void)
+void test_decryptUsingBaEcies(void)
 {
-	int32_t retVal;
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeInt256_t msg;
@@ -207,16 +159,10 @@ int test_decryptUsingBaEcies(void)
 	TypeDecryptEcies_t dec_eciesData;
 
 	/* Move to ACTIVATED state, normal operating mode */
-	if (setupActivatedNormalState(e_EU) != VTEST_PASS)
-		return VTEST_FAIL;
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Generate an Ba key to use */
-	retVal = v2xSe_generateBaEccKeyPair(SLOT_ZERO, V2XSE_CURVE_BP256T1,
-							&statusCode, &pubKey);
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_generateBaEccKeyPair returned %d\n",
-								retVal);
-		return VTEST_FAIL;
-	}
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Set up ECIES decrypt parameters */
 	dec_eciesData.kdfParamP1Len = 0;
 	dec_eciesData.macLen = 0;
@@ -224,14 +170,10 @@ int test_decryptUsingBaEcies(void)
 	dec_eciesData.vctLen = 1;
 	dec_eciesData.pVctData = (TypeVCTData_t*)(&(vct.data));
 	/* Perform decryption */
-	retVal = v2xSe_decryptUsingBaEcies(SLOT_ZERO, &dec_eciesData,
-		&statusCode, &size, (TypePlainText_t*)(&(msg.data)));
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_decryptUsingBaEcies returned %d\n",
-								retVal);
-		return VTEST_FAIL;
-	}
+	VTEST_CHECK_RESULT(v2xSe_decryptUsingBaEcies(SLOT_ZERO, &dec_eciesData,
+			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
+								V2XSE_SUCCESS);
 
-	/* Only return pass when all tests implemented */
-	return VTEST_CONF;
+	/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }

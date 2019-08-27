@@ -11,30 +11,35 @@
  *
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <v2xseapi.h>
 #include "vtest.h"
-#include "SEdevicemanagement.h"
-#include "SEkeymanagement.h"
-#include "SEsignature.h"
-#include "SEecies.h"
-#include "SEdatastorage.h"
-#include "SEutility.h"
-#include "SEkeyinjection.h"
+#include "version.h"
 
-testEntry allTests[] = {
-	SE_DEVICE_MANAGEMENT_TESTS
-	SE_KEY_MANAGEMENT_TESTS
-	SE_SIGNATURE_TESTS
-	SE_ECIES_TESTS
-	SE_DATA_STORAGE_TESTS
-	SE_UTILITY_TESTS
-	SE_KEY_INJECTION_TESTS
-};
+/** Status of the currently running test caes */
+currentTestStatus_t currentTestStatus;
+/** Combined status of all tests run */
+overallTestStatus_t overallTestStatus = {0,0,0,0,0,0,0};
 
+extern testEntry_t allTests[];
+int getNumTests(void);
+
+/**
+ *
+ * @brief Extract numerical test number from string
+ *
+ * Extract numerical test number from string taken from the command line
+ * when vtest was started.  Note that test number 1 is not allowed as it
+ * corresponds to VTEST_FAIL, but as this would correspond to requirement
+ * R0.0 which does not exist, this is acceptable.
+ *
+ * @param testStr string from command line that should contain test number
+ *
+ * @return test number, or VTEST_FAIL
+ *
+ */
 int getTestNum(const char *testStr)
 {
 	long convNum;
@@ -51,160 +56,85 @@ int getTestNum(const char *testStr)
 
 /**
  *
- * @brief Utility function to place system in INIT state
+ * @brief Output log message to console
  *
- * @return VTEST_PASS or VTEST_FAIL
+ * This function outputs a log message to the console during test execution.
+ * The filename and linenumber generating the log is printed first, followed
+ * by the provided log message on the next line.
+ *
+ * @param fileName name of the source file generating the log message
+ * @param lineNumber source line number generating the log message
+ * @param format the string to format the log message, in printf style
  *
  */
-int setupInitState(void)
+void outputLog(const char *const fileName, const int lineNumber,
+					const char *const format, ...)
 {
-	int32_t retVal;
+	va_list ap;
 
-	/* Move to INIT state */
-	retVal = v2xSe_reset();
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_reset returned %d\n", retVal);
-		return VTEST_FAIL;
-	}
-	return VTEST_PASS;
+	va_start(ap, format);
+	printf("LOG from %s:%d:\n ", fileName, lineNumber);
+	vprintf(format, ap);
+	printf("\n");
+	va_end(ap);
+	fflush(stdout);
 }
 
 /**
  *
- * @brief Utility function to place system in CONNECTED state
+ * @brief Utility function to check the result of a function call
  *
- * @return VTEST_PASS or VTEST_FAIL
+ * This function checks the result of a function call and updates the
+ * subtest counter appropriately
+ *
+ * @param fileName name of source file this function is called from
+ * @param lineNumber source line number this function is called from
+ * @param actual the result returned by the function call under test
+ * @param expected the expected result of the function call under test
  *
  */
-int setupConnectedState(void)
+void checkResult(const char *const fileName,
+		const int lineNumber, int actual, int expected)
 {
-	int32_t retVal;
-
-	/* Move to INIT state first as known starting point */
-	retVal = v2xSe_reset();
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_reset returned %d\n", retVal);
-		return VTEST_FAIL;
+	currentTestStatus.currentSubTestsRun++;
+	if (actual != expected) {
+		currentTestStatus.currentSubTestsFail++;
+		printf("ERROR: %s:%d expected %d, got %d\n", fileName,
+						lineNumber, expected, actual);
 	}
-	/* Move to CONNECTED state */
-	retVal = v2xSe_connect();
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_connect returned %d\n", retVal);
-		return VTEST_FAIL;
-	}
-	return VTEST_PASS;
 }
 
 /**
  *
- * @brief Utility function to place system in ACTIVATED state
- *
- * @return VTEST_PASS or VTEST_FAIL
+ * @brief Utility function to flag that a test cannot be completed
  *
  */
-int setupActivatedState(appletSelection_t appId)
+void flagConf(void)
 {
-	int32_t retVal;
-	TypeSW_t statusCode;
-
-	/* Move to INIT state first as known starting point */
-	retVal = v2xSe_reset();
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_reset returned %d\n", retVal);
-		return VTEST_FAIL;
-	}
-	/* Move to ACTIVATED state */
-	retVal = v2xSe_activate(appId, &statusCode);
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_activate returned %d\n", retVal);
-		return VTEST_FAIL;
-	}
-	return VTEST_PASS;
+	currentTestStatus.currentTestConfFlagged = 1;
 }
 
 /**
  *
- * @brief Utility function to place system in ACTIVATED state, normal phase
+ * @brief The main function of the vtest program
  *
- * @return VTEST_PASS or VTEST_FAIL
+ * This function parses the vtest command line parameters and runs the
+ * requested tests
  *
- */
-int setupActivatedNormalState(appletSelection_t appId)
-{
-	int32_t retVal;
-	TypeSW_t statusCode;
-	uint8_t phase;
-
-	/* Move to INIT state first as known starting point */
-	retVal = v2xSe_reset();
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_reset returned %d\n", retVal);
-		return VTEST_FAIL;
-	}
-	/* Move to ACTIVATED state */
-	retVal = v2xSe_activate(appId, &statusCode);
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_activate returned %d\n", retVal);
-		return VTEST_FAIL;
-	}
-	/* Check if already normal operating phase */
-	retVal = v2xSe_getSePhase(&phase, &statusCode);
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_getSePhase returned %d\n", retVal);
-		return VTEST_FAIL;
-	}
-	if (phase == V2XSE_NORMAL_OPERATING_PHASE)
-		return VTEST_PASS;
-
-	/* Need to end key injection */
-	retVal = v2xSe_endKeyInjection(&statusCode);
-	if (retVal != V2XSE_SUCCESS) {
-		printf("ERROR: v2xSe_endKeyInjection returned %d\n", retVal);
-		return VTEST_FAIL;
-	}
-	return VTEST_PASS;
-}
-
-/**
+ * @param argc the number of command line arguments, including program name
+ * @param argv an array giving the command line arguments
  *
- * @brief Utility function to remove an NVM variable
- *
- * This function is a utility function to remove an NVM variable.  It
- * deletes the variable in the filesystem if it is present.
- *
- * @param filename the filename of the variable to remove
- *
- * @return VTEST_PASS or VTEST_FAIL
+ * @return 1 if any tests failed, else 32 if test blocked, else 0
  *
  */
-int removeNvmVariable(char *filename)
-{
-	/* Return pass if var does not exist */
-	if (access(filename, F_OK))
-		return VTEST_PASS;
-
-	/* Error if failure deleting file */
-	if (remove(filename))
-		return VTEST_FAIL;
-
-	return VTEST_PASS;
-}
-
-
 int main(int argc, char* argv[])
 {
 	int i;
 	int minTest = BEFORE_FIRST_TEST;
 	int maxTest = AFTER_LAST_TEST;
+	int numDefinedTests = getNumTests();
 
-	int numTestsRun = 0;
-	int numTestsSkipped = 0;
-	int numTestsPass = 0;
-	int numTestsFail = 0;
-	int numTestsConf = 0;
-	int numInternalErrors = 0;
-
-	printf("vtest: Start\n");
+	printf("vtest version "VERSION": Start\n");
 
 	if (argc == 1) {
 		printf("Running all tests\n");
@@ -227,44 +157,33 @@ int main(int argc, char* argv[])
 	if ((minTest == VTEST_FAIL) || (maxTest == VTEST_FAIL))
 		return VTEST_FAIL;
 
-	for (i = 0; i < (sizeof(allTests)/sizeof(testEntry)); i++) {
+	for (i = 0; i < numDefinedTests; i++) {
 		if ((allTests[i].testNum >= minTest) &&
 					(allTests[i].testNum <= maxTest)) {
-			int result;
-			numTestsRun++;
-			printf("Running test %06d: %s\n",allTests[i].testNum,
-							allTests[i].testName);
-			result = allTests[i].testFn();
-			switch (result) {
-				case VTEST_PASS:
-					numTestsPass++;
-					printf("Test result: PASS\n");
-					break;
-				case VTEST_FAIL:
-					numTestsFail++;
-					printf("Test result: FAIL\n");
-					break;
-				case VTEST_CONF:
-					numTestsConf++;
-					printf("Test result: CONF\n");
-					break;
-				default:
-					numInternalErrors++;
-					printf("Internal error\n");
-					break;
-			}
+			VTEST_START_TEST_CASE(allTests[i].testNum,
+						allTests[i].testName);
+			allTests[i].testFn();
+			VTEST_END_TEST_CASE();
 		} else {
-			numTestsSkipped++;
+			VTEST_SKIP_TEST_CASE();
 		}
 	}
 
 	printf("\n\nSUMMARY:\n");
-	printf("Tests RUN: %d\n",numTestsRun);
-	printf("Tests SKIPPED: %d\n",numTestsSkipped);
-	printf("Internal Errors: %d\n",numInternalErrors);
-	printf("Tests PASS: %d\n",numTestsPass);
-	printf("Tests CONF: %d\n",numTestsConf);
-	printf("Tests FAIL: %d\n",numTestsFail);
+	printf("Tests RUN: %d\n",overallTestStatus.numTestsRun);
+	printf("Tests SKIPPED: %d\n",overallTestStatus.numTestsSkipped);
+	printf("Tests PASS: %d\n",overallTestStatus.numTestsPass);
+	printf("Tests CONF: %d\n",overallTestStatus.numTestsConf);
+	printf("Tests FAIL: %d\n",overallTestStatus.numTestsFail);
+	printf("Subtests RUN: %d\n",overallTestStatus.numSubTestsRun);
+	printf("Subtests FAIL: %d\n",overallTestStatus.numSubTestsFail);
 	printf("vtest: Done\n");
-	return VTEST_PASS;
+
+	if (overallTestStatus.numTestsFail) {
+		return VTEST_FAIL;
+	} else if (overallTestStatus.numTestsConf) {
+		return VTEST_CONF;
+	} else {
+		return VTEST_PASS;
+	}
 }
