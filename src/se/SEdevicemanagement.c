@@ -46,6 +46,9 @@ void test_connect_negative(void)
 
 	/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -78,7 +81,10 @@ void test_activate_negative(void)
 	VTEST_CHECK_RESULT(v2xSe_activate(e_EU_AND_GS, &statusCode),
 						V2XSE_FAILURE_ACTIVATED);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }
 
@@ -115,7 +121,10 @@ void test_activateWithSecurityLevel_negative(void)
 			e_channelSecLevel_5, &statusCode),
 						V2XSE_FAILURE_ACTIVATED);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }
 
@@ -226,6 +235,9 @@ void test_getAppletVersion(void)
 						version.data[2]);
 	/* Verify format (generation digit) */
 	VTEST_CHECK_RESULT(version.data[0], EXPECTED_VERSION_GENERATION);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -293,6 +305,9 @@ void test_getSeInfo(void)
 				!seInfo.eciesSupport ||
 				!seInfo.maxDataSlots),
 					0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -345,6 +360,9 @@ void test_getPlatformInfo(void)
 	/* Verify all 16 bytes filled */
 	VTEST_CHECK_RESULT(strnlen(displayString,V2XSE_PLATFORM_IDENTITY),
 					V2XSE_PLATFORM_IDENTITY);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -378,6 +396,9 @@ void test_getPlatformConfig(void)
 				!platformConfig.data[2] ||
 				!platformConfig.data[3]),
 					0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -433,6 +454,9 @@ void test_getChipInfo(void)
 			break;
 	}
 	VTEST_CHECK_RESULT((i == V2XSE_SERIAL_NUMBER), 0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -461,6 +485,9 @@ void test_getAttackLog(void)
 	/* Verify contents empty */
 	VTEST_CHECK_RESULT((attackLog.currAttackCntrStatus !=
 				V2XSE_ATTACK_CNT_ZERO) || attackLog.len, 0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -488,6 +515,9 @@ void test_sendReceive(void)
 	/* Perform sendRecieve */
 	VTEST_CHECK_RESULT(v2xSe_sendReceive(TxBuf, V2XSE_MAX_TX_RX_SIZE,
 				&RxLen, RxBuf, &statusCode), V2XSE_FAILURE);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -509,6 +539,9 @@ void test_invokeGarbageCollector(void)
 	/* Invoke garbage collector */
 	VTEST_CHECK_RESULT(v2xSe_invokeGarbageCollector(&statusCode),
 								V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -534,6 +567,9 @@ void test_getRemainingNvm(void)
 	VTEST_LOG("Remaining NVM: 0x%x bytes\n",remainingNvm);
 	/* Verify non-zero value */
 	VTEST_CHECK_RESULT(!remainingNvm, 0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -576,6 +612,9 @@ void test_getSePhase_keyinject(void)
 								V2XSE_SUCCESS);
 	/* Verify value read */
 	VTEST_CHECK_RESULT(phase, V2XSE_KEY_INJECTION_PHASE);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -610,4 +649,7 @@ void test_getSePhase_normal(void)
 								V2XSE_SUCCESS);
 	/* Verify value read */
 	VTEST_CHECK_RESULT(phase, V2XSE_NORMAL_OPERATING_PHASE);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }

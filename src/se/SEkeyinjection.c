@@ -70,4 +70,7 @@ void test_endKeyInjection(void)
 								V2XSE_SUCCESS);
 	/* Verify value read */
 	VTEST_CHECK_RESULT(phase, V2XSE_NORMAL_OPERATING_PHASE);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }

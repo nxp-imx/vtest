@@ -135,6 +135,9 @@ void test_generateMaEccKeyPair(void)
 						&pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -209,6 +212,9 @@ void test_generateRtEccKeyPair_empty(void)
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -286,6 +292,9 @@ void test_generateRtEccKeyPair_overwrite(void)
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -364,6 +373,9 @@ void test_deleteRtEccPrivateKey(void)
 	/* Verify can no longer retrive key in max slot */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_SLOT, &statusCode,
 					&curveId, &pubKey), V2XSE_FAILURE);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -477,6 +489,9 @@ void test_generateBaEccKeyPair_empty(void)
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -596,6 +611,9 @@ void test_generateBaEccKeyPair_overwrite(void)
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -674,6 +692,9 @@ void test_deleteBaEccPrivateKey(void)
 	/* Verify can no longer retrive key in max slot */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_SLOT, &statusCode,
 					&curveId, &pubKey), V2XSE_FAILURE);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -768,6 +789,9 @@ void test_deriveRtEccKeyPair_empty(void)
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -865,6 +889,9 @@ void test_deriveRtEccKeyPair_overwrite(void)
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -900,6 +927,9 @@ void test_activateRtKeyForSigning(void)
 				&signature, &fastIndicator), V2XSE_SUCCESS);
 	VTEST_CHECK_RESULT(fastIndicator, 1);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }

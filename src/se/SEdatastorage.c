@@ -133,6 +133,9 @@ void test_storeData_getData(void)
 	/* Verify retrieved string */
 	VTEST_CHECK_RESULT( (size != V2XSE_MAX_DATA_SIZE_GSA) ||
 			memcmp(dataStorage_write, dataStorage_read, size), 0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -170,4 +173,7 @@ void test_deleteData(void)
 	VTEST_CHECK_RESULT(v2xSe_getData(SLOT_ZERO, &size, dataStorage_read,
 						&statusCode), V2XSE_FAILURE);
 	VTEST_CHECK_RESULT(statusCode, V2XSE_WRONG_DATA);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }

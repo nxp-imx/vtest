@@ -43,7 +43,11 @@ void test_createBaSign(void)
 	/* Create signature */
 	VTEST_CHECK_RESULT(v2xSe_createBaSign(SLOT_ZERO, 32, &hash,
 		&statusCode, &signature), V2XSE_SUCCESS);
-	/* Flag CONF as not all required tests implemented yet */
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }
 
@@ -79,7 +83,10 @@ void test_createMaSign(void)
 	VTEST_CHECK_RESULT( v2xSe_createMaSign(32, &hash, &statusCode,
 						&signature), V2XSE_SUCCESS);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }
 
@@ -116,7 +123,10 @@ void test_createRtSignLowLatency(void)
 				&signature, &fastIndicator), V2XSE_SUCCESS);
 	VTEST_CHECK_RESULT(fastIndicator, 1);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }
 
@@ -148,6 +158,9 @@ void test_createRtSign(void)
 	VTEST_CHECK_RESULT(v2xSe_createRtSign(NON_ZERO_SLOT, &hash,
 				&statusCode, &signature), V2XSE_SUCCESS);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }

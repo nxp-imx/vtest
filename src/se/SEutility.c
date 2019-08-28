@@ -57,6 +57,9 @@ void test_getRandomNumber(void)
 						&rand2), V2XSE_SUCCESS);
 	/* Make sure they are different */
 	VTEST_CHECK_RESULT(!memcmp(rand1.data, rand2.data, sizeof(long)), 0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**

@@ -53,7 +53,10 @@ void test_encryptUsingEcies(void)
 	VTEST_CHECK_RESULT(v2xSe_encryptUsingEcies(&enc_eciesData, &statusCode,
 		&size, (TypeVCTData_t*)(&(vct.data))), V2XSE_SUCCESS);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }
 
@@ -92,7 +95,10 @@ void test_decryptUsingRtEcies(void)
 			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
 								V2XSE_SUCCESS);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }
 
@@ -135,7 +141,10 @@ void test_decryptUsingMaEcies(void)
 			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
 								V2XSE_SUCCESS);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }
 
@@ -174,6 +183,9 @@ void test_decryptUsingBaEcies(void)
 			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
 								V2XSE_SUCCESS);
 
-	/* Flag CONF as not all required tests implemented yet */
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
 	VTEST_FLAG_CONF();
 }
