@@ -38,6 +38,7 @@ add_executable (vtest
 	src/se/SEperformance.c
 	src/se/SEmisc.c
 	src/ecc/ECCcrypto.c
+	src/ecc/ECCdevicemgmt.c
 	)
 
 target_include_directories (vtest
