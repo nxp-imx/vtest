@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2019 NXP
  */
@@ -35,54 +34,21 @@
 
 /**
  *
- * @file testlist.c
+ * @file ECClifecycle.h
  *
- * @brief Defines list of all tests that can be run
+ * @brief Header file for tests for ECC life cycle tests (requirements R2.*)
  *
  */
 
-#include "vtest.h"
-#include "ECCcrypto.h"
-#include "ECCdevicemgmt.h"
-#include "ECClifecycle.h"
-#include "SEdevicemanagement.h"
-#include "SEkeymanagement.h"
-#include "SEsignature.h"
-#include "SEecies.h"
-#include "SEdatastorage.h"
-#include "SEutility.h"
-#include "SEkeyinjection.h"
-#include "SEperformance.h"
+#ifndef ECCLIFECYCLE_H
+#define ECCLIFECYCLE_H
 
-/**
- * @brief Array containing entries for all avialable tests
- *
- * This array containts an entry for each available test.
- * Tests should be placed in the following array in order of test
- * number
- */
-testEntry_t allTests[] = {
-	ECC_DEVICEMGMT_TESTS
-	ECC_LIFECYCLE_TESTS
-	ECC_CRYPTO_TESTS
-	SE_DEVICE_MANAGEMENT_TESTS
-	SE_KEY_MANAGEMENT_TESTS
-	SE_SIGNATURE_TESTS
-	SE_ECIES_TESTS
-	SE_DATA_STORAGE_TESTS
-	SE_UTILITY_TESTS
-	SE_KEY_INJECTION_TESTS
-	SE_PERFORMANCE_TESTS
-};
+#define ECC_LIFECYCLE_TESTS \
+	VTEST_DEFINE_TEST(20101, &ecc_test_disp_ping,	 \
+		"Test disp_ping for expected behaviour") \
 
-/**
- *
- * @brief Utility function get total number of available tests
- *
- * @return total number of available tests
- *
- */
-int getNumTests(void)
-{
-	return sizeof(allTests)/sizeof(testEntry_t);
-}
+void ecc_test_disp_ping(void);
+
+
+#endif /* ECCLIFECYCLE_H */
+

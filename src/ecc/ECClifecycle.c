@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2019 NXP
  */
@@ -35,54 +34,52 @@
 
 /**
  *
- * @file testlist.c
+ * @file ECClifecycle.c
  *
- * @brief Defines list of all tests that can be run
+ * @brief Tests for ECC life cycle operations (requirements R2.*)
  *
  */
 
-#include "vtest.h"
-#include "ECCcrypto.h"
-#include "ECCdevicemgmt.h"
 #include "ECClifecycle.h"
-#include "SEdevicemanagement.h"
-#include "SEkeymanagement.h"
-#include "SEsignature.h"
-#include "SEecies.h"
-#include "SEdatastorage.h"
-#include "SEutility.h"
-#include "SEkeyinjection.h"
-#include "SEperformance.h"
+#include "ecc_dispatcher.h"
+#include "vtest_async.h"
+
+/* Used to count the number of asynchronous API calls */
+static volatile int count_async = ASYNC_COUNT_RESET;
 
 /**
- * @brief Array containing entries for all avialable tests
+ * @brief Ping test callback
  *
- * This array containts an entry for each available test.
- * Tests should be placed in the following array in order of test
- * number
- */
-testEntry_t allTests[] = {
-	ECC_DEVICEMGMT_TESTS
-	ECC_LIFECYCLE_TESTS
-	ECC_CRYPTO_TESTS
-	SE_DEVICE_MANAGEMENT_TESTS
-	SE_KEY_MANAGEMENT_TESTS
-	SE_SIGNATURE_TESTS
-	SE_ECIES_TESTS
-	SE_DATA_STORAGE_TESTS
-	SE_UTILITY_TESTS
-	SE_KEY_INJECTION_TESTS
-	SE_PERFORMANCE_TESTS
-};
-
-/**
- *
- * @brief Utility function get total number of available tests
- *
- * @return total number of available tests
+ * @param[in]  callbackdata    data for callback function (not used?)
+ * @param[out] ret             returned value by the dispatcher
+ * @param[out] serverTime      round trip time
  *
  */
-int getNumTests(void)
+static void disp_pingCallback(
+	void *callbackdata,
+	disp_ReturnValue_t ret,
+	struct timespec serverTime
+	)
 {
-	return sizeof(allTests)/sizeof(testEntry_t);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
 }
+
+/**
+ *
+ * @brief Positive test of disp_ping
+ *
+ * This function tests multiple calls of disp_ping API.
+ */
+void ecc_test_disp_ping(void)
+{
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ping((void *)0, 0, disp_pingCallback),
+		DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ping((void *)0, 0, disp_pingCallback),
+		DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ping((void *)0, 0, disp_pingCallback),
+		DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_1_MS);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
