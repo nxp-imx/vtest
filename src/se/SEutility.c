@@ -111,9 +111,9 @@ void test_getSigLenFromHashLen(void)
 
 /* Test size 64 returned for V2XSE_256_EC_HASH_SIZE */
 	VTEST_CHECK_RESULT(v2xSe_getSigLenFromHashLen(V2XSE_256_EC_HASH_SIZE),
-									64);
+									65);
 
 /* Test size 96 returned for V2XSE_384_EC_HASH_SIZE */
 	VTEST_CHECK_RESULT(v2xSe_getSigLenFromHashLen(V2XSE_384_EC_HASH_SIZE),
-									96);
+									97);
 }
