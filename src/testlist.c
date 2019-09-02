@@ -50,7 +50,6 @@
 #include "SEutility.h"
 #include "SEkeyinjection.h"
 #include "SEperformance.h"
-#include "ECDSAplaceholder.h"
 
 /**
  * @brief Array containing entries for all avialable tests
@@ -60,7 +59,6 @@
  * number
  */
 testEntry_t allTests[] = {
-	ECDSA_PLACEHOLDER_TESTS
 	SE_DEVICE_MANAGEMENT_TESTS
 	SE_KEY_MANAGEMENT_TESTS
 	SE_SIGNATURE_TESTS
