@@ -11,10 +11,35 @@
  *
  */
 
+#include <string.h>
 #include <v2xseapi.h>
 #include "vtest.h"
 #include "SEmisc.h"
 #include "SEecies.h"
+
+/** ECIES encrypt test vector - input message */
+static TypePlainText_t eciesMsg = {
+	.data = {	0x91, 0x69, 0x15, 0x5B, 0x08, 0xB0, 0x76, 0x74,
+			0xCB, 0xAD, 0xF7, 0x5F, 0xB4, 0x6A, 0x7B, 0x0D}
+	};
+
+/** ECIES encrypt test vector - p1 parameter */
+static uint8_t eciesP1[32] = {0xA6, 0xB7, 0xB5, 0x25, 0x54, 0xB4, 0x20, 0x3F,
+                               0x7E, 0x3A, 0xCF, 0xDB, 0x3A, 0x3E, 0xD8, 0x67,
+                               0x4E, 0xE0, 0x86, 0xCE, 0x59, 0x06, 0xA7, 0xCA,
+                               0xC2, 0xF8, 0xA3, 0x98, 0x30, 0x6D, 0x3B, 0xE9 };
+
+/** ECIES encrypt test vector - public key */
+static TypePublicKey_t eciesPubKey = {
+	.x = {	0x1c, 0xcb, 0xe9, 0x1c, 0x07, 0x5f, 0xc7, 0xf4,
+		0xf0, 0x33, 0xbf, 0xa2, 0x48, 0xdb, 0x8f, 0xcc,
+		0xd3, 0x56, 0x5d, 0xe9, 0x4b, 0xbf, 0xb1, 0x2f,
+		0x3c, 0x59, 0xff, 0x46, 0xc2, 0x71, 0xbf, 0x83 },
+	.y = {	0xce, 0x40, 0x14, 0xc6, 0x88, 0x11, 0xf9, 0xa2,
+		0x1a, 0x1f, 0xdb, 0x2c, 0x0e, 0x61, 0x13, 0xe0,
+		0x6d, 0xb7, 0xca, 0x93, 0xb7, 0x40, 0x4e, 0x78,
+		0xdc, 0x7c, 0xcd, 0x5c, 0xa8, 0x9a, 0x4c, 0xa9 }
+	};
 
 /**
  *
@@ -22,36 +47,31 @@
  *
  * This function tests v2xSe_encryptUsingEcies for expected behaviour
  * The following behaviours are tested:
- *  - success returned when random data provided
+ *  - success returned when hsm test vectors provided
  * TODO!! Verify result, create normal inputs, try different curves, applets...
  *
  */
 void test_encryptUsingEcies(void)
 {
 	TypeSW_t statusCode;
-	TypePublicKey_t pubKey;
 	TypeEncryptEcies_t enc_eciesData;
-	TypeInt256_t msg;
-	TypeInt256_t vct;
-	TypeLen_t size;
+	uint8_t vct[3*32];
+	TypeLen_t size = (uint8_t)sizeof(vct);
 
 	/* Move to ACTIVATED state, normal operating mode */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
-	/* Generate an Rt key to have a public key to use */
-	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Set up ECIES encrypt parameters */
-	enc_eciesData.pEccPublicKey = &pubKey;
-	enc_eciesData.curveId = V2XSE_CURVE_BP256T1;
-	enc_eciesData.kdfParamP1Len = 0;
-	enc_eciesData.macLen = 0;
+	enc_eciesData.pEccPublicKey = &eciesPubKey;
+	enc_eciesData.curveId = V2XSE_CURVE_NISTP256;
+	enc_eciesData.kdfParamP1Len = 32;
+	memcpy(enc_eciesData.kdfParamP1, eciesP1, sizeof(eciesP1));
+	enc_eciesData.macLen = 16;
 	enc_eciesData.macParamP2Len = 0;
-	enc_eciesData.msgLen = 1;
-	enc_eciesData.pMsgData = (TypePlainText_t*)(&(msg.data));
-	msg.data[0]=34;
+	enc_eciesData.msgLen = 16;
+	enc_eciesData.pMsgData = &eciesMsg;
 	/* Perform encryption */
 	VTEST_CHECK_RESULT(v2xSe_encryptUsingEcies(&enc_eciesData, &statusCode,
-		&size, (TypeVCTData_t*)(&(vct.data))), V2XSE_SUCCESS);
+		&size, (TypeVCTData_t*)(&vct)), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
