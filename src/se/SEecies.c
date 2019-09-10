@@ -95,7 +95,8 @@ void test_decryptUsingRtEcies(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeInt256_t msg;
-	TypeInt256_t vct;
+	TypeEncryptEcies_t enc_eciesData;
+	uint8_t vct[3*32];
 	TypeLen_t size;
 	TypeDecryptEcies_t dec_eciesData;
 
@@ -103,13 +104,30 @@ void test_decryptUsingRtEcies(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Generate an Rt key to use */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+
+	/* Encrypt data with this key */
+	enc_eciesData.pEccPublicKey = &pubKey;
+	enc_eciesData.curveId = V2XSE_CURVE_NISTP256;
+	enc_eciesData.kdfParamP1Len = 32;
+	memcpy(enc_eciesData.kdfParamP1, eciesP1, sizeof(eciesP1));
+	enc_eciesData.macLen = 16;
+	enc_eciesData.macParamP2Len = 0;
+	enc_eciesData.msgLen = 16;
+	enc_eciesData.pMsgData = &eciesMsg;
+	size = (uint8_t)sizeof(vct);
+	/* Perform encryption */
+	VTEST_CHECK_RESULT(v2xSe_encryptUsingEcies(&enc_eciesData, &statusCode,
+		&size, (TypeVCTData_t*)(vct)), V2XSE_SUCCESS);
+
 	/* Set up ECIES decrypt parameters */
-	dec_eciesData.kdfParamP1Len = 0;
-	dec_eciesData.macLen = 0;
+	dec_eciesData.kdfParamP1Len = 32;
+	memcpy(dec_eciesData.kdfParamP1, eciesP1, sizeof(eciesP1));
+	dec_eciesData.macLen = 16;
 	dec_eciesData.macParamP2Len = 0;
-	dec_eciesData.vctLen = 1;
-	dec_eciesData.pVctData = (TypeVCTData_t*)(&(vct.data));
+	dec_eciesData.vctLen = size;
+	dec_eciesData.pVctData = (TypeVCTData_t*)vct;
+	size = 16;
 	/* Perform decryption */
 	VTEST_CHECK_RESULT(v2xSe_decryptUsingRtEcies(SLOT_ZERO, &dec_eciesData,
 			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
@@ -137,7 +155,8 @@ void test_decryptUsingMaEcies(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeInt256_t msg;
-	TypeInt256_t vct;
+	TypeEncryptEcies_t enc_eciesData;
+	uint8_t vct[3*32];
 	TypeLen_t size;
 	TypeDecryptEcies_t dec_eciesData;
 
@@ -150,12 +169,29 @@ void test_decryptUsingMaEcies(void)
 	/* Generate MA key of known curveId */
 	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP256,
 		&statusCode, &pubKey), V2XSE_SUCCESS);
+
+	/* Encrypt data with this key */
+	enc_eciesData.pEccPublicKey = &pubKey;
+	enc_eciesData.curveId = V2XSE_CURVE_NISTP256;
+	enc_eciesData.kdfParamP1Len = 32;
+	memcpy(enc_eciesData.kdfParamP1, eciesP1, sizeof(eciesP1));
+	enc_eciesData.macLen = 16;
+	enc_eciesData.macParamP2Len = 0;
+	enc_eciesData.msgLen = 16;
+	enc_eciesData.pMsgData = &eciesMsg;
+	size = (uint8_t)sizeof(vct);
+	/* Perform encryption */
+	VTEST_CHECK_RESULT(v2xSe_encryptUsingEcies(&enc_eciesData, &statusCode,
+		&size, (TypeVCTData_t*)(vct)), V2XSE_SUCCESS);
+
 	/* Set up ECIES decrypt parameters */
-	dec_eciesData.kdfParamP1Len = 0;
-	dec_eciesData.macLen = 0;
+	dec_eciesData.kdfParamP1Len = 32;
+	memcpy(dec_eciesData.kdfParamP1, eciesP1, sizeof(eciesP1));
+	dec_eciesData.macLen = 16;
 	dec_eciesData.macParamP2Len = 0;
-	dec_eciesData.vctLen = 1;
-	dec_eciesData.pVctData = (TypeVCTData_t*)(&(vct.data));
+	dec_eciesData.vctLen = size;
+	dec_eciesData.pVctData = (TypeVCTData_t*)vct;
+	size = 16;
 	/* Perform decryption */
 	VTEST_CHECK_RESULT(v2xSe_decryptUsingMaEcies(&dec_eciesData,
 			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
@@ -183,7 +219,8 @@ void test_decryptUsingBaEcies(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeInt256_t msg;
-	TypeInt256_t vct;
+	TypeEncryptEcies_t enc_eciesData;
+	uint8_t vct[3*32];
 	TypeLen_t size;
 	TypeDecryptEcies_t dec_eciesData;
 
@@ -191,13 +228,30 @@ void test_decryptUsingBaEcies(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Generate an Ba key to use */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+
+	/* Encrypt data with this key */
+	enc_eciesData.pEccPublicKey = &pubKey;
+	enc_eciesData.curveId = V2XSE_CURVE_NISTP256;
+	enc_eciesData.kdfParamP1Len = 32;
+	memcpy(enc_eciesData.kdfParamP1, eciesP1, sizeof(eciesP1));
+	enc_eciesData.macLen = 16;
+	enc_eciesData.macParamP2Len = 0;
+	enc_eciesData.msgLen = 16;
+	enc_eciesData.pMsgData = &eciesMsg;
+	size = (uint8_t)sizeof(vct);
+	/* Perform encryption */
+	VTEST_CHECK_RESULT(v2xSe_encryptUsingEcies(&enc_eciesData, &statusCode,
+		&size, (TypeVCTData_t*)(vct)), V2XSE_SUCCESS);
+
 	/* Set up ECIES decrypt parameters */
-	dec_eciesData.kdfParamP1Len = 0;
-	dec_eciesData.macLen = 0;
+	dec_eciesData.kdfParamP1Len = 32;
+	memcpy(dec_eciesData.kdfParamP1, eciesP1, sizeof(eciesP1));
+	dec_eciesData.macLen = 16;
 	dec_eciesData.macParamP2Len = 0;
-	dec_eciesData.vctLen = 1;
-	dec_eciesData.pVctData = (TypeVCTData_t*)(&(vct.data));
+	dec_eciesData.vctLen = size;
+	dec_eciesData.pVctData = (TypeVCTData_t*)vct;
+	size = 16;
 	/* Perform decryption */
 	VTEST_CHECK_RESULT(v2xSe_decryptUsingBaEcies(SLOT_ZERO, &dec_eciesData,
 			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
