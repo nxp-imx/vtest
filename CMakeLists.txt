@@ -6,7 +6,6 @@ project (vtest)
 set (vtest_VERSION 0.1)
 
 find_package(v2xsehsm REQUIRED)
-find_package(hsmstub REQUIRED)
 
 configure_file (
 	${PROJECT_SOURCE_DIR}/version.h.in
@@ -43,11 +42,14 @@ target_include_directories (vtest
 	PRIVATE include/se
 	PRIVATE include/ecdsa
 	PRIVATE ../include
+	PRIVATE ${SECO_LIBS_DIR}/include
 	)
 
 target_link_libraries (vtest
 	v2xsehsm
-	hsmstub)
+	${SECO_LIBS_DIR}/hsm_lib.a
+	${ZLIB_DIR}/libz.a
+	)
 
 target_compile_options(vtest PRIVATE -Werror -Wall)
 
