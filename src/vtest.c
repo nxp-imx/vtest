@@ -55,6 +55,7 @@ overallTestStatus_t overallTestStatus = {0,0,0,0,0,0,0};
 
 extern testEntry_t allTests[];
 int getNumTests(void);
+int seClean(void);
 
 /**
  *
@@ -169,6 +170,8 @@ int main(int argc, char* argv[])
 	if (argc == 1) {
 		printf("Running all tests\n");
 	} else if (argc == 2) {
+		if (!strcmp(argv[1], "clean"))
+			return seClean();
 		printf("Running single test\n");
 		minTest = getTestNum(argv[1]);
 		maxTest = minTest;
@@ -181,7 +184,8 @@ int main(int argc, char* argv[])
 		printf("USAGE: vtest\n");
 		printf("       vtest [single test num]\n");
 		printf("       vtest [first test num] [last test num]\n");
-		return -1;
+		printf("       vtest clean\n");
+		return VTEST_FAIL;
 	}
 
 	if ((minTest == VTEST_FAIL) || (maxTest == VTEST_FAIL))

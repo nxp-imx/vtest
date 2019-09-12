@@ -50,6 +50,36 @@
 
 /**
  *
+ * @brief Utility function to remove SE nvm vars and blob
+ *
+ * @return VTEST_FAIL or VTEST_CONF
+ *
+ */
+int seClean(void)
+{
+	int error_seen = 0;
+
+	if (removeNvmVariable(EU_PHASE_FILENAME)) {
+		printf("Error removing EU state\n");
+		error_seen = 1;
+	}
+	if (removeNvmVariable(US_PHASE_FILENAME)) {
+		printf("Error removing US state\n");
+		error_seen = 1;
+	}
+	if (removeNvmVariable("/etc/seco_hsm_nvm")) {
+		printf("Error removing seco_hsm_nvm\n");
+		error_seen = 1;
+	}
+	if (error_seen)
+		return VTEST_FAIL;
+
+	printf("Successfully removed NVM state\n");
+	return VTEST_CONF;
+}
+
+/**
+ *
  * @brief Utility function to place system in INIT state
  *
  * @return VTEST_PASS or VTEST_FAIL
