@@ -54,3 +54,19 @@ target_link_libraries (vtest
 target_compile_options(vtest PRIVATE -Werror -Wall)
 
 install (TARGETS vtest RUNTIME DESTINATION bin)
+
+# Following should be temporary, until seco nvm handler is properly integrated in system
+add_executable (seco_nvm_daemon
+	src/se/seco_nvm_daemon.c
+	)
+
+target_compile_options(seco_nvm_daemon PRIVATE -Werror -Wall)
+target_link_libraries(seco_nvm_daemon
+	${SECO_LIBS_DIR}/seco_nvm_manager.a
+	${SECO_LIBS_DIR}/hsm_lib.a
+	${ZLIB_DIR}/libz.a
+	)
+
+target_include_directories(seco_nvm_daemon PRIVATE ${SECO_LIBS_DIR}/include)
+install (TARGETS seco_nvm_daemon RUNTIME DESTINATION bin)
+install (FILES seco_nvm_daemon.service DESTINATION etc/systemd)
