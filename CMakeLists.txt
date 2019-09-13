@@ -33,6 +33,7 @@ add_executable (vtest
 	src/se/SEdatastorage.c
 	src/se/SEutility.c
 	src/se/SEkeyinjection.c
+	src/se/SEperformance.c
 	src/se/SEmisc.c
 	src/ecdsa/ECDSAplaceholder.c
 	)

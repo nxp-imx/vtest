@@ -35,32 +35,26 @@
 
 /**
  *
- * @file SEsignature.h
+ * @file SEperformance.h
  *
- * @brief Header files for tests for SE Signature (requirements R7.*)
+ * @brief Header file for tests for SE performance (requirements R13.*)
  *
  */
 
-#ifndef SESIGNATURE_H
-#define SESIGNATURE_H
+#ifndef SEPERFORMANCE_H
+#define SEPERFORMANCE_H
 
 /**
- * List of tests from to be run from SEsignature.c
+ * List of tests from to be run from SEperformance.c
  * Tests should be listed in order of incrementing test number
  */
-#define SE_SIGNATURE_TESTS \
-	VTEST_DEFINE_TEST(70101, &test_createBaSign, \
-		"Test v2xSe_createBaSign for expected behaviour")\
-	VTEST_DEFINE_TEST(70201, &test_createMaSign, \
-		"Test v2xSe_createMaSign for expected behaviour")\
-	VTEST_DEFINE_TEST(70301, &test_createRtSignLowLatency, \
-		"Test v2xSe_createRtSignLowLatency for expected behaviour")\
-	VTEST_DEFINE_TEST(70401, &test_createRtSign, \
-		"Test v2xSe_createRtSign for expected behaviour")\
+#define SE_PERFORMANCE_TESTS \
+	VTEST_DEFINE_TEST(130502, &test_sigGenSpeed, \
+		"Test speed of signature generation")\
 
-void test_createBaSign(void);
-void test_createMaSign(void);
-void test_createRtSign(void);
-void test_createRtSignLowLatency(void);
+void test_sigGenSpeed(void);
+
+/** Number of signatures generated during signature generation test */
+#define SIG_SPEED_GEN_NUM 100
 
 #endif

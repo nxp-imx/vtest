@@ -49,6 +49,7 @@
 #include "SEdatastorage.h"
 #include "SEutility.h"
 #include "SEkeyinjection.h"
+#include "SEperformance.h"
 #include "ECDSAplaceholder.h"
 
 /**
@@ -67,6 +68,7 @@ testEntry_t allTests[] = {
 	SE_DATA_STORAGE_TESTS
 	SE_UTILITY_TESTS
 	SE_KEY_INJECTION_TESTS
+	SE_PERFORMANCE_TESTS
 };
 
 /**
