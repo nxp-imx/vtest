@@ -41,6 +41,7 @@
  *
  */
 
+#include <time.h>
 #include <v2xseapi.h>
 #include "vtest.h"
 #include "SEmisc.h"
@@ -961,5 +962,125 @@ void test_activateRtKeyForSigning(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 
 /* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
+}
+
+/**
+ *
+ * @brief Test speed of run time key creation
+ *
+ * This function tests the speed of run time key creation
+ * The following behaviours are tested:
+ *  - key generated in empty slot
+ * TODO: try different key types, update, more keys for better accuracy
+ *
+ */
+void test_rtKeyCreationSpeed(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	int i;
+	struct timespec startTime, endTime;
+	long nsTimeDiff;
+	float keySpeedMs;
+
+/* Measure speed of creating NIST P256 key in empty slot */
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+
+	/* Delete any existing keys, ignore errors if no key present in slot */
+	for (i = 0; i < KEY_SPEED_CREATE_NUM; i++)
+		v2xSe_deleteRtEccPrivateKey(i, &statusCode);
+
+	/* Log start time */
+	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
+		VTEST_FLAG_CONF();
+		return;
+	}
+
+	/* Create the keys */
+	for (i = 0; i < KEY_SPEED_CREATE_NUM; i++)
+		VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(i,
+			V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+								V2XSE_SUCCESS);
+	/* Log end time */
+	if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
+		VTEST_FLAG_CONF();
+		return;
+	}
+
+	/* Calculate elapsed time and key create time */
+	nsTimeDiff = (endTime.tv_sec - startTime.tv_sec) * 1000000000;
+	nsTimeDiff += endTime.tv_nsec;
+	nsTimeDiff -= startTime.tv_nsec;
+	VTEST_LOG("Elapsed time for %d keys: %ld ns\n", KEY_SPEED_CREATE_NUM,
+								nsTimeDiff);
+	keySpeedMs = nsTimeDiff / (float)KEY_SPEED_CREATE_NUM / (float)1000000;
+	VTEST_LOG("Key creation time: %.2f ms\n", keySpeedMs);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+	/* Need to define pass/fail criteria */
+	VTEST_FLAG_CONF();
+}
+
+/**
+ *
+ * @brief Test speed of base key creation
+ *
+ * This function tests the speed of base key creation
+ * The following behaviours are tested:
+ *  - key generated in empty slot
+ * TODO: try different key types, update, more keys for better accuracy
+ *
+ */
+void test_baKeyCreationSpeed(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	int i;
+	struct timespec startTime, endTime;
+	long nsTimeDiff;
+	float keySpeedMs;
+
+/* Measure speed of creating NIST P256 key in empty slot */
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+
+	/* Delete any existing keys, ignore errors if no key present in slot */
+	for (i = 0; i < KEY_SPEED_CREATE_NUM; i++)
+		v2xSe_deleteBaEccPrivateKey(i, &statusCode);
+
+	/* Log start time */
+	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
+		VTEST_FLAG_CONF();
+		return;
+	}
+
+	/* Create the keys */
+	for (i = 0; i < KEY_SPEED_CREATE_NUM; i++)
+		VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(i,
+			V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+								V2XSE_SUCCESS);
+	/* Log end time */
+	if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
+		VTEST_FLAG_CONF();
+		return;
+	}
+
+	/* Calculate elapsed time and key create time */
+	nsTimeDiff = (endTime.tv_sec - startTime.tv_sec) * 1000000000;
+	nsTimeDiff += endTime.tv_nsec;
+	nsTimeDiff -= startTime.tv_nsec;
+	VTEST_LOG("Elapsed time for %d keys: %ld ns\n", KEY_SPEED_CREATE_NUM,
+								nsTimeDiff);
+	keySpeedMs = nsTimeDiff / (float)KEY_SPEED_CREATE_NUM / (float)1000000;
+	VTEST_LOG("Key creation time: %.2f ms\n", keySpeedMs);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+	/* Need to define pass/fail criteria */
 	VTEST_FLAG_CONF();
 }

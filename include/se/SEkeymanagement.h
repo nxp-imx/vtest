@@ -49,25 +49,29 @@
  * Tests should be listed in order of incrementing test number
  */
 #define SE_KEY_MANAGEMENT_TESTS \
-	VTEST_DEFINE_TEST( 60101, &test_generateMaEccKeyPair, \
+	VTEST_DEFINE_TEST(60101, &test_generateMaEccKeyPair, \
 		"Test v2xSe_generateMaEccKeyPair for expected behaviour")\
-	VTEST_DEFINE_TEST( 60301, &test_generateRtEccKeyPair_empty, \
+	VTEST_DEFINE_TEST(60301, &test_generateRtEccKeyPair_empty, \
 		"Test v2xSe_generateRtEccKeyPair for keys in empty slots")\
-	VTEST_DEFINE_TEST( 60302, &test_generateRtEccKeyPair_overwrite, \
+	VTEST_DEFINE_TEST(60302, &test_generateRtEccKeyPair_overwrite, \
 		"Test v2xSe_generateRtEccKeyPair for keys in full slots")\
-	VTEST_DEFINE_TEST( 60401, &test_deleteRtEccPrivateKey, \
+	VTEST_DEFINE_TEST(60304, &test_rtKeyCreationSpeed, \
+		"Test speed of run time key creation")\
+	VTEST_DEFINE_TEST(60401, &test_deleteRtEccPrivateKey, \
 		"Test v2xSe_deleteRtEccPrivateKey for existing keys")\
-	VTEST_DEFINE_TEST( 60601, &test_generateBaEccKeyPair_empty, \
+	VTEST_DEFINE_TEST(60601, &test_generateBaEccKeyPair_empty, \
 		"Test v2xSe_generateBaEccKeyPair for keys in empty slots")\
-	VTEST_DEFINE_TEST( 60602, &test_generateBaEccKeyPair_overwrite, \
+	VTEST_DEFINE_TEST(60602, &test_generateBaEccKeyPair_overwrite, \
 		"Test v2xSe_generateBaEccKeyPair for keys in full slots")\
-	VTEST_DEFINE_TEST( 60701, &test_deleteBaEccPrivateKey, \
+	VTEST_DEFINE_TEST(60604, &test_baKeyCreationSpeed, \
+		"Test speed of base key creation")\
+	VTEST_DEFINE_TEST(60701, &test_deleteBaEccPrivateKey, \
 		"Test v2xSe_deleteBaEccPrivateKey for existing keys")\
-	VTEST_DEFINE_TEST( 60901, &test_deriveRtEccKeyPair_empty, \
+	VTEST_DEFINE_TEST(60901, &test_deriveRtEccKeyPair_empty, \
 		"Test v2xSe_deriveRtEccKeyPair for keys in empty slots")\
-	VTEST_DEFINE_TEST( 60902, &test_deriveRtEccKeyPair_overwrite, \
+	VTEST_DEFINE_TEST(60902, &test_deriveRtEccKeyPair_overwrite, \
 		"Test v2xSe_deriveRtEccKeyPair for keys in full slots")\
-	VTEST_DEFINE_TEST( 61001, &test_activateRtKeyForSigning, \
+	VTEST_DEFINE_TEST(61001, &test_activateRtKeyForSigning, \
 		"Test v2xSe_activateRtKeyForSigning for normal operation")\
 
 void test_generateMaEccKeyPair(void);
@@ -80,5 +84,10 @@ void test_deleteBaEccPrivateKey(void);
 void test_deriveRtEccKeyPair_empty(void);
 void test_deriveRtEccKeyPair_overwrite(void);
 void test_activateRtKeyForSigning(void);
+void test_rtKeyCreationSpeed(void);
+void test_baKeyCreationSpeed(void);
+
+/** Number of keys created during key creation test, limited by hsm */
+#define KEY_SPEED_CREATE_NUM 40
 
 #endif
