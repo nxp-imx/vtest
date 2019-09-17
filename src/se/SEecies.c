@@ -163,6 +163,10 @@ void test_decryptUsingRtEcies(void)
 			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
 								V2XSE_SUCCESS);
 
+	/* Verify message is correctly decrypted */
+	VTEST_CHECK_RESULT(size, 16);
+	VTEST_CHECK_RESULT(memcmp(eciesMsg.data, msg.data, size), 0);
+
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 
@@ -226,6 +230,9 @@ void test_decryptUsingMaEcies(void)
 	VTEST_CHECK_RESULT(v2xSe_decryptUsingMaEcies(&dec_eciesData,
 			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
 								V2XSE_SUCCESS);
+	/* Verify message is correctly decrypted */
+	VTEST_CHECK_RESULT(size, 16);
+	VTEST_CHECK_RESULT(memcmp(eciesMsg.data, msg.data, size), 0);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -286,6 +293,9 @@ void test_decryptUsingBaEcies(void)
 	VTEST_CHECK_RESULT(v2xSe_decryptUsingBaEcies(SLOT_ZERO, &dec_eciesData,
 			&statusCode, &size, (TypePlainText_t*)(&(msg.data))),
 								V2XSE_SUCCESS);
+	/* Verify message is correctly decrypted */
+	VTEST_CHECK_RESULT(size, 16);
+	VTEST_CHECK_RESULT(memcmp(eciesMsg.data, msg.data, size), 0);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
