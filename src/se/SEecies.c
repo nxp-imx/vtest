@@ -42,7 +42,7 @@
  */
 
 #include <string.h>
-#include <v2xseapi.h>
+#include <v2xSe.h>
 #include "vtest.h"
 #include "SEmisc.h"
 #include "SEecies.h"

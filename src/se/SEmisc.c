@@ -44,7 +44,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <v2xseapi.h>
+#include <v2xSe.h>
 #include "vtest.h"
 #include "SEmisc.h"
 
