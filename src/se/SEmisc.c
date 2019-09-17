@@ -71,6 +71,7 @@ int seClean(void)
 		printf("Error removing seco_hsm_nvm\n");
 		error_seen = 1;
 	}
+	sync();
 	if (error_seen)
 		return VTEST_FAIL;
 
