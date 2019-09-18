@@ -42,8 +42,9 @@ add_executable (vtest
 target_include_directories (vtest
 	PRIVATE include
 	PRIVATE include/se
-	PRIVATE include/ecdsa
+	PRIVATE include/ecc
 	PRIVATE ../include
+	PRIVATE ${DISP_SRC}/../../inc
 	PRIVATE ${SECO_LIBS_DIR}/include
 	)
 
@@ -51,6 +52,9 @@ target_link_libraries (vtest
 	v2xCrypto
 	${SECO_LIBS_DIR}/hsm_lib.a
 	${ZLIB_DIR}/libz.a
+	${DISP_SRC}/libNxDispatcher.so.0.1
+	pthread
+	rt
 	)
 
 target_compile_options(vtest PRIVATE -Werror -Wall)
