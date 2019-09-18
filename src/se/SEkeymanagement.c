@@ -956,7 +956,7 @@ void test_activateRtKeyForSigning(void)
 	/* Create signature */
 	VTEST_CHECK_RESULT(v2xSe_createRtSignLowLatency(&hash, &statusCode,
 				&signature, &fastIndicator), V2XSE_SUCCESS);
-	VTEST_CHECK_RESULT(fastIndicator, 1);
+	VTEST_CHECK_RESULT(fastIndicator, 0);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
