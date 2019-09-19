@@ -72,4 +72,3 @@ target_link_libraries(seco_nvm_daemon
 
 target_include_directories(seco_nvm_daemon PRIVATE ${SECO_LIBS_DIR}/include)
 install (TARGETS seco_nvm_daemon RUNTIME DESTINATION bin)
-install (FILES seco_nvm_daemon.service DESTINATION etc/systemd)
