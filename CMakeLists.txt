@@ -19,8 +19,10 @@ configure_file(
 	)
 
 add_custom_target(doc
-	COMMAND doxygen ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	COMMAND doxygen Doxyfile
+	COMMAND make -C doxygen/latex pdf
+	COMMAND mv doxygen/latex/refman.pdf vtest_api_manual.pdf
 	VERBATIM)
 
 add_executable (vtest
