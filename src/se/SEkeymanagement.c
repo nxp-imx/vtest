@@ -41,6 +41,7 @@
  *
  */
 
+#include <string.h>
 #include <time.h>
 #include <v2xSe.h>
 #include "vtest.h"
@@ -66,7 +67,8 @@
 void test_generateMaEccKeyPair(void)
 {
 	TypeSW_t statusCode;
-	TypePublicKey_t pubKey;
+	TypePublicKey_t pubKey_create;
+	TypePublicKey_t pubKey_retrieve;
 	TypeCurveId_t curveId;
 
 /* Test MA key can be generated and retrieved for EU applet */
@@ -79,11 +81,13 @@ void test_generateMaEccKeyPair(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Create MA key */
 	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP256,
-		&statusCode, &pubKey), V2XSE_SUCCESS);
+				&statusCode, &pubKey_create), V2XSE_SUCCESS);
 	/* Retrieve MA public key */
 	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
-						&pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+					&pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
 
 /* Test MA key can be generated and retrieved for US applet */
@@ -96,11 +100,13 @@ void test_generateMaEccKeyPair(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
 	/* Create MA key */
 	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_BP256R1,
-		&statusCode, &pubKey), V2XSE_SUCCESS);
+				&statusCode, &pubKey_create), V2XSE_SUCCESS);
 	/* Retrieve MA public key */
 	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
-						&pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+					&pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
 
 /* Test MA key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
@@ -112,11 +118,13 @@ void test_generateMaEccKeyPair(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Create MA key */
 	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_BP256T1,
-		&statusCode, &pubKey), V2XSE_SUCCESS);
+				&statusCode, &pubKey_create), V2XSE_SUCCESS);
 	/* Retrieve MA public key */
 	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
-						&pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+					&pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 
 /* Test MA key for curve V2XSE_CURVE_NISTP384 can be generated and retrieved */
@@ -128,11 +136,13 @@ void test_generateMaEccKeyPair(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Create MA key */
 	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP384,
-		&statusCode, &pubKey), V2XSE_SUCCESS);
+				&statusCode, &pubKey_create), V2XSE_SUCCESS);
 	/* Retrieve MA public key */
 	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
-						&pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+					&pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP384);
 
 /* Test MA key for curve V2XSE_CURVE_BP384R1 can be generated and retrieved */
@@ -144,11 +154,13 @@ void test_generateMaEccKeyPair(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Create MA key */
 	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_BP384R1,
-		&statusCode, &pubKey), V2XSE_SUCCESS);
+				&statusCode, &pubKey_create), V2XSE_SUCCESS);
 	/* Retrieve MA public key */
 	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
-						&pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+					&pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384R1);
 
 /* Test MA key for curve V2XSE_CURVE_BP384T1 can be generated and retrieved */
@@ -160,15 +172,70 @@ void test_generateMaEccKeyPair(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 	/* Create MA key */
 	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_BP384T1,
-		&statusCode, &pubKey), V2XSE_SUCCESS);
+				&statusCode, &pubKey_create), V2XSE_SUCCESS);
 	/* Retrieve MA public key */
 	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
-						&pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+					&pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test v2xSe_getMaEccPublicKey for expected behaviour
+ *
+ * This function tests v2xSe_generateMaEccKeyPair for expected behaviour
+ * The following behaviours are tested:
+ *  - MA public key retrieved is different from RT and BA pubkeys
+ * NOTE: key retrieval of all types tested in test_generateMaEccKeyPair
+ *
+ */
+void test_getMaEccPublicKey(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey_MA;
+	TypePublicKey_t pubKey_discard;
+	TypePublicKey_t pubKey_different;
+	TypeCurveId_t curveId;
+
+/* MA public key retrieved is different from RT and BA pubkeys */
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode, EU applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+	/* Create MA key */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP256,
+				&statusCode, &pubKey_discard), V2XSE_SUCCESS);
+	/* Retrieve MA public key */
+	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
+						&pubKey_MA), V2XSE_SUCCESS);
+	/* Generate RT key */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_discard),
+								V2XSE_SUCCESS);
+	/* Retrieve Rt public key */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
+				&curveId, &pubKey_different), V2XSE_SUCCESS);
+	/* Verify key contents are different to MA key */
+	VTEST_CHECK_RESULT(!memcmp(&pubKey_MA, &pubKey_different,
+						sizeof(TypePublicKey_t)), 0);
+	/* Create Ba key */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_discard),
+								V2XSE_SUCCESS);
+	/* Retrieve Ba public key */
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
+				&curveId, &pubKey_different), V2XSE_SUCCESS);
+	/* Verify key contents are different to MA key */
+	VTEST_CHECK_RESULT(!memcmp(&pubKey_MA, &pubKey_different,
+						sizeof(TypePublicKey_t)), 0);
 }
 
 /**
@@ -190,7 +257,8 @@ void test_generateMaEccKeyPair(void)
 void test_generateRtEccKeyPair_empty(void)
 {
 	TypeSW_t statusCode;
-	TypePublicKey_t pubKey;
+	TypePublicKey_t pubKey_create;
+	TypePublicKey_t pubKey_retrieve;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
 
@@ -208,11 +276,14 @@ void test_generateRtEccKeyPair_empty(void)
 	v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
 
 /* Test Rt key can be generated and retrieved for US applet */
@@ -224,11 +295,14 @@ void test_generateRtEccKeyPair_empty(void)
 	v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT, &statusCode);
 	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(NON_ZERO_SLOT, &statusCode,
-		&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
@@ -237,11 +311,14 @@ void test_generateRtEccKeyPair_empty(void)
 	v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT, &statusCode);
 	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 
 /* Go back to init to leave system in known state after test */
@@ -267,7 +344,8 @@ void test_generateRtEccKeyPair_empty(void)
 void test_generateRtEccKeyPair_overwrite(void)
 {
 	TypeSW_t statusCode;
-	TypePublicKey_t pubKey;
+	TypePublicKey_t pubKey_create;
+	TypePublicKey_t pubKey_retrieve;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
 
@@ -283,14 +361,18 @@ void test_generateRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Create Rt key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
 
 /* Test Rt key can be generated and retrieved for US applet */
@@ -300,28 +382,36 @@ void test_generateRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
 	/* Create Rt key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(NON_ZERO_SLOT, &statusCode,
-		&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Rt key can be generated and retrieved in max slot */
 	/* Create Rt key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 
 /* Go back to init to leave system in known state after test */
@@ -411,6 +501,54 @@ void test_deleteRtEccPrivateKey(void)
 
 /**
  *
+ * @brief Test v2xSe_getRtEccPublicKey for expected behaviour
+ *
+ * This function tests v2xSe_generateRtEccKeyPair for expected behaviour
+ * The following behaviours are tested:
+ *  - Pubkey retrieved from different slots match created keys
+ *  - Pubkey retrieved from different slots are different
+ * NOTE: key retrieval of all types tested in test_generateRtEccKeyPair
+ *
+ */
+void test_getRtEccPublicKey(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey_Rt1;
+	TypePublicKey_t pubKey_Rt2;
+	TypePublicKey_t pubKey_retrieve;
+	TypeCurveId_t curveId;
+
+/* Test Pubkey retrieved from different slots match created keys */
+/* Pubkey retrieved from different slots are different */
+	/* Move to ACTIVATED state, normal operating mode, EU applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+	/* Generate RT key 1 */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_Rt1),
+								V2XSE_SUCCESS);
+	/* Generate RT key 2 */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_Rt2),
+								V2XSE_SUCCESS);
+	/* Retrieve Rt1 public key */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_Rt1, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
+	/* Retrieve Rt2 public key */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(NON_ZERO_SLOT, &statusCode,
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_Rt2, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
+	/* Verify keys are different - already compared to Rt1/Rt2 */
+	VTEST_CHECK_RESULT(!memcmp(&pubKey_Rt1, &pubKey_Rt2,
+						sizeof(TypePublicKey_t)), 0);
+}
+
+/**
+ *
  * @brief Test v2xSe_generateBaEccKeyPair for keys in empty slots
  *
  * This function tests v2xSe_generateBaEccKeyPair for keys in empty slots
@@ -431,7 +569,8 @@ void test_deleteRtEccPrivateKey(void)
 void test_generateBaEccKeyPair_empty(void)
 {
 	TypeSW_t statusCode;
-	TypePublicKey_t pubKey;
+	TypePublicKey_t pubKey_create;
+	TypePublicKey_t pubKey_retrieve;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
 
@@ -449,11 +588,14 @@ void test_generateBaEccKeyPair_empty(void)
 	v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
 
 /* Test Ba key can be generated and retrieved for US applet */
@@ -465,11 +607,14 @@ void test_generateBaEccKeyPair_empty(void)
 	v2xSe_deleteBaEccPrivateKey(NON_ZERO_SLOT, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(NON_ZERO_SLOT, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
 
 /* Test Ba key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
@@ -478,11 +623,14 @@ void test_generateBaEccKeyPair_empty(void)
 	v2xSe_deleteBaEccPrivateKey(MAX_BA_SLOT, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_BA_SLOT, &statusCode,
-		&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 
 /* Test Ba key for curve V2XSE_CURVE_NISTP384 can be generated and retrieved */
@@ -490,11 +638,14 @@ void test_generateBaEccKeyPair_empty(void)
 	v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_NISTP384, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP384, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP384);
 
 /* Test Ba key for curve V2XSE_CURVE_BP384R1 can be generated and retrieved */
@@ -502,11 +653,14 @@ void test_generateBaEccKeyPair_empty(void)
 	v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP384R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP384R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384R1);
 
 /* Test Ba key for curve V2XSE_CURVE_BP384T1 can be generated and retrieved */
@@ -514,11 +668,14 @@ void test_generateBaEccKeyPair_empty(void)
 	v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP384T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP384T1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
 
 /* Go back to init to leave system in known state after test */
@@ -547,7 +704,8 @@ void test_generateBaEccKeyPair_empty(void)
 void test_generateBaEccKeyPair_overwrite(void)
 {
 	TypeSW_t statusCode;
-	TypePublicKey_t pubKey;
+	TypePublicKey_t pubKey_create;
+	TypePublicKey_t pubKey_retrieve;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
 
@@ -563,14 +721,18 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(seInfo.maxBaKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Create Ba key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
 
 /* Test Ba key can be generated and retrieved for US applet */
@@ -580,67 +742,87 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
 	/* Create Ba key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(NON_ZERO_SLOT, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
 
 /* Test Ba key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Ba key can be generated and retrieved in max slot */
 	/* Create Ba key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_BA_SLOT, &statusCode,
-		&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 
 /* Test Ba key for curve V2XSE_CURVE_NISTP384 can be generated and retrieved */
 	/* Create Ba key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_NISTP384, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP384, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP384);
 
 /* Test Ba key for curve V2XSE_CURVE_BP384R1 can be generated and retrieved */
 	/* Create Ba key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP384R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP384R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384R1);
 
 /* Test Ba key for curve V2XSE_CURVE_BP384T1 can be generated and retrieved */
 	/* Create Ba key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP384T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP384T1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
 
 /* Go back to init to leave system in known state after test */
@@ -730,6 +912,54 @@ void test_deleteBaEccPrivateKey(void)
 
 /**
  *
+ * @brief Test v2xSe_getBaEccPublicKey for expected behaviour
+ *
+ * This function tests v2xSe_generateBaEccKeyPair for expected behaviour
+ * The following behaviours are tested:
+ *  - Pubkey retrieved from different slots match created keys
+ *  - Pubkey retrieved from different slots are different
+ * NOTE: key retrieval of all types tested in test_generateBaEccKeyPair
+ *
+ */
+void test_getBaEccPublicKey(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey_Ba1;
+	TypePublicKey_t pubKey_Ba2;
+	TypePublicKey_t pubKey_retrieve;
+	TypeCurveId_t curveId;
+
+/* Test Pubkey retrieved from different slots match created keys */
+/* Pubkey retrieved from different slots are different */
+	/* Move to ACTIVATED state, normal operating mode, EU applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+	/* Generate BA key 1 */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_Ba1),
+								V2XSE_SUCCESS);
+	/* Generate BA key 2 */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_Ba2),
+								V2XSE_SUCCESS);
+	/* Retrieve Ba1 public key */
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_Ba1, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
+	/* Retrieve Ba2 public key */
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(NON_ZERO_SLOT, &statusCode,
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_Ba2, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
+	/* Verify keys are different */
+	VTEST_CHECK_RESULT(!memcmp(&pubKey_Ba1, &pubKey_Ba2,
+						sizeof(TypePublicKey_t)), 0);
+}
+
+/**
+ *
  * @brief Test v2xSe_deriveRtEccKeyPair for keys in empty slots
  *
  * This function tests v2xSe_deriveRtEccKeyPair for keys in empty slots
@@ -745,7 +975,8 @@ void test_deleteBaEccPrivateKey(void)
 void test_deriveRtEccKeyPair_empty(void)
 {
 	TypeSW_t statusCode;
-	TypePublicKey_t pubKey;
+	TypePublicKey_t pubKey_create;
+	TypePublicKey_t pubKey_retrieve;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
 	TypeInt256_t data1;
@@ -770,17 +1001,20 @@ void test_deriveRtEccKeyPair_empty(void)
 	v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Generate Ba key to use in derivation - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Derive Rt key */
 	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(MAX_RT_SLOT, &data1,
 		&data2,	&data3, SLOT_ZERO, V2XSE_RSP_WITH_PUBKEY, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
+				&curveId, &pubKey_create), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
-		&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256R1 can be derived and retrieved */
@@ -789,17 +1023,20 @@ void test_deriveRtEccKeyPair_empty(void)
 	v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT, &statusCode);
 	/* Generate Ba key to use in derivation - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Derive Rt key */
 	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(SLOT_ZERO, &data1, &data2,
 		&data3,	NON_ZERO_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
+				&curveId, &pubKey_create), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(NON_ZERO_SLOT, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be derived and retrieved */
@@ -808,17 +1045,20 @@ void test_deriveRtEccKeyPair_empty(void)
 	v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT, &statusCode);
 	/* Generate Ba key to use in derivation - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Derive Rt key */
 	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(SLOT_ZERO, &data1, &data2,
 		&data3,	MAX_RT_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
+				&curveId, &pubKey_create), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 
 /* Go back to init to leave system in known state after test */
@@ -842,7 +1082,8 @@ void test_deriveRtEccKeyPair_empty(void)
 void test_deriveRtEccKeyPair_overwrite(void)
 {
 	TypeSW_t statusCode;
-	TypePublicKey_t pubKey;
+	TypePublicKey_t pubKey_create;
+	TypePublicKey_t pubKey_retrieve;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
 	TypeInt256_t data1;
@@ -865,60 +1106,72 @@ void test_deriveRtEccKeyPair_overwrite(void)
 /* Test Rt key can be derived and retrieved in slot 0 */
 	/* Create Rt key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Generate Ba key to use in derivation - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Derive Rt key */
 	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(MAX_RT_SLOT, &data1,
 		&data2,	&data3, SLOT_ZERO, V2XSE_RSP_WITH_PUBKEY, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
+				&curveId, &pubKey_create), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
-		&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256R1 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in non-zero slot */
 	/* Create Rt key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Generate Ba key to use in derivation - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Derive Rt key */
 	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(SLOT_ZERO, &data1, &data2,
 		&data3,	NON_ZERO_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
+				&curveId, &pubKey_create), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(NON_ZERO_SLOT, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in max slot */
 	/* Create Rt key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Generate Ba key to use in derivation - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
+								V2XSE_SUCCESS);
 	/* Derive Rt key */
 	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(SLOT_ZERO, &data1, &data2,
 		&data3,	MAX_RT_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
+				&curveId, &pubKey_create), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 	/* Retrieve Rt public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
-					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Verify curveId is correct */
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 
 /* Go back to init to leave system in known state after test */

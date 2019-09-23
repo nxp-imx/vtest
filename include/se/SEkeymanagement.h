@@ -51,6 +51,8 @@
 #define SE_KEY_MANAGEMENT_TESTS \
 	VTEST_DEFINE_TEST(60101, &test_generateMaEccKeyPair, \
 		"Test v2xSe_generateMaEccKeyPair for expected behaviour")\
+	VTEST_DEFINE_TEST(60201, &test_getMaEccPublicKey, \
+		"Test v2xSe_getMaEccPublicKey for expected behaviour")\
 	VTEST_DEFINE_TEST(60301, &test_generateRtEccKeyPair_empty, \
 		"Test v2xSe_generateRtEccKeyPair for keys in empty slots")\
 	VTEST_DEFINE_TEST(60302, &test_generateRtEccKeyPair_overwrite, \
@@ -59,6 +61,8 @@
 		"Test speed of run time key creation")\
 	VTEST_DEFINE_TEST(60401, &test_deleteRtEccPrivateKey, \
 		"Test v2xSe_deleteRtEccPrivateKey for existing keys")\
+	VTEST_DEFINE_TEST(60501, &test_getRtEccPublicKey, \
+		"Test v2xSe_getRtEccPublicKey for expected behaviour")\
 	VTEST_DEFINE_TEST(60601, &test_generateBaEccKeyPair_empty, \
 		"Test v2xSe_generateBaEccKeyPair for keys in empty slots")\
 	VTEST_DEFINE_TEST(60602, &test_generateBaEccKeyPair_overwrite, \
@@ -67,6 +71,8 @@
 		"Test speed of base key creation")\
 	VTEST_DEFINE_TEST(60701, &test_deleteBaEccPrivateKey, \
 		"Test v2xSe_deleteBaEccPrivateKey for existing keys")\
+	VTEST_DEFINE_TEST(60801, &test_getBaEccPublicKey, \
+		"Test v2xSe_getBaEccPublicKey for expected behaviour")\
 	VTEST_DEFINE_TEST(60901, &test_deriveRtEccKeyPair_empty, \
 		"Test v2xSe_deriveRtEccKeyPair for keys in empty slots")\
 	VTEST_DEFINE_TEST(60902, &test_deriveRtEccKeyPair_overwrite, \
@@ -75,12 +81,15 @@
 		"Test v2xSe_activateRtKeyForSigning for normal operation")\
 
 void test_generateMaEccKeyPair(void);
+void test_getMaEccPublicKey(void);
 void test_generateRtEccKeyPair_empty(void);
 void test_generateRtEccKeyPair_overwrite(void);
 void test_deleteRtEccPrivateKey(void);
+void test_getRtEccPublicKey(void);
 void test_generateBaEccKeyPair_empty(void);
 void test_generateBaEccKeyPair_overwrite(void);
 void test_deleteBaEccPrivateKey(void);
+void test_getBaEccPublicKey(void);
 void test_deriveRtEccKeyPair_empty(void);
 void test_deriveRtEccKeyPair_overwrite(void);
 void test_activateRtKeyForSigning(void);
