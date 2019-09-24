@@ -46,33 +46,127 @@
 #include "SEmisc.h"
 #include "SEsignature.h"
 
+/** Data to calculate signature on for tests */
+TypeHash_t testHash = {
+	.data = {
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+		0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+		0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+		0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
+		0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F
+	}
+};
+
 /**
  *
  * @brief Test v2xSe_createBaSign for expected behaviour
  *
  * This function tests v2xSe_createBaSign for expected behaviour
  * The following behaviours are tested:
+ *  - Valid signature can be generated for EU applet
+ *  - Valid signature can be generated for US applet
+ *  - Valid signature for curve V2XSE_CURVE_NISTP256 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP256R1 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP256T1 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_NISTP384 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP384R1 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP384T1 can be generated
+ *  - Valid signature can be generated using key in slot 0
+ *  - Valid signature can be generated using key in non-zero slot
+ *  - Valid signature can be generated using key in max slot
  *  - signature generated with valid inputs
- * TODO: try different algs, verify signature, different slots...
  *
  */
 void test_createBaSign(void)
 {
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
-	TypeHash_t hash;
 	TypeSignature_t signature;
+	TypeInformation_t seInfo;
 
-	/* Create dummy hash data */
-	hash.data[0] = 14;
-	/* Move to ACTIVATED state, normal operating mode */
+/* Test Valid signature can be generated for EU applet */
+/* Test Valid signature for curve V2XSE_CURVE_NISTP256 can be generated */
+/* Test Valid signature can be generated using key in slot 0 */
+	/* Move to ACTIVATED state, normal operating mode, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
-	/* Make sure BA key exists */
+	/* Get SE info, to know max data slot available */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+	/* Check that test constant is in correct range */
+	VTEST_CHECK_RESULT(seInfo.maxBaKeysAllowed <= NON_ZERO_SLOT, 0);
+	/* Create BA key in slot 0 */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Create signature */
-	VTEST_CHECK_RESULT(v2xSe_createBaSign(SLOT_ZERO, 32, &hash,
-		&statusCode, &signature), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_createBaSign(SLOT_ZERO,
+		V2XSE_256_EC_HASH_SIZE, &testHash, &statusCode, &signature),
+								V2XSE_SUCCESS);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Test Valid signature can be generated for US applet */
+/* Test Valid signature for curve V2XSE_CURVE_NISTP256 can be generated */
+/* Test Valid signature can be generated using key in non-zero slot */
+	/* Move to ACTIVATED state, normal operating mode, US applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
+	/* Create BA key in non-zero slot */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
+		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createBaSign(NON_ZERO_SLOT,
+		V2XSE_256_EC_HASH_SIZE, &testHash, &statusCode, &signature),
+								V2XSE_SUCCESS);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_BP256T1 can be generated */
+/* Test Valid signature can be generated using key in max slot */
+	/* Create BA key in max slot */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createBaSign(MAX_BA_SLOT,
+		V2XSE_256_EC_HASH_SIZE, &testHash, &statusCode, &signature),
+								V2XSE_SUCCESS);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(MAX_BA_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_NISTP384 can be generated */
+	/* Create BA key */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_NISTP384, &statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createBaSign(SLOT_ZERO,
+		V2XSE_384_EC_HASH_SIZE, &testHash, &statusCode, &signature),
+								V2XSE_SUCCESS);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_BP384R1 can be generated */
+	/* Create BA key */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_BP384R1, &statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createBaSign(SLOT_ZERO,
+		V2XSE_384_EC_HASH_SIZE, &testHash, &statusCode, &signature),
+								V2XSE_SUCCESS);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_BP384T1 can be generated */
+	/* Create BA key */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_BP384T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createBaSign(SLOT_ZERO,
+		V2XSE_384_EC_HASH_SIZE, &testHash, &statusCode, &signature),
+								V2XSE_SUCCESS);
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
 								V2XSE_SUCCESS);
@@ -90,21 +184,26 @@ void test_createBaSign(void)
  *
  * This function tests v2xSe_createMaSign for expected behaviour
  * The following behaviours are tested:
- *  - signature generated with valid inputs
- * TODO: try different algs, verify signature, different applet...
+ *  - Valid signature can be generated for EU applet
+ *  - Valid signature can be generated for US applet
+ *  - Valid signature for curve V2XSE_CURVE_NISTP256 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP256R1 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP256T1 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_NISTP384 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP384R1 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP384T1 can be generated
  *
-  */
+ */
 void test_createMaSign(void)
 {
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
-	TypeHash_t hash;
 	TypeSignature_t signature;
 
-	/* Create dummy hash data */
-	hash.data[0] = 15;
+/* Test Valid signature can be generated for EU applet */
+/* Test Valid signature for curve V2XSE_CURVE_NISTP256 can be generated */
 	/* Move to INIT state */
-	VTEST_CHECK_RESULT(setupInitState(),VTEST_PASS);
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force reset of all keys */
 	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
 	/* Move to ACTIVATED state, normal operating mode */
@@ -113,8 +212,79 @@ void test_createMaSign(void)
 	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP256,
 					&statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Create signature */
-	VTEST_CHECK_RESULT( v2xSe_createMaSign(32, &hash, &statusCode,
-						&signature), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_createMaSign(V2XSE_256_EC_HASH_SIZE,
+			&testHash, &statusCode,	&signature), V2XSE_SUCCESS);
+
+/* Test Valid signature can be generated for US applet */
+/* Test Valid signature for curve V2XSE_CURVE_BP256R1 can be generated */
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(US_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
+	/* Generate MA key of known curveId */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_BP256R1,
+					&statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createMaSign(V2XSE_256_EC_HASH_SIZE,
+			&testHash, &statusCode,	&signature), V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_BP256T1 can be generated */
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+	/* Generate MA key of known curveId */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_BP256T1,
+					&statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createMaSign(V2XSE_256_EC_HASH_SIZE,
+			&testHash, &statusCode,	&signature), V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_NISTP384 can be generated */
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+	/* Generate MA key of known curveId */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP384,
+					&statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createMaSign(V2XSE_384_EC_HASH_SIZE,
+			&testHash, &statusCode,	&signature), V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_BP384R1 can be generated */
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+	/* Generate MA key of known curveId */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_BP384R1,
+					&statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createMaSign(V2XSE_384_EC_HASH_SIZE,
+			&testHash, &statusCode,	&signature), V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_BP384T1 can be generated */
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+	/* Generate MA key of known curveId */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_BP384T1,
+					&statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createMaSign(V2XSE_384_EC_HASH_SIZE,
+			&testHash, &statusCode,	&signature), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -129,34 +299,81 @@ void test_createMaSign(void)
  *
  * This function tests v2xSe_createRtSignLowLatency for expected behaviour
  * The following behaviours are tested:
- *  - signature generated with valid inputs
- * TODO: try different algs, verify signature, different slots...
+ *  - Valid signature can be generated for EU applet
+ *  - Valid signature can be generated for US applet
+ *  - Valid signature for curve V2XSE_CURVE_NISTP256 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP256R1 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP256T1 can be generated
+ *  - Valid signature can be generated using key in slot 0
+ *  - Valid signature can be generated using key in non-zero slot
+ *  - Valid signature can be generated using key in max slot
  *
  */
 void test_createRtSignLowLatency(void)
 {
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
-	TypeHash_t hash;
 	TypeSignature_t signature;
 	TypeLowlatencyIndicator_t fastIndicator;
+	TypeInformation_t seInfo;
 
-	/* Create dummy hash data */
-	hash.data[0] = 17;
-	/* Move to ACTIVATED state, normal operating mode */
+/* Test Valid signature can be generated for EU applet */
+/* Test Valid signature for curve V2XSE_CURVE_NISTP256 can be generated */
+/* Test Valid signature can be generated using key in slot 0 */
+	/* Move to ACTIVATED state, normal operating mode, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
-	/* Make sure RT key exists */
+	/* Get SE info, to know max data slot available */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+	/* Check that test constant is in correct range */
+	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
+	/* Create Rt key in slot 0 */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Activate key for low latency signature */
+	VTEST_CHECK_RESULT(v2xSe_activateRtKeyForSigning(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createRtSignLowLatency(&testHash, &statusCode,
+				&signature, &fastIndicator), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(fastIndicator, 0);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Test Valid signature can be generated for US applet */
+/* Test Valid signature for curve V2XSE_CURVE_BP256R1 can be generated */
+/* Test Valid signature can be generated using key in non-zero slot */
+	/* Move to ACTIVATED state, normal operating mode, EU applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
+	/* Create Rt key in non-zero slot */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Activate key for low latency signature */
 	VTEST_CHECK_RESULT(v2xSe_activateRtKeyForSigning(NON_ZERO_SLOT,
 						&statusCode), V2XSE_SUCCESS);
 	/* Create signature */
-	VTEST_CHECK_RESULT(v2xSe_createRtSignLowLatency(&hash, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_createRtSignLowLatency(&testHash, &statusCode,
 				&signature, &fastIndicator), V2XSE_SUCCESS);
 	VTEST_CHECK_RESULT(fastIndicator, 0);
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_BP256T1 can be generated */
+/* Test Valid signature can be generated using key in non-zero slot */
+	/* Create Rt key in max slot */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Activate key for low latency signature */
+	VTEST_CHECK_RESULT(v2xSe_activateRtKeyForSigning(MAX_RT_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createRtSignLowLatency(&testHash, &statusCode,
+				&signature, &fastIndicator), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(fastIndicator, 0);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
 						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
@@ -172,29 +389,68 @@ void test_createRtSignLowLatency(void)
  *
  * This function tests v2xSe_createRtSign for expected behaviour
  * The following behaviours are tested:
- *  - signature generated with valid inputs
- * TODO: try different algs, verify signature, different slots...
+ *  - Valid signature can be generated for EU applet
+ *  - Valid signature can be generated for US applet
+ *  - Valid signature for curve V2XSE_CURVE_NISTP256 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP256R1 can be generated
+ *  - Valid signature for curve V2XSE_CURVE_BP256T1 can be generated
+ *  - Valid signature can be generated using key in slot 0
+ *  - Valid signature can be generated using key in non-zero slot
+ *  - Valid signature can be generated using key in max slot
  *
  */
 void test_createRtSign(void)
 {
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
-	TypeHash_t hash;
 	TypeSignature_t signature;
+	TypeInformation_t seInfo;
 
-	/* Create dummy hash data */
-	hash.data[0] = 16;
-	/* Move to ACTIVATED state, normal operating mode */
+/* Test Valid signature can be generated for EU applet */
+/* Test Valid signature for curve V2XSE_CURVE_NISTP256 can be generated */
+/* Test Valid signature can be generated using key in slot 0 */
+	/* Move to ACTIVATED state, normal operating mode, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
-	/* Make sure RT key exists */
+	/* Get SE info, to know max data slot available */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+	/* Check that test constant is in correct range */
+	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
+	/* Create Rt key in slot 0 */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createRtSign(SLOT_ZERO, &testHash,
+				&statusCode, &signature), V2XSE_SUCCESS);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Test Valid signature can be generated for US applet */
+/* Test Valid signature for curve V2XSE_CURVE_BP256R1 can be generated */
+/* Test Valid signature can be generated using key in non-zero slot */
+	/* Move to ACTIVATED state, normal operating mode, EU applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
+	/* Create Rt key in non-zero slot */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Create signature */
-	VTEST_CHECK_RESULT(v2xSe_createRtSign(NON_ZERO_SLOT, &hash,
+	VTEST_CHECK_RESULT(v2xSe_createRtSign(NON_ZERO_SLOT, &testHash,
 				&statusCode, &signature), V2XSE_SUCCESS);
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_BP256T1 can be generated */
+/* Test Valid signature can be generated using key in non-zero slot */
+	/* Create Rt key in max slot */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createRtSign(MAX_RT_SLOT, &testHash,
+				&statusCode, &signature), V2XSE_SUCCESS);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
 						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
