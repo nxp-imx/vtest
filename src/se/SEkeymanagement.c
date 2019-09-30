@@ -203,7 +203,7 @@ void test_generateRtEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
-	VTEST_CHECK_RESULT(seInfo.maxDataSlots <= NON_ZERO_SLOT, 0);
+	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Delete existing Rt key (ignore error if key does not exist) */
 	v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Rt key */
@@ -234,12 +234,12 @@ void test_generateRtEccKeyPair_empty(void)
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Rt key can be generated and retrieved in max slot */
 	/* Delete existing Rt key (ignore error if key does not exist) */
-	v2xSe_deleteRtEccPrivateKey(MAX_SLOT, &statusCode);
+	v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT, &statusCode);
 	/* Create Rt key */
-	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
-	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
@@ -280,7 +280,7 @@ void test_generateRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
-	VTEST_CHECK_RESULT(seInfo.maxDataSlots <= NON_ZERO_SLOT, 0);
+	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Create Rt key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
@@ -313,13 +313,13 @@ void test_generateRtEccKeyPair_overwrite(void)
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Rt key can be generated and retrieved in max slot */
 	/* Create Rt key - may overwrite */
-	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Create Rt key */
-	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
-	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
@@ -359,7 +359,7 @@ void test_deleteRtEccPrivateKey(void)
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
-	VTEST_CHECK_RESULT(seInfo.maxDataSlots <= NON_ZERO_SLOT, 0);
+	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Create Rt key in slot 0 - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
@@ -393,16 +393,16 @@ void test_deleteRtEccPrivateKey(void)
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
 	/* Create Rt key - may overwrite */
-	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
-	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Delete key in max slot */
-	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_SLOT, &statusCode),
-								V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 	/* Verify can no longer retrieve key in max slot */
-	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
 					&curveId, &pubKey), V2XSE_FAILURE);
 
 /* Go back to init to leave system in known state after test */
@@ -444,7 +444,7 @@ void test_generateBaEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
-	VTEST_CHECK_RESULT(seInfo.maxDataSlots <= NON_ZERO_SLOT, 0);
+	VTEST_CHECK_RESULT(seInfo.maxBaKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Delete existing Ba key (ignore error if key does not exist) */
 	v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Ba key */
@@ -475,12 +475,12 @@ void test_generateBaEccKeyPair_empty(void)
 /* Test Ba key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Ba key can be generated and retrieved in max slot */
 	/* Delete existing Ba key (ignore error if key does not exist) */
-	v2xSe_deleteBaEccPrivateKey(MAX_SLOT, &statusCode);
+	v2xSe_deleteBaEccPrivateKey(MAX_BA_SLOT, &statusCode);
 	/* Create Ba key */
-	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
-	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_BA_SLOT, &statusCode,
 		&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
@@ -560,7 +560,7 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
-	VTEST_CHECK_RESULT(seInfo.maxDataSlots <= NON_ZERO_SLOT, 0);
+	VTEST_CHECK_RESULT(seInfo.maxBaKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Create Ba key - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
@@ -593,13 +593,13 @@ void test_generateBaEccKeyPair_overwrite(void)
 /* Test Ba key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Ba key can be generated and retrieved in max slot */
 	/* Create Ba key - may overwrite */
-	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Create Ba key */
-	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
-	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_BA_SLOT, &statusCode,
 		&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
@@ -678,7 +678,7 @@ void test_deleteBaEccPrivateKey(void)
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
-	VTEST_CHECK_RESULT(seInfo.maxDataSlots <= NON_ZERO_SLOT, 0);
+	VTEST_CHECK_RESULT(seInfo.maxBaKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Create Ba key in slot 0 - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
@@ -712,16 +712,16 @@ void test_deleteBaEccPrivateKey(void)
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
 	/* Create Ba key - may overwrite */
-	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
-	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_BA_SLOT, &statusCode,
 		&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Delete key in max slot */
-	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(MAX_SLOT, &statusCode),
-								V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(MAX_BA_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 	/* Verify can no longer retrieve key in max slot */
-	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(MAX_BA_SLOT, &statusCode,
 					&curveId, &pubKey), V2XSE_FAILURE);
 
 /* Go back to init to leave system in known state after test */
@@ -758,7 +758,7 @@ void test_deriveRtEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
-	VTEST_CHECK_RESULT(seInfo.maxDataSlots <= NON_ZERO_SLOT, 0);
+	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Set up key derivation parameters */
 	data1.data[0] = 1;
 	data2.data[0] = 2;
@@ -769,11 +769,11 @@ void test_deriveRtEccKeyPair_empty(void)
 	/* Delete existing Rt key (ignore error if key does not exist) */
 	v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Generate Ba key to use in derivation - may overwrite */
-	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Derive Rt key */
-	VTEST_CHECK_RESULT( v2xSe_deriveRtEccKeyPair(MAX_SLOT, &data1, &data2,
-		&data3, SLOT_ZERO, V2XSE_RSP_WITH_PUBKEY, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(MAX_RT_SLOT, &data1,
+		&data2,	&data3, SLOT_ZERO, V2XSE_RSP_WITH_PUBKEY, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
@@ -805,18 +805,18 @@ void test_deriveRtEccKeyPair_empty(void)
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in max slot */
 	/* Delete existing Rt key (ignore error if key does not exist) */
-	v2xSe_deleteRtEccPrivateKey(MAX_SLOT, &statusCode);
+	v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT, &statusCode);
 	/* Generate Ba key to use in derivation - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Derive Rt key */
 	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(SLOT_ZERO, &data1, &data2,
-		&data3,	MAX_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode, &curveId,
-						&pubKey), V2XSE_SUCCESS);
+		&data3,	MAX_RT_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode,
+					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 	/* Retrieve Rt public key */
-	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
@@ -855,7 +855,7 @@ void test_deriveRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
-	VTEST_CHECK_RESULT(seInfo.maxDataSlots <= NON_ZERO_SLOT, 0);
+	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
 	/* Set up key derivation parameters */
 	data1.data[0] = 1;
 	data2.data[0] = 2;
@@ -867,11 +867,11 @@ void test_deriveRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Generate Ba key to use in derivation - may overwrite */
-	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Derive Rt key */
-	VTEST_CHECK_RESULT( v2xSe_deriveRtEccKeyPair(MAX_SLOT, &data1, &data2,
-		&data3, SLOT_ZERO, V2XSE_RSP_WITH_PUBKEY, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(MAX_RT_SLOT, &data1,
+		&data2,	&data3, SLOT_ZERO, V2XSE_RSP_WITH_PUBKEY, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
@@ -904,19 +904,19 @@ void test_deriveRtEccKeyPair_overwrite(void)
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in max slot */
 	/* Create Rt key - may overwrite */
-	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Generate Ba key to use in derivation - may overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Derive Rt key */
 	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(SLOT_ZERO, &data1, &data2,
-		&data3,	MAX_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode, &curveId,
-						&pubKey), V2XSE_SUCCESS);
+		&data3,	MAX_RT_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode,
+					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 	/* Retrieve Rt public key */
-	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_SLOT, &statusCode,
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);

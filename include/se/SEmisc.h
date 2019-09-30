@@ -56,8 +56,12 @@
 #define SLOT_ZERO	0
 /** Index of a non-zero nvm slot */
 #define NON_ZERO_SLOT	1234
-/** Index of last nvm slot */
-#define MAX_SLOT	(seInfo.maxDataSlots - 1)
+/** Index of last data nvm slot */
+#define MAX_DATA_SLOT	(seInfo.maxDataSlots - 1)
+/** Index of last RT nvm slot */
+#define MAX_RT_SLOT	(seInfo.maxRtKeysAllowed - 1)
+/** Index of last BA nvm slot */
+#define MAX_BA_SLOT	(seInfo.maxBaKeysAllowed - 1)
 
 int setupInitState(void);
 int setupConnectedState(void);

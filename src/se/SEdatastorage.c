@@ -110,11 +110,11 @@ void test_storeData_getData(void)
 	/* Store test string in max slot */
 	memcpy(dataStorage_write, TEST_STRING_MAX_SLOT,
 					strlen(TEST_STRING_MAX_SLOT)+1);
-	VTEST_CHECK_RESULT(v2xSe_storeData(MAX_SLOT,
+	VTEST_CHECK_RESULT(v2xSe_storeData(MAX_DATA_SLOT,
 		strlen(TEST_STRING_MAX_SLOT)+1,	(uint8_t*)TEST_STRING_MAX_SLOT,
 						&statusCode), V2XSE_SUCCESS);
 	/* Retrieve stored string from max slot */
-	VTEST_CHECK_RESULT(v2xSe_getData(MAX_SLOT, &size, dataStorage_read,
+	VTEST_CHECK_RESULT(v2xSe_getData(MAX_DATA_SLOT, &size, dataStorage_read,
 						&statusCode), V2XSE_SUCCESS);
 	/* Verify retrieved string */
 	VTEST_CHECK_RESULT( (size != (strlen(TEST_STRING_MAX_SLOT)+1)) ||
