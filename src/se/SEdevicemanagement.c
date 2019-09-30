@@ -278,6 +278,8 @@ void test_getAppletVersion(void)
  * The following behaviours are tested:
  *  - info returned in correct format for EU applet
  *  - info returned in correct format for US applet
+ *  - info returned in correct format for EU and GS applet
+ *  - info returned in correct format for US and GS applet
  *
  */
 void test_getSeInfo(void)
@@ -304,10 +306,13 @@ void test_getSeInfo(void)
 	/* Verify format (expected non-zero values are non-zero) */
 	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
 				!seInfo.maxBaKeysAllowed ||
-				!seInfo.numPreparedVal ||
-				!seInfo.rtKeyDerivation ||
+				seInfo.numPreparedVal ||
+				seInfo.fipsModeIndicator ||
+				seInfo.proofOfPossession ||
+				!seInfo.rollBackProtection ||
+				seInfo.rtKeyDerivation ||
 				!seInfo.eciesSupport ||
-				!seInfo.maxDataSlots),
+				seInfo.maxDataSlots),
 					0);
 
 /* Test info format for US applet */
@@ -330,7 +335,64 @@ void test_getSeInfo(void)
 	/* Verify format (expected non-zero values are non-zero) */
 	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
 				!seInfo.maxBaKeysAllowed ||
-				!seInfo.numPreparedVal ||
+				seInfo.numPreparedVal ||
+				!seInfo.rtKeyDerivation ||
+				!seInfo.eciesSupport ||
+				seInfo.maxDataSlots),
+					0);
+
+/* Test info format for EU applet */
+	/* Move to ACTIVATED state with EU and GS applet */
+	VTEST_CHECK_RESULT(setupActivatedState(e_EU_AND_GS), VTEST_PASS);
+	/* Retrieve EU applet SE info */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+	VTEST_LOG("EU applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d",
+					seInfo.maxRtKeysAllowed,
+					seInfo.maxBaKeysAllowed,
+					seInfo.numPreparedVal,
+					seInfo.fipsModeIndicator,
+					seInfo.proofOfPossession,
+					seInfo.rollBackProtection,
+					seInfo.rtKeyDerivation,
+					seInfo.eciesSupport,
+					seInfo.maxDataSlots);
+	/* Verify format (expected non-zero values are non-zero) */
+	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
+				!seInfo.maxBaKeysAllowed ||
+				seInfo.numPreparedVal ||
+				seInfo.fipsModeIndicator ||
+				seInfo.proofOfPossession ||
+				!seInfo.rollBackProtection ||
+				seInfo.rtKeyDerivation ||
+				!seInfo.eciesSupport ||
+				!seInfo.maxDataSlots),
+					0);
+
+/* Test info format for US applet */
+	/* Move to ACTIVATED state with US and GS applet */
+	VTEST_CHECK_RESULT(setupActivatedState(e_US_AND_GS), VTEST_PASS);
+	/* Retrieve US applet SE info */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+	VTEST_LOG("US applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d",
+					seInfo.maxRtKeysAllowed,
+					seInfo.maxBaKeysAllowed,
+					seInfo.numPreparedVal,
+					seInfo.fipsModeIndicator,
+					seInfo.proofOfPossession,
+					seInfo.rollBackProtection,
+					seInfo.rtKeyDerivation,
+					seInfo.eciesSupport,
+					seInfo.maxDataSlots);
+	/* Verify format (expected non-zero values are non-zero) */
+	/* Verify format (expected non-zero values are non-zero) */
+	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
+				!seInfo.maxBaKeysAllowed ||
+				seInfo.numPreparedVal ||
+				seInfo.fipsModeIndicator ||
+				seInfo.proofOfPossession ||
+				!seInfo.rollBackProtection ||
 				!seInfo.rtKeyDerivation ||
 				!seInfo.eciesSupport ||
 				!seInfo.maxDataSlots),
