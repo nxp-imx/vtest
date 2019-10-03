@@ -152,6 +152,31 @@ int setupActivatedState(appletSelection_t appId)
 
 /**
  *
+ * @brief Utility function to place system in ACTIVATED state with sec level 5
+ *
+ * @param appId applet(s) to be selected during activation
+ *
+ * @return VTEST_PASS or VTEST_FAIL
+ *
+ */
+int setupActivatedStateSecurityLevel5(appletSelection_t appId)
+{
+	TypeSW_t statusCode;
+
+	/* Move to INIT state first as known starting point */
+	if (v2xSe_reset() != V2XSE_SUCCESS)
+		return VTEST_FAIL;
+
+	/* Move to ACTIVATED state */
+	if (v2xSe_activateWithSecurityLevel(appId, e_channelSecLevel_5,
+						&statusCode) != V2XSE_SUCCESS)
+		return VTEST_FAIL;
+
+	return VTEST_PASS;
+}
+
+/**
+ *
  * @brief Utility function to place system in ACTIVATED state, normal phase
  *
  * @param appId applet(s) to be selected during activation
@@ -161,33 +186,26 @@ int setupActivatedState(appletSelection_t appId)
  */
 int setupActivatedNormalState(appletSelection_t appId)
 {
-	int32_t retVal;
 	TypeSW_t statusCode;
 	uint8_t phase;
 
-	/* Move to INIT state first as known starting point */
-	retVal = v2xSe_reset();
-	if (retVal != V2XSE_SUCCESS) {
+	/* Need security level 5 to query current phase */
+	if (setupActivatedStateSecurityLevel5(appId) != V2XSE_SUCCESS)
 		return VTEST_FAIL;
-	}
-	/* Move to ACTIVATED state */
-	retVal = v2xSe_activate(appId, &statusCode);
-	if (retVal != V2XSE_SUCCESS) {
-		return VTEST_FAIL;
-	}
-	/* Check if already normal operating phase */
-	retVal = v2xSe_getSePhase(&phase, &statusCode);
-	if (retVal != V2XSE_SUCCESS) {
-		return VTEST_FAIL;
-	}
-	if (phase == V2XSE_NORMAL_OPERATING_PHASE)
-		return VTEST_PASS;
 
-	/* Need to end key injection */
-	retVal = v2xSe_endKeyInjection(&statusCode);
-	if (retVal != V2XSE_SUCCESS) {
+	/* Get phase */
+	if (v2xSe_getSePhase(&phase, &statusCode) != V2XSE_SUCCESS)
 		return VTEST_FAIL;
-	}
+
+	/* Move to normal operation phase if not already there */
+	if (phase != V2XSE_NORMAL_OPERATING_PHASE)
+		if(v2xSe_endKeyInjection(&statusCode) != V2XSE_SUCCESS)
+			return VTEST_FAIL;
+
+	/* Set up normal low security level activation */
+	if (setupActivatedState(appId) != V2XSE_SUCCESS)
+		return VTEST_FAIL;
+
 	return VTEST_PASS;
 }
 

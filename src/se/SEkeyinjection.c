@@ -66,8 +66,8 @@ void test_endKeyInjection(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force reset of phase */
 	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
-	/* Move to ACTIVATED state */
-	VTEST_CHECK_RESULT(setupActivatedState(e_EU),VTEST_PASS);
+	/* Move to ACTIVATED state with security level 5 */
+	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_EU), VTEST_PASS);
 	/* Verify SE phase is key injection */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
@@ -86,8 +86,8 @@ void test_endKeyInjection(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force reset of phase */
 	VTEST_CHECK_RESULT(removeNvmVariable(US_PHASE_FILENAME), VTEST_PASS);
-	/* Move to ACTIVATED state */
-	VTEST_CHECK_RESULT(setupActivatedState(e_US),VTEST_PASS);
+	/* Move to ACTIVATED state with security level 5 */
+	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_US), VTEST_PASS);
 	/* Verify SE phase is key injection */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);

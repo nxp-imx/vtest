@@ -66,6 +66,7 @@
 int setupInitState(void);
 int setupConnectedState(void);
 int setupActivatedState(appletSelection_t appId);
+int setupActivatedStateSecurityLevel5(appletSelection_t appId);
 int setupActivatedNormalState(appletSelection_t appId);
 int removeNvmVariable(char *filename);
 

@@ -113,7 +113,7 @@ void test_connect_negative(void)
  * This function tests v2xSe_activate for expected behaviour
  * The following conditions are tested:
  *  - v2xSe_activate moves from INIT to ACTIVATED state
- *  - v2xSe_activate sets security level to default (5)
+ *  - v2xSe_activate sets security level to default (1)
  *  - v2xSe_activate works for US applet
  *  - v2xSe_activate works for EU applet
  *  - v2xSe_activate works for US & GS applet
@@ -134,9 +134,9 @@ void test_activate(void)
 	VTEST_CHECK_RESULT(v2xSe_activate(e_US, &statusCode), VTEST_PASS);
 	/* Verify really in ACTIVATED state (based on error code) */
 	VTEST_CHECK_RESULT(v2xSe_connect(), V2XSE_FAILURE_ACTIVATED);
-	/* Verify security level is 5 (getSePhase only works then) */
+	/* Verify security level is <5 (getSePhase only works for 5) */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
-								V2XSE_SUCCESS);
+								V2XSE_FAILURE);
 	/* Verify GS applet not activated */
 	VTEST_CHECK_RESULT(v2xSe_storeData(SLOT_ZERO, sizeof(dummyData),
 				&dummyData, &statusCode), V2XSE_FAILURE);
@@ -965,8 +965,8 @@ void test_getSePhase_keyinject(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force return to key injection phase */
 	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
-	/* Move to ACTIVATED state with EU applet */
-	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
+	/* Move to ACTIVATED state with EU applet & security level 5 */
+	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_EU), VTEST_PASS);
 	/* Verify SE phase reading */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
@@ -978,8 +978,8 @@ void test_getSePhase_keyinject(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force return to key injection phase */
 	VTEST_CHECK_RESULT(removeNvmVariable(US_PHASE_FILENAME), VTEST_PASS);
-	/* Move to ACTIVATED state with US applet */
-	VTEST_CHECK_RESULT(setupActivatedState(e_US), VTEST_PASS);
+	/* Move to ACTIVATED state with US applet & security level 5 */
+	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_US), VTEST_PASS);
 	/* Verify SE phase reading */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
@@ -1008,6 +1008,8 @@ void test_getSePhase_normal(void)
 /* Test expected value returned in normal operating phase for EU applet */
 	/* Move to ACTIVATED state, normal operating mode, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+	/* Now move to security level 5 to be able to read phase */
+	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_EU), VTEST_PASS);
 	/* Verify SE phase reading */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
@@ -1017,6 +1019,8 @@ void test_getSePhase_normal(void)
 /* Test expected value returned in normal operating phase for US applet */
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
+	/* Now move to security level 5 to be able to read phase */
+	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_US), VTEST_PASS);
 	/* Verify SE phase reading */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
