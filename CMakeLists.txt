@@ -49,7 +49,7 @@ target_include_directories (vtest
 	)
 
 target_link_libraries (vtest
-	v2xsehsm
+	v2xCrypto
 	${SECO_LIBS_DIR}/hsm_lib.a
 	${ZLIB_DIR}/libz.a
 	)
