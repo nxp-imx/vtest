@@ -522,7 +522,7 @@ void test_getAppletVersion(void)
 						version.data[1],
 						version.data[2]);
 	/* Verify format (generation digit) */
-	VTEST_CHECK_RESULT(version.data[0], EXPECTED_VERSION_GENERATION);
+	VTEST_CHECK_RESULT(version.data[0], EXPECTED_MAJOR_VERSION);
 
 /* Test correct version format for US applet */
 	/* Move to ACTIVATED state with US + storage applets */
@@ -535,7 +535,7 @@ void test_getAppletVersion(void)
 						version.data[1],
 						version.data[2]);
 	/* Verify format (generation digit) */
-	VTEST_CHECK_RESULT(version.data[0], EXPECTED_VERSION_GENERATION);
+	VTEST_CHECK_RESULT(version.data[0], EXPECTED_MAJOR_VERSION);
 
 /* Test correct version format for storage applet */
 	/* Retrieve storage applet version */
@@ -545,7 +545,7 @@ void test_getAppletVersion(void)
 						version.data[1],
 						version.data[2]);
 	/* Verify format (generation digit) */
-	VTEST_CHECK_RESULT(version.data[0], EXPECTED_VERSION_GENERATION);
+	VTEST_CHECK_RESULT(version.data[0], EXPECTED_MAJOR_VERSION);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -702,7 +702,7 @@ void test_getCryptoLibVersion(void)
 						version.data[1],
 						version.data[2]);
 	/* Verify format (generation digit) */
-	VTEST_CHECK_RESULT(version.data[0], EXPECTED_VERSION_GENERATION);
+	VTEST_CHECK_RESULT(version.data[0], EXPECTED_MAJOR_VERSION);
 }
 
 /**

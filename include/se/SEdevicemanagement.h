@@ -44,8 +44,8 @@
 #ifndef SEDEVICEMANAGEMENT_H
 #define SEDEVICEMANAGEMENT_H
 
-/** All version numbers are expected to start with 3.xxxxx */
-#define EXPECTED_VERSION_GENERATION	3
+/** All version numbers are expected to start with 0.xxxxx */
+#define EXPECTED_MAJOR_VERSION	0
 /** Maximum size of data allowed for v2xSe_sendReceive */
 #define V2XSE_MAX_TX_RX_SIZE 261
 
