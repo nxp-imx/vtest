@@ -215,7 +215,8 @@ int main(int argc, char* argv[])
 
 	if (overallTestStatus.numTestsFail) {
 		return VTEST_FAIL;
-	} else if (overallTestStatus.numTestsConf) {
+	} else if (overallTestStatus.numTestsConf ||
+					(overallTestStatus.numTestsRun == 0)) {
 		return VTEST_CONF;
 	} else {
 		return VTEST_PASS;
