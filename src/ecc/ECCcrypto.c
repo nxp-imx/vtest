@@ -48,6 +48,7 @@
 
 static volatile int count_async = ASYNC_COUNT_RESET;
 
+#define PUBKEY_COORD_SIZE    32
 #define MEMCMP_IDENTICAL      0
 #define HASH_MSG_SIZE         7
 
@@ -87,6 +88,51 @@ static uint8_t sign_ver_s[32] = {
 	          0xEF, 0x34, 0xD1, 0xDE, 0x93, 0x6B, 0xC8, 0x39,
 	          0x44, 0x86, 0xFD, 0x6F, 0x64, 0x26, 0x7A, 0xE6
 	          };
+/*
+ * Dataset for public key decompression tests
+ */
+/*
+ * X-coordinate of public key
+ * this will be the Y input for the test
+ */
+static uint8_t pubKey_x[32] = {
+	          0x3c, 0x23, 0xa9, 0x76, 0x3a, 0x2f, 0x12, 0xbb,
+	          0x12, 0xe8, 0xde, 0xee, 0xb2, 0x69, 0x1c, 0x9e,
+	          0x79, 0x00, 0x30, 0xb7, 0xfc, 0x2e, 0xcf, 0xad,
+	          0xe3, 0x1e, 0x99, 0x51, 0x5b, 0x8b, 0xf1, 0x44
+	          };
+/*
+ * Y-coordinate of public key before decompression test:
+ * this will be the Y input for the test.
+ * The first byte is:
+ *     - 0x00 if LSB of Y-coordinate is 0
+ *     - 0x01 if LSB of Y-coordinate is 1
+ */
+static uint8_t pubKey_y[32] = {
+	          0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	          };
+/*
+ * Y-coordinate of public key: this is the expected output
+ */
+static uint8_t pubKey_y_exp[32] = {
+	          0xed, 0x61, 0x30, 0x99, 0x9e, 0xe0, 0x2f, 0x23,
+	          0x10, 0x63, 0xf1, 0x40, 0x0c, 0x0a, 0xd1, 0x8c,
+	          0x02, 0x54, 0xbb, 0x24, 0xe8, 0x51, 0xaa, 0x52,
+	          0xdc, 0x4b, 0x27, 0x92, 0x4f, 0xcb, 0x06, 0x6d
+	          };
+/*
+ * Y-coordinate of public key before decompression test:
+ * this will be the Y input for the negative test.
+ */
+static uint8_t pubKey_y_neg[32] = {
+	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	          };
 
 /**
  * @brief   Signature verification callback: positive test
@@ -120,6 +166,47 @@ void disp_VerifSigOfHashCallback_negative(void *sequence_number,
 	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT(verification_result,
 		DISP_VERIFRES_ERROR_VERIFICATION);
+}
+
+/**
+ * @brief   Public key decompression callback: positive test
+ *
+ * @param[in]  sequence_number       sequence operation id (not used?)
+ * @param[out] ret                   returned value by the dispatcher
+ * @param[out] pubKey_decompressed   decompressed public key
+ *
+ */
+void my_disp_DecompressPubKeyCallback(void *sequence_number,
+	disp_ReturnValue_t ret,
+	disp_PubKey_t *pubKey_decompressed)
+{
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	/* Compare decompressed and expected Y-coordinate */
+	VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
+		(const void *) pubKey_y_exp, PUBKEY_COORD_SIZE),
+		MEMCMP_IDENTICAL);
+}
+
+/**
+ * @brief   Public key decompression callback: negative test
+ *
+ * @param[in]  sequence_number       sequence operation id (not used?)
+ * @param[out] ret                   returned value by the dispatcher
+ * @param[out] pubKey_decompressed   decompressed public key
+ *
+ */
+void my_disp_DecompressPubKeyCallback_negative(void *sequence_number,
+	disp_ReturnValue_t ret,
+	disp_PubKey_t *pubKey_decompressed)
+{
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	/*
+	 * Compare decompressed and expected Y-coordinate
+	 * This time if memcmp is not 0, the test PASS
+	 */
+	VTEST_CHECK_RESULT(!memcmp((const void *) pubKey_decompressed->y,
+		(const void *) pubKey_y_exp, PUBKEY_COORD_SIZE),
+		MEMCMP_IDENTICAL);
 }
 
 /**
@@ -173,6 +260,47 @@ void ecc_test_signature_verification_negative(void)
 		DISP_CURVE_NISTP256, &pubKey, hash, &sig,
 		disp_VerifSigOfHashCallback_negative), DISP_RETVAL_NO_ERROR,
 		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Positive test of disp_ecc_decompressPublicKey with NISTP256
+ *
+ */
+void ecc_test_pubkey_decompression(void)
+{
+	disp_PubKey_t pubKey;
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+
+	pubKey.x = pubKey_x;
+	pubKey.y = pubKey_y;
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_decompressPublicKey((void *)0, 0,
+		DISP_CURVE_NISTP256, &pubKey, my_disp_DecompressPubKeyCallback),
+		DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Negative test of disp_ecc_decompressPublicKey with NISTP256
+ *
+ */
+void ecc_test_pubkey_decompression_negative(void)
+{
+	disp_PubKey_t pubKey;
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+
+	pubKey.x = pubKey_x;
+	pubKey.y = pubKey_y_neg;
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_decompressPublicKey((void *)0, 0,
+		DISP_CURVE_NISTP256, &pubKey,
+		my_disp_DecompressPubKeyCallback_negative),
+		DISP_RETVAL_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
