@@ -1,0 +1,10 @@
+Software Content Register
+--------------------------------------------
+Package:                     vtest v0.1.0
+Outgoing License:            BSD-3-Clause
+License File:                BSD-3-Clause.txt
+Package Category:            Security
+Type of Content:             Source code
+Description and comments:    Test application for V2X ECDSA and SE API
+Release Location:            CAF (TBD)
+Origin:                      NXP (BSD-3-Clause)
