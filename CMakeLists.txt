@@ -37,6 +37,7 @@ add_executable (vtest
 	src/se/SEkeyinjection.c
 	src/se/SEperformance.c
 	src/se/SEmisc.c
+	src/ecc/ECCcrypto.c
 	)
 
 target_include_directories (vtest

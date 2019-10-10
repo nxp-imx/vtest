@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2019 NXP
  */
@@ -35,50 +34,34 @@
 
 /**
  *
- * @file testlist.c
+ * @file ECCcrypto.h
  *
- * @brief Defines list of all tests that can be run
+ * @brief Header file for tests for ECC cryptography (requirements R3.*)
  *
  */
 
-#include "vtest.h"
-#include "ECCcrypto.h"
-#include "SEdevicemanagement.h"
-#include "SEkeymanagement.h"
-#include "SEsignature.h"
-#include "SEecies.h"
-#include "SEdatastorage.h"
-#include "SEutility.h"
-#include "SEkeyinjection.h"
-#include "SEperformance.h"
+#ifndef ECC_CRYPTO_H
+#define ECC_CRYPTO_H
 
-/**
- * @brief Array containing entries for all avialable tests
- *
- * This array containts an entry for each available test.
- * Tests should be placed in the following array in order of test
- * number
- */
-testEntry_t allTests[] = {
-	ECC_CRYPTO_TESTS
-	SE_DEVICE_MANAGEMENT_TESTS
-	SE_KEY_MANAGEMENT_TESTS
-	SE_SIGNATURE_TESTS
-	SE_ECIES_TESTS
-	SE_DATA_STORAGE_TESTS
-	SE_UTILITY_TESTS
-	SE_KEY_INJECTION_TESTS
-	SE_PERFORMANCE_TESTS
-};
+#include <stdint.h>
 
-/**
- *
- * @brief Utility function get total number of available tests
- *
- * @return total number of available tests
- *
- */
-int getNumTests(void)
-{
-	return sizeof(allTests)/sizeof(testEntry_t);
-}
+#define ECC_CRYPTO_TESTS \
+	VTEST_DEFINE_TEST(30101, &ecc_test_signature_verification,            \
+		"Test signature verification")                                \
+	VTEST_DEFINE_TEST(30102, &ecc_test_signature_verification_negative,   \
+		"Test signature verification failure")                        \
+	VTEST_DEFINE_TEST(30103, &ecc_test_signature_verification_message,    \
+		"Test signature verification of a message")                   \
+	VTEST_DEFINE_TEST(30104, &ecc_test_signature_verification_key,        \
+		"Test signature verification with key storage")               \
+	VTEST_DEFINE_TEST(30105, &ecc_test_signature_verification_key_of_msg, \
+		"Test signature verification of a message with key storage")  \
+
+void ecc_test_signature_verification(void);
+void ecc_test_signature_verification_negative(void);
+void ecc_test_signature_verification_message(void);
+void ecc_test_signature_verification_key(void);
+void ecc_test_signature_verification_key_of_msg(void);
+
+#endif /* ECC_CRYPTO_H */
+
