@@ -134,6 +134,25 @@ static uint8_t pubKey_y_neg[32] = {
 	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	          };
 
+/*
+ * Dataset for sha256 tests
+ */
+/* msg is "message" */
+static uint8_t sha256_msg[HASH_MSG_SIZE] = {
+	          0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65
+	          };
+/* Expected hash of "message" using SHA256 */
+static uint8_t sha256_hash_exp[32] = {
+	          0xab, 0x53, 0x0a, 0x13, 0xe4, 0x59, 0x14, 0x98,
+	          0x2b, 0x79, 0xf9, 0xb7, 0xe3, 0xfb, 0xa9, 0x94,
+	          0xcf, 0xd1, 0xf3, 0xfb, 0x22, 0xf7, 0x1c, 0xea,
+	          0x1a, 0xfb, 0xf0, 0x2b, 0x46, 0x0c, 0x6d, 0x1d
+	          };
+/* msg is "messagg": this is used for negative test */
+static uint8_t sha256_msg_neg[HASH_MSG_SIZE] = {
+	          0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x67
+	          };
+
 /**
  * @brief   Signature verification callback: positive test
  *
@@ -302,6 +321,39 @@ void ecc_test_pubkey_decompression_negative(void)
 		my_disp_DecompressPubKeyCallback_negative),
 		DISP_RETVAL_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Positive test of disp_SHA256
+ *
+ */
+void ecc_test_hash(void)
+{
+	uint8_t sha256_hash_got[32];
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	disp_SHA256((const void *) sha256_msg, HASH_MSG_SIZE, sha256_hash_got);
+	VTEST_CHECK_RESULT(memcmp((const void *) sha256_hash_exp,
+		(const void *) sha256_hash_got, 32), MEMCMP_IDENTICAL);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Negative test of disp_SHA256
+ *
+ */
+void ecc_test_hash_negative(void)
+{
+	uint8_t sha256_hash_got[32];
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	disp_SHA256((const void *) sha256_msg_neg, HASH_MSG_SIZE,
+		sha256_hash_got);
+	VTEST_CHECK_RESULT(!memcmp((const void *) sha256_hash_exp,
+		(const void *) sha256_hash_got, 32), MEMCMP_IDENTICAL);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 

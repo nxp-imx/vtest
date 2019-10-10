@@ -60,6 +60,10 @@
 		"Test public key decompression")                              \
 	VTEST_DEFINE_TEST(30107, &ecc_test_pubkey_decompression_negative,     \
 		"Test public key decompression failure")                      \
+	VTEST_DEFINE_TEST(30108, &ecc_test_hash,                              \
+		"Test hash functions")                                        \
+	VTEST_DEFINE_TEST(30109, &ecc_test_hash_negative,                     \
+		"Test hash functions failure")                                \
 
 void ecc_test_signature_verification(void);
 void ecc_test_signature_verification_negative(void);
@@ -68,6 +72,8 @@ void ecc_test_signature_verification_key(void);
 void ecc_test_signature_verification_key_of_msg(void);
 void ecc_test_pubkey_decompression(void);
 void ecc_test_pubkey_decompression_negative(void);
+void ecc_test_hash(void);
+void ecc_test_hash_negative(void);
 
 #endif /* ECC_CRYPTO_H */
 
