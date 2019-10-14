@@ -35,7 +35,7 @@
 
 /**
  *
- * @file vtest_async.c
+ * @file vtest_async.h
  *
  * @brief Header file for V2X test asynchronous application
  *
@@ -48,28 +48,29 @@
 #include <unistd.h>
 #include "vtest.h"
 
-/* Count value */
+/** Count value for async calls */
 #define ASYNC_COUNT_RESET 0
 
-/* Define time unit in us*/
+/** 1ms time unit in us*/
 #define TIME_UNIT_1_MS  1000
+/** 10ms time unit in us*/
 #define TIME_UNIT_10_MS 10000
 
-/* This is used to call async API */
+/** Macro used to call async API */
 #define VTEST_CHECK_RESULT_ASYNC_INC(got, exp, count)                      \
 do {                                                                       \
 	checkResult( __FILE__, __LINE__, got, exp);                        \
 	count++;                                                           \
 } while (0)                                                                \
 
-/* This is used to signal a return from async API calls */
+/** Macro used to signal a return from async API calls */
 #define VTEST_CHECK_RESULT_ASYNC_DEC(got, exp, count)                      \
 do {                                                                       \
 	checkResult( __FILE__, __LINE__, got, exp);                        \
 	count--;                                                           \
 } while (0)                                                                \
 
-/* This is used to wait returns from async API calls */
+/** Macro used to wait returns from async API calls */
 #define VTEST_CHECK_RESULT_ASYNC_WAIT(count, time)                         \
 do {                                                                       \
 	usleep(time);                                                      \

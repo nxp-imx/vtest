@@ -43,6 +43,10 @@
 #ifndef ECCLIFECYCLE_H
 #define ECCLIFECYCLE_H
 
+/**
+ * List of tests from to be run from ECClifecycle.c
+ * Tests should be listed in order of incrementing test number
+ */
 #define ECC_LIFECYCLE_TESTS \
 	VTEST_DEFINE_TEST(20101, &ecc_test_disp_ping,	 \
 		"Test disp_ping for expected behaviour") \
@@ -51,4 +55,3 @@ void ecc_test_disp_ping(void);
 
 
 #endif /* ECCLIFECYCLE_H */
-

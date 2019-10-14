@@ -45,6 +45,10 @@
 
 #include <stdint.h>
 
+/**
+ * List of tests from to be run from ECCcrypto.c
+ * Tests should be listed in order of incrementing test number
+ */
 #define ECC_CRYPTO_TESTS \
 	VTEST_DEFINE_TEST(30101, &ecc_test_signature_verification,            \
 		"Test signature verification")                                \
@@ -76,4 +80,3 @@ void ecc_test_hash(void);
 void ecc_test_hash_negative(void);
 
 #endif /* ECC_CRYPTO_H */
-

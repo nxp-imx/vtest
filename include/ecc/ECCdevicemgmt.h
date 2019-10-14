@@ -43,21 +43,31 @@
 #ifndef ECCDEVICEMGMT_H
 #define ECCDEVICEMGMT_H
 
-/* Dispatcher version */
+/** Dispatcher version - major */
 #define DISP_MAJOR_VERSION 0
+/** Dispatcher version - minor */
 #define DISP_MINOR_VERSION 1
+/** Dispatcher version - patch */
 #define DISP_PATCH_VERSION 0
 
-/* Library version */
+/** Library version - major */
 #define LIB_MAJOR_VERSION 0
+/** Library version - minor */
 #define LIB_MINOR_VERSION 1
+/** Library version - patch */
 #define LIB_PATCH_VERSION 0
 
-/* LLC driver version: must be 0.0.0 since it is not used */
+/** LLC driver version - major : must be 0 since it is not used */
 #define LLC_MAJOR_VERSION 0
+/** LLC driver version - minor : must be 0 since it is not used */
 #define LLC_MINOR_VERSION 0
+/** LLC driver version - ptach : must be 0 since it is not used */
 #define LLC_PATCH_VERSION 0
 
+/**
+ * List of tests from to be run from ECCdevicemgmt.c
+ * Tests should be listed in order of incrementing test number
+ */
 #define ECC_DEVICEMGMT_TESTS \
 	VTEST_DEFINE_TEST(10101, &ecc_test_activate,                    \
 		"Test initialization of ECC dispatcher")                \
