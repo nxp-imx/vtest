@@ -42,6 +42,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <v2xSe.h>
@@ -67,8 +68,8 @@ int seClean(void)
 		printf("Error removing US state\n");
 		error_seen = 1;
 	}
-	if (removeNvmVariable("/etc/seco_hsm_nvm")) {
-		printf("Error removing seco_hsm_nvm\n");
+	if (system("rm /etc/seco_hsm/*")) {
+		printf("Error removing seco blob files\n");
 		error_seen = 1;
 	}
 	sync();
