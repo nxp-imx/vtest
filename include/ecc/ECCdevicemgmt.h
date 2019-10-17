@@ -46,7 +46,7 @@
 /** Dispatcher version - major */
 #define DISP_MAJOR_VERSION 0
 /** Dispatcher version - minor */
-#define DISP_MINOR_VERSION 1
+#define DISP_MINOR_VERSION 2
 /** Dispatcher version - patch */
 #define DISP_PATCH_VERSION 0
 
