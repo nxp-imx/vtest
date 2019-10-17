@@ -43,6 +43,9 @@
 #include "vtest.h"
 #include "ECCdevicemgmt.h"
 #include "ecc_dispatcher.h"
+#include "vtest_async.h"
+
+static volatile int count_async = ASYNC_COUNT_RESET;
 
 /**
  *
@@ -159,6 +162,26 @@ void ecc_test_cputime(void)
 }
 
 /**
+ * @brief   Test of asynchronous cputime API: callback
+ *
+ * @param[in]  sequence_number       sequence operation id (not used?)
+ * @param[out] ret                   returned value by the dispatcher
+ *
+ */
+void ecc_testCputimeAsync_callback(void *sequence_number,
+	disp_DispatcherSetMaxCpuTime_t ret)
+{
+	/*
+	 * Functionality not supported, function only present for MARS
+	 * compatibility, so cannot verify returned values.
+	 * Async framework requires a test, so compare 0 with 0 (at
+	 * least it proves the callback was called)
+	 */
+	VTEST_CHECK_RESULT_ASYNC_DEC(0, 0, count_async);
+}
+
+
+/**
  *
  * @brief Test of asynchronous cputime API
  *
@@ -173,9 +196,10 @@ void ecc_test_cputime_async(void)
 	disp_DispatcherSetMaxCpuTime_t t = {0};
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	VTEST_CHECK_RESULT(
-		disp_setMaxCpuTimeAsync((void *)0, t, NULL), 
-		DISP_RETVAL_UNDEFINED_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_setMaxCpuTimeAsync((void *)0, t,
+					ecc_testCputimeAsync_callback),
+					DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
