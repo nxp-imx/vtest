@@ -42,70 +42,215 @@
  */
 
 #include <time.h>
+#include <stdlib.h>
 #include <v2xSe.h>
 #include "vtest.h"
 #include "SEmisc.h"
 #include "SEperformance.h"
 
+static long nsMinLatency, nsMaxLatency;
+
+static TypePublicKey_t *pubKeyArray;
+static TypeHash_t *hashArray;
+
+
 /**
+ * @brief   Create an array of hash values for signature generation
  *
- * @brief Test speed of signature generation
+ * @param numHash number of hashes to generate
  *
- * This function tests the speed of signature generation
- * The following behaviours are tested:
- *  - signature generated with valid inputs
- * TODO: try different signature types
+ * @return pointer to hash array, or NULL on failure
  *
  */
-void test_sigGenSpeed(void)
+static TypeHash_t *createHashArray(uint32_t numHash)
+{
+	uint32_t i;
+	TypeSW_t hsmStatusCode;
+	TypeHash_t *hashArray;
+
+	hashArray = calloc(numHash, sizeof(TypeHash_t));
+	if (!hashArray)
+		return NULL;
+
+	for (i = 0; i < numHash; i++) {
+		if (v2xSe_getRandomNumber(sizeof(TypeHash_t), &hsmStatusCode,
+				(TypeRandomNumber_t *)hashArray[i].data)) {
+			free(hashArray);
+			return NULL;
+		}
+	}
+	return hashArray;
+}
+
+/**
+ * @brief   Create an array of public key values for signature generation
+ *
+ * @param numPubKey number of public key values to generate
+ * @param curveId curve to use to create key
+ *
+ * @return pointer to public key array, or NULL on failure
+ *
+ */
+static TypePublicKey_t *createPubKeyArray(uint32_t numPubKey, TypeCurveId_t
+								curveId)
+{
+	uint32_t i;
+	TypeSW_t hsmStatusCode;
+	TypePublicKey_t *pubKeyArray;
+
+	pubKeyArray = calloc(numPubKey, sizeof(TypePublicKey_t));
+	if (!pubKeyArray)
+		return NULL;
+
+	for (i = 0; i < numPubKey; i++) {
+		if (v2xSe_generateRtEccKeyPair(i, curveId,
+				&hsmStatusCode,	&pubKeyArray[i])) {
+			free(pubKeyArray);
+			return NULL;
+		}
+	}
+	return pubKeyArray;
+}
+
+/**
+ * @brief   Allocate data for  tests
+ *
+ * @param testType type of test
+ *
+ * @return VTEST_PASS or VTEST_FAIL
+ *
+ */
+static uint32_t populateTestData(uint32_t testType)
+{
+	uint32_t retVal = VTEST_PASS;
+	uint32_t numElements;
+
+	VTEST_CHECK_RESULT(testType != TEST_TYPE_SIG_GEN_LATENCY, 0);
+	if (testType != TEST_TYPE_SIG_GEN_LATENCY)
+		goto fail;
+
+	/* Move to ACTIVATED state, normal operating mode for SE functions */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+
+	/* Generate keys to sign with - all tests need this */
+	pubKeyArray = createPubKeyArray(NUM_KEYS_PERF_TESTS,
+							V2XSE_CURVE_NISTP256);
+	VTEST_CHECK_RESULT((pubKeyArray == 0), 0);
+	if (!pubKeyArray)
+		goto fail;
+
+	/* Determine number of hash/sigs to generate for test type */
+	switch (testType) {
+	case TEST_TYPE_SIG_GEN_LATENCY:
+		numElements = SIG_LATENCY_GEN_NUM;
+		break;
+	}
+
+	/* Generate random hashes to sign */
+	hashArray = createHashArray(numElements);
+	VTEST_CHECK_RESULT((hashArray == 0), 0);
+	if (!hashArray)
+		goto fail_hash;
+
+	goto exit;
+
+fail_hash:
+	free(pubKeyArray);
+fail:
+	retVal = VTEST_FAIL;
+exit:
+	/* SE back to init to leave in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	return retVal;
+}
+
+/**
+ * @brief   Free data tests
+ *
+ * @param testType type of test
+ *
+ */
+static void freeTestData(uint32_t testType)
+{
+	if (testType == TEST_TYPE_SIG_GEN_LATENCY) {
+		free(pubKeyArray);
+		free(hashArray);
+	}
+}
+
+/**
+ *
+ * @brief Test latency of signature generation in an unloaded system
+ *
+ * This function tests the latency of signature generation in an unloaded
+ * system. Only the signature generation is performed when the latency is
+ * measured.
+ *
+ */
+void test_sigGenLatencyUnloaded(void)
 {
 	TypeSW_t statusCode;
-	TypePublicKey_t pubKey;
-	TypeHash_t hash;
 	TypeSignature_t signature;
-	int i;
+	int32_t i;
 	struct timespec startTime, endTime;
-	long nsTimeDiff;
-	float sigSpeedMs;
+	float sigGenMinLatencyMs;
+	float sigGenMaxLatencyMs;
+	long nsLatency;
 
-/* Measure speed of creating NIST P256 signature in empty slot */
-	/* Create dummy hash data */
-	hash.data[0] = 16;
+	/* Populate data for test */
+	if (populateTestData(TEST_TYPE_SIG_GEN_LATENCY))
+		return;
+
 	/* Move to ACTIVATED state, normal operating mode */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
-	/* Make sure RT key exists */
-	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
 
-	/* Log start time */
-	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
-		VTEST_FLAG_CONF();
-		return;
+	/* Init max & min before first measurement */
+	nsMinLatency = SIG_LATENCY_MIN_INIT;
+	nsMaxLatency = SIG_LATENCY_MAX_INIT;
+
+	/* Loop to generate the signatures */
+	for (i = 0; i < SIG_LATENCY_GEN_NUM; i++) {
+		/* Get start time */
+		if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
+			VTEST_FLAG_CONF();
+			freeTestData(TEST_TYPE_SIG_GEN_LATENCY);
+			return;
+		}
+		/* Generate the signature */
+		VTEST_CHECK_RESULT(v2xSe_createRtSign(i % NUM_KEYS_PERF_TESTS,
+				&hashArray[i],	&statusCode, &signature),
+				V2XSE_SUCCESS);
+		/* Get end time */
+		if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
+			VTEST_FLAG_CONF();
+			freeTestData(TEST_TYPE_SIG_GEN_LATENCY);
+			return;
+		}
+
+		/* Calculate latency */
+		CALCULATE_TIME_DIFF_NS(startTime, endTime, nsLatency);
+
+		/* Update max/min if required */
+		if (nsLatency > nsMaxLatency)
+			nsMaxLatency = nsLatency;
+		if (nsLatency < nsMinLatency)
+			nsMinLatency = nsLatency;
+
 	}
 
-	/* Generate the signatures */
-	for (i = 0; i < SIG_SPEED_GEN_NUM; i++)
-		VTEST_CHECK_RESULT(v2xSe_createRtSign(NON_ZERO_SLOT, &hash,
-				&statusCode, &signature), V2XSE_SUCCESS);
+	/* Free allocated data */
+	freeTestData(TEST_TYPE_SIG_GEN_LATENCY);
 
-	/* Log end time */
-	if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
-		VTEST_FLAG_CONF();
-		return;
-	}
+	/* Calculate max/min latency */
+	sigGenMinLatencyMs = nsMinLatency / (float)1000000;
+	sigGenMaxLatencyMs = nsMaxLatency / (float)1000000;
+	VTEST_LOG("Sig gen latency: %.2f ms min, %.2f ms max (allow %.2f)\n",
+			sigGenMinLatencyMs, sigGenMaxLatencyMs,
+			SIG_GEN_LATENCY_THRESHOLD);
 
-	/* Calculate elapsed time and sign gen time */
-	nsTimeDiff = (endTime.tv_sec - startTime.tv_sec) * 1000000000;
-	nsTimeDiff += endTime.tv_nsec;
-	nsTimeDiff -= startTime.tv_nsec;
-	VTEST_LOG("Elapsed time for %d signatures: %ld ns\n",
-					SIG_SPEED_GEN_NUM, nsTimeDiff);
-	sigSpeedMs = nsTimeDiff / (float)SIG_SPEED_GEN_NUM / (float)1000000;
-	VTEST_LOG("Signature generation time: %.2f ms\n", sigSpeedMs);
+	/* Compare to requirement */
+	VTEST_CHECK_RESULT(sigGenMaxLatencyMs > SIG_GEN_LATENCY_THRESHOLD, 0);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
-
-	/* Need to define pass/fail criteria */
-	VTEST_FLAG_CONF();
 }
