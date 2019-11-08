@@ -64,6 +64,17 @@ static disp_PubKey_t verif_pubKey;
 static disp_Hash_t verif_hash;
 static disp_Sig_t verif_sig;
 
+/** Hash for canned signature, big enough for 384 bits, 256 uses less */
+static TypeHash_t cannedHash = {{
+	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+	0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+	0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+	0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+	0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
+	0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F
+	}
+};
+
 
 /**
  * @brief   Create an array of hash values for signature generation
@@ -524,21 +535,35 @@ void test_sigGenRate(void)
 
 /**
  *
- * @brief Test latency of signature verification in unloaded system
+ * @brief Test latency of signature verification.
  *
- * This function tests the latency of signature verification in an unloaded
- * system.  Only the signature verification is running when measuring the
- * latency.
+ * This function tests the latency of signature verification.  If requested,
+ * simulation of a loaded system is done using constant signature generations
+ * in parallel with the signature verifications.
+ *
+ * @param testType indicates whether test should run on loaded system or not
  *
  */
-void test_sigVerifLatencyUnloaded(void)
+void test_sigVerifLatency(uint32_t testType)
 {
 	float sigVerifMinLatencyMs;
 	float sigVerifMaxLatencyMs;
+	TypeSW_t statusCode;
+	TypePublicKey_t gen_pubKey;
+	TypeSignature_t gen_signature;
 
 	/* Populate data for test */
 	if (populateTestData(TEST_TYPE_SIG_VERIF_LATENCY))
 		return;
+
+	if (testType == LOADED_TEST) {
+		/* Move to ACTIVATED state, normal operating mode */
+		VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+		/* Create RT key for background sig gen operations */
+		VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+			V2XSE_CURVE_NISTP256, &statusCode, &gen_pubKey),
+								V2XSE_SUCCESS);
+	}
 
 	/* Set up system for signature verification */
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
@@ -553,7 +578,7 @@ void test_sigVerifLatencyUnloaded(void)
 	/* Log start time */
 	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
 		VTEST_FLAG_CONF();
-		return;
+		goto stopVerifLatencyTest;
 	}
 
 	/* Start verification loops */
@@ -561,8 +586,28 @@ void test_sigVerifLatencyUnloaded(void)
 		DISP_CURVE_NISTP256, &verif_pubKey, verif_hash, &verif_sig,
 		signatureVerificationCallback_latency), DISP_RETVAL_NO_ERROR,
 		count_async);
-	/* Wait for end of loop */
-	VTEST_CHECK_RESULT_ASYNC_LOOP(count_async, loopCount);
+
+	if (testType == LOADED_TEST) {
+	/*
+	 * Run parallel signature generation until verif counter goes to 0.
+	 * Use canned hash & single key for parallel sig gen.  Performance
+	 * of sig gen operations not measured so don't care about possible
+	 * cache effects of always using same data.
+	 */
+		while (loopCount > 0) {
+			VTEST_CHECK_RESULT(v2xSe_createRtSign(SLOT_ZERO,
+				&cannedHash, &statusCode, &gen_signature),
+								V2XSE_SUCCESS);
+		}
+		/* Clean up - loops should be finished */
+		VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_1_MS);
+	} else {
+	/* Unloaded test - just wait for end */
+		VTEST_CHECK_RESULT_ASYNC_LOOP(count_async, loopCount);
+	}
+
+stopVerifLatencyTest:
+	/* Finished verifications */
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 
 	/* Free allocated data */
@@ -582,6 +627,38 @@ void test_sigVerifLatencyUnloaded(void)
 		VTEST_CHECK_RESULT(sigVerifMaxLatencyMs >
 					SIG_VERIF_LATENCY_THRESHOLD, 0);
 	}
+
+	/* Go back to init to leave system in known state after test */
+	if (testType == LOADED_TEST)
+		VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test latency of signature verification in loaded system
+ *
+ * This function tests the latency of signature verification.  To simulate
+ * the loading of a normal system, constant signature generations are performed
+ * in parallel with the signature verifications.
+ *
+ */
+void test_sigVerifLatencyLoaded(void)
+{
+	test_sigVerifLatency(LOADED_TEST);
+}
+
+/**
+ *
+ * @brief Test latency of signature verification in unloaded system
+ *
+ * This function tests the latency of signature verification in an unloaded
+ * system.  Only the signature verification is running when measuring the
+ * latency.
+ *
+ */
+void test_sigVerifLatencyUnloaded(void)
+{
+	test_sigVerifLatency(UNLOADED_TEST);
 }
 
 /**

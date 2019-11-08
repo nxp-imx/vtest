@@ -53,6 +53,8 @@
 		"Test rate of signature verification")\
 	VTEST_DEFINE_TEST(130301, &test_sigGenRate, \
 		"Test rate of signature generation")\
+	VTEST_DEFINE_TEST(130401, &test_sigVerifLatencyLoaded, \
+		"Test latency of signature verification")\
 	VTEST_DEFINE_TEST(130402, &test_sigVerifLatencyUnloaded, \
 		"Test latency of signature verification")\
 	VTEST_DEFINE_TEST(130502, &test_sigGenLatencyUnloaded, \
@@ -60,6 +62,7 @@
 
 void test_sigVerifRate(void);
 void test_sigGenRate(void);
+void test_sigVerifLatencyLoaded(void);
 void test_sigVerifLatencyUnloaded(void);
 void test_sigGenLatencyUnloaded(void);
 
@@ -97,6 +100,11 @@ void test_sigGenLatencyUnloaded(void);
 #define TEST_TYPE_SIG_VERIF_LATENCY	2
 /** Test type - sig gen rate */
 #define TEST_TYPE_SIG_GEN_LATENCY	3
+
+/** Test should be with in loaded system */
+#define LOADED_TEST		0
+/** Test should be with in unloaded system */
+#define UNLOADED_TEST		1
 
 #define SETUP_ECDSA_SIG_VERIF_PTRS(loop)				\
 do {									\
