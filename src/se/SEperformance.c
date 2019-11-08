@@ -236,10 +236,8 @@ static uint32_t populateTestData(uint32_t testType)
 	uint32_t retVal = VTEST_PASS;
 	uint32_t numElements;
 
-	VTEST_CHECK_RESULT((testType > TEST_TYPE_SIG_GEN_LATENCY) ||
-				(testType == TEST_TYPE_SIG_VERIF_LATENCY), 0);
-	if ((testType > TEST_TYPE_SIG_GEN_LATENCY) ||
-				(testType == TEST_TYPE_SIG_VERIF_LATENCY))
+	VTEST_CHECK_RESULT(testType > TEST_TYPE_SIG_GEN_LATENCY, 0);
+	if (testType > TEST_TYPE_SIG_GEN_LATENCY)
 		goto fail;
 
 	/* Move to ACTIVATED state, normal operating mode for SE functions */
@@ -259,6 +257,9 @@ static uint32_t populateTestData(uint32_t testType)
 		break;
 	case TEST_TYPE_SIG_GEN_RATE:
 		numElements = SIG_RATE_GEN_NUM;
+		break;
+	case TEST_TYPE_SIG_VERIF_LATENCY:
+		numElements = SIG_LATENCY_VERIF_NUM;
 		break;
 	case TEST_TYPE_SIG_GEN_LATENCY:
 		numElements = SIG_LATENCY_GEN_NUM;
@@ -312,12 +313,12 @@ exit:
  */
 static void freeTestData(uint32_t testType)
 {
-	if ((testType <= TEST_TYPE_SIG_GEN_LATENCY) &&
-				(testType != TEST_TYPE_SIG_VERIF_LATENCY)) {
+	if (testType <= TEST_TYPE_SIG_GEN_LATENCY) {
 		free(pubKeyArray);
 		free(hashArray);
 	}
-	if (testType == TEST_TYPE_SIG_VERIF_RATE)
+	if ((testType == TEST_TYPE_SIG_VERIF_RATE) ||
+			(testType == TEST_TYPE_SIG_VERIF_LATENCY))
 		free(sigArray);
 }
 
@@ -350,6 +351,54 @@ static void signatureVerificationCallback_rate(void *sequence_number,
 			VTEST_FLAG_CONF();
 			return;
 		}
+	}
+}
+
+/**
+ * @brief   Signature verification callback: latency tests
+ *
+ * @param[in]  sequence_number       sequence operation id (not used?)
+ * @param[out] ret                   returned value by the dispatcher
+ * @param[out] verification_result   verification result
+ *
+ */
+static void signatureVerificationCallback_latency(void *sequence_number,
+	disp_ReturnValue_t ret,
+	disp_VerificationResult_t verification_result)
+{
+	long nsLatency;
+
+	if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
+		VTEST_FLAG_CONF();
+		return;
+	}
+
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, DISP_VERIFRES_SUCCESS);
+
+	/* Calculate latency */
+	CALCULATE_TIME_DIFF_NS(startTime, endTime, nsLatency);
+
+	/* Update max/min if required */
+	if (nsLatency > nsMaxLatency)
+		nsMaxLatency = nsLatency;
+	if (nsLatency < nsMinLatency)
+		nsMinLatency = nsLatency;
+
+	/* Start next loop if required */
+	if (--loopCount > 0) {
+		/* Setup ECDSA pointers for next loop */
+		SETUP_ECDSA_SIG_VERIF_PTRS(loopCount);
+		/* Launch next loop */
+		if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
+			VTEST_FLAG_CONF();
+			return;
+		}
+		VTEST_CHECK_RESULT_ASYNC_INC(
+			disp_ecc_verify_signature((void *) 0, 0,
+			DISP_CURVE_NISTP256, &verif_pubKey, verif_hash,
+			&verif_sig, signatureVerificationCallback_latency),
+			DISP_RETVAL_NO_ERROR, count_async);
 	}
 }
 
@@ -471,6 +520,68 @@ void test_sigGenRate(void)
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test latency of signature verification in unloaded system
+ *
+ * This function tests the latency of signature verification in an unloaded
+ * system.  Only the signature verification is running when measuring the
+ * latency.
+ *
+ */
+void test_sigVerifLatencyUnloaded(void)
+{
+	float sigVerifMinLatencyMs;
+	float sigVerifMaxLatencyMs;
+
+	/* Populate data for test */
+	if (populateTestData(TEST_TYPE_SIG_VERIF_LATENCY))
+		return;
+
+	/* Set up system for signature verification */
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	loopCount = SIG_LATENCY_VERIF_NUM;
+
+	/* Setup ECDSA variables to point to first data to verify */
+	SETUP_ECDSA_SIG_VERIF_PTRS(loopCount);
+
+	/* Init max & min before first measurement */
+	nsMinLatency = SIG_LATENCY_MIN_INIT;
+	nsMaxLatency = SIG_LATENCY_MAX_INIT;
+	/* Log start time */
+	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
+		VTEST_FLAG_CONF();
+		return;
+	}
+
+	/* Start verification loops */
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
+		DISP_CURVE_NISTP256, &verif_pubKey, verif_hash, &verif_sig,
+		signatureVerificationCallback_latency), DISP_RETVAL_NO_ERROR,
+		count_async);
+	/* Wait for end of loop */
+	VTEST_CHECK_RESULT_ASYNC_LOOP(count_async, loopCount);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+
+	/* Free allocated data */
+	freeTestData(TEST_TYPE_SIG_VERIF_LATENCY);
+
+	/* If test finished as expected */
+	if (!loopCount) {
+		/* Calculate max/min latency */
+		sigVerifMinLatencyMs = nsMinLatency / (float)1000000;
+		sigVerifMaxLatencyMs = nsMaxLatency / (float)1000000;
+		VTEST_LOG("Sig verif latency: %.2f ms min,"
+				" %.2f ms max (allow %.2f)\n",
+				sigVerifMinLatencyMs, sigVerifMaxLatencyMs,
+				SIG_VERIF_LATENCY_THRESHOLD);
+
+		/* Compare to requirement */
+		VTEST_CHECK_RESULT(sigVerifMaxLatencyMs >
+					SIG_VERIF_LATENCY_THRESHOLD, 0);
+	}
 }
 
 /**

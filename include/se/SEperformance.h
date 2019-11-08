@@ -53,11 +53,14 @@
 		"Test rate of signature verification")\
 	VTEST_DEFINE_TEST(130301, &test_sigGenRate, \
 		"Test rate of signature generation")\
+	VTEST_DEFINE_TEST(130402, &test_sigVerifLatencyUnloaded, \
+		"Test latency of signature verification")\
 	VTEST_DEFINE_TEST(130502, &test_sigGenLatencyUnloaded, \
 		"Test latency of signature generation")\
 
 void test_sigVerifRate(void);
 void test_sigGenRate(void);
+void test_sigVerifLatencyUnloaded(void);
 void test_sigGenLatencyUnloaded(void);
 
 /** Number of keys to use for signing in performance tests */
@@ -73,12 +76,16 @@ void test_sigGenLatencyUnloaded(void);
 /** Signature generation rate pass/fail threshold */
 #define SIG_GEN_RATE_THRESHOLD		200
 
+/** Number of signatures verified during signature verification latency test */
+#define SIG_LATENCY_VERIF_NUM 1000
 /** Number of signatures generated during signature generation latency test */
 #define SIG_LATENCY_GEN_NUM 1000
 /** Init value for min latency (ns) = 100s, 1st measurement should be lower */
 #define SIG_LATENCY_MIN_INIT	100000000000
 /** Init value for max latency (ns) = 0s, 1st measurement should be higher */
 #define SIG_LATENCY_MAX_INIT	0
+/** Signature verification latency pass/fail threshold */
+#define SIG_VERIF_LATENCY_THRESHOLD	10.0f
 /** Signature generation latency pass/fail threshold */
 #define SIG_GEN_LATENCY_THRESHOLD	10.0f
 
