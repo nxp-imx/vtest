@@ -57,27 +57,42 @@
 #define TIME_UNIT_10_MS 10000
 
 /** Macro used to call async API */
-#define VTEST_CHECK_RESULT_ASYNC_INC(got, exp, count)                      \
-do {                                                                       \
-	checkResult( __FILE__, __LINE__, got, exp);                        \
-	count++;                                                           \
-} while (0)                                                                \
+#define VTEST_CHECK_RESULT_ASYNC_INC(got, exp, count)			\
+do {									\
+	checkResult(__FILE__, __LINE__, got, exp);			\
+	count++;							\
+} while (0)
 
 /** Macro used to signal a return from async API calls */
-#define VTEST_CHECK_RESULT_ASYNC_DEC(got, exp, count)                      \
-do {                                                                       \
-	checkResult( __FILE__, __LINE__, got, exp);                        \
-	count--;                                                           \
-} while (0)                                                                \
+#define VTEST_CHECK_RESULT_ASYNC_DEC(got, exp, count)			\
+do {									\
+	checkResult(__FILE__, __LINE__, got, exp);			\
+	count--;							\
+} while (0)
 
 /** Macro used to wait returns from async API calls */
-#define VTEST_CHECK_RESULT_ASYNC_WAIT(count, time)                         \
-do {                                                                       \
-	usleep(time);                                                      \
-	if (count > 0)                                                     \
-		printf("%d missing responses!\n", count);                  \
-	checkResult( __FILE__, __LINE__, count, ASYNC_COUNT_RESET);        \
-	count = ASYNC_COUNT_RESET;                                         \
-} while (0)                                                                \
+#define VTEST_CHECK_RESULT_ASYNC_WAIT(count, time)			\
+do {									\
+	usleep(time);							\
+	if (count > 0)							\
+		printf("%d missing responses!\n", count);		\
+	checkResult(__FILE__, __LINE__, count, ASYNC_COUNT_RESET);	\
+	count = ASYNC_COUNT_RESET;					\
+} while (0)
+
+/** Macro used to wait for loop of async API calls, 1 min timeout */
+#define VTEST_CHECK_RESULT_ASYNC_LOOP(count, loops)			\
+do {									\
+	int32_t timeout = 60;						\
+	while (loops && --timeout)					\
+		usleep(TIME_UNIT_10_MS*100);				\
+	checkResult(__FILE__, __LINE__, loops, 0);			\
+	if (loops > 0)							\
+		loops = -1;						\
+	if (count > 0)							\
+		printf("%d missing responses!\n", count);		\
+	checkResult(__FILE__, __LINE__, count, ASYNC_COUNT_RESET);	\
+	count = ASYNC_COUNT_RESET;					\
+} while (0)
 
 #endif

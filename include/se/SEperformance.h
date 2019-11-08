@@ -49,16 +49,24 @@
  * Tests should be listed in order of incrementing test number
  */
 #define SE_PERFORMANCE_TESTS \
+	VTEST_DEFINE_TEST(130201, &test_sigVerifRate, \
+		"Test rate of signature verification")\
 	VTEST_DEFINE_TEST(130301, &test_sigGenRate, \
 		"Test rate of signature generation")\
 	VTEST_DEFINE_TEST(130502, &test_sigGenLatencyUnloaded, \
 		"Test latency of signature generation")\
 
+void test_sigVerifRate(void);
 void test_sigGenRate(void);
 void test_sigGenLatencyUnloaded(void);
 
 /** Number of keys to use for signing in performance tests */
 #define NUM_KEYS_PERF_TESTS	5
+
+/** Number of signatures verified during signature verification rate test */
+#define SIG_RATE_VERIF_NUM 5000l
+/** Signature verification rate pass/fail threshold */
+#define SIG_VERIF_RATE_THRESHOLD	2500
 
 /** Number of signatures generated during signature generation rate test */
 #define SIG_RATE_GEN_NUM 400l
@@ -82,6 +90,15 @@ void test_sigGenLatencyUnloaded(void);
 #define TEST_TYPE_SIG_VERIF_LATENCY	2
 /** Test type - sig gen rate */
 #define TEST_TYPE_SIG_GEN_LATENCY	3
+
+#define SETUP_ECDSA_SIG_VERIF_PTRS(loop)				\
+do {									\
+	verif_pubKey.x = pubKeyArray[(loop - 1) % NUM_KEYS_PERF_TESTS].x;\
+	verif_pubKey.y = pubKeyArray[(loop - 1) % NUM_KEYS_PERF_TESTS].y;\
+	verif_hash = hashArray[loop - 1].data;				\
+	verif_sig.r = sigArray[loop - 1].r;				\
+	verif_sig.s = sigArray[loop - 1].s;				\
+} while (0)
 
 #define CALCULATE_TIME_DIFF_NS(start, end, diff)			\
 do {									\

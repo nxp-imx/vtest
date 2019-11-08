@@ -47,12 +47,22 @@
 #include "vtest.h"
 #include "SEmisc.h"
 #include "SEperformance.h"
+#include "ecc_dispatcher.h"
+#include "vtest_async.h"
+
+static volatile int count_async = ASYNC_COUNT_RESET;
+static volatile int loopCount;
 
 static struct timespec startTime, endTime;
 static long nsMinLatency, nsMaxLatency;
 
 static TypePublicKey_t *pubKeyArray;
 static TypeHash_t *hashArray;
+static TypeSignature_t *sigArray;
+
+static disp_PubKey_t verif_pubKey;
+static disp_Hash_t verif_hash;
+static disp_Sig_t verif_sig;
 
 
 /**
@@ -114,6 +124,106 @@ static TypePublicKey_t *createPubKeyArray(uint32_t numPubKey, TypeCurveId_t
 }
 
 /**
+ * @brief   Create an array of signatures for verification
+ *
+ * @param numSig number of signatures to generate
+ * @param hashArray array of hash values to sign
+ * @param numKeys number of keys generated for signing
+ *
+ * @return pointer to signature array, or NULL on failure
+ *
+ */
+static TypeSignature_t *createSigArray(uint32_t numSig, TypeHash_t *hashArray,
+							uint32_t numKeys)
+{
+	uint32_t i;
+	TypeSW_t hsmStatusCode;
+	TypeSignature_t *sigArray;
+
+	sigArray = calloc(numSig, sizeof(TypeSignature_t));
+	if (!sigArray)
+		return NULL;
+
+	for (i = 0; i < numSig; i++) {
+		if (v2xSe_createRtSign(i % numKeys, &hashArray[i],
+				&hsmStatusCode,	&sigArray[i])) {
+			free(sigArray);
+			return NULL;
+		}
+	}
+	return sigArray;
+}
+
+/**
+ * @brief   Reverse the endianness of an array of hash values
+ *
+ * @param hashArray array of hashes to reverse
+ * @param numHash number of hashes to reverse
+ * @param hashSize size of used hash data in each hash
+ *
+ */
+static void reverseHashEndianness(TypeHash_t *hashArray, uint32_t numHash,
+							uint32_t dataSize)
+{
+	uint32_t i, j;
+	TypeHash_t swapped;
+
+	for (i = 0; i < numHash; i++) {
+		for (j = 0; j < dataSize; j++)
+			swapped.data[j] = hashArray[i].data[dataSize - 1 - j];
+		memcpy(hashArray[i].data, swapped.data, dataSize);
+	}
+}
+
+/**
+ * @brief   Reverse the endianness of an array of public keys
+ *
+ * @param pubKeyArray array of public keys to reverse
+ * @param numPubKey number of public keys to reverse
+ * @param dataSize size of used data in each key coordinate
+ *
+ */
+static void reversePubKeyEndianness(TypePublicKey_t *pubKeyArray,
+					uint32_t numPubKey, uint32_t dataSize)
+{
+	uint32_t i, j;
+	TypePublicKey_t swapped;
+
+	for (i = 0; i < numPubKey; i++) {
+		for (j = 0; j < dataSize; j++) {
+			swapped.x[j] = pubKeyArray[i].x[dataSize - 1 - j];
+			swapped.y[j] = pubKeyArray[i].y[dataSize - 1 - j];
+		}
+		memcpy(pubKeyArray[i].x, swapped.x, dataSize);
+		memcpy(pubKeyArray[i].y, swapped.y, dataSize);
+	}
+}
+
+/**
+ * @brief   Reverse the endianness of an array of signatures
+ *
+ * @param sigArray array of signatures to reverse
+ * @param numSig number of signatures to reverse
+ * @param dataSize size of used data in each signature element
+ *
+ */
+static void reverseSigEndianness(TypeSignature_t *sigArray, uint32_t numSig,
+							uint32_t dataSize)
+{
+	uint32_t i, j;
+	TypeSignature_t swapped;
+
+	for (i = 0; i < numSig; i++) {
+		for (j = 0; j < dataSize; j++) {
+			swapped.r[j] = sigArray[i].r[dataSize - 1 - j];
+			swapped.s[j] = sigArray[i].s[dataSize - 1 - j];
+		}
+		memcpy(sigArray[i].r, swapped.r, dataSize);
+		memcpy(sigArray[i].s, swapped.s, dataSize);
+	}
+}
+
+/**
  * @brief   Allocate data for  tests
  *
  * @param testType type of test
@@ -126,10 +236,10 @@ static uint32_t populateTestData(uint32_t testType)
 	uint32_t retVal = VTEST_PASS;
 	uint32_t numElements;
 
-	VTEST_CHECK_RESULT((testType != TEST_TYPE_SIG_GEN_LATENCY) &&
-				(testType != TEST_TYPE_SIG_GEN_RATE), 0);
-	if ((testType != TEST_TYPE_SIG_GEN_LATENCY) &&
-				(testType != TEST_TYPE_SIG_GEN_RATE))
+	VTEST_CHECK_RESULT((testType > TEST_TYPE_SIG_GEN_LATENCY) ||
+				(testType == TEST_TYPE_SIG_VERIF_LATENCY), 0);
+	if ((testType > TEST_TYPE_SIG_GEN_LATENCY) ||
+				(testType == TEST_TYPE_SIG_VERIF_LATENCY))
 		goto fail;
 
 	/* Move to ACTIVATED state, normal operating mode for SE functions */
@@ -144,6 +254,9 @@ static uint32_t populateTestData(uint32_t testType)
 
 	/* Determine number of hash/sigs to generate for test type */
 	switch (testType) {
+	case TEST_TYPE_SIG_VERIF_RATE:
+		numElements = SIG_RATE_VERIF_NUM;
+		break;
 	case TEST_TYPE_SIG_GEN_RATE:
 		numElements = SIG_RATE_GEN_NUM;
 		break;
@@ -160,8 +273,27 @@ static uint32_t populateTestData(uint32_t testType)
 	if (!hashArray)
 		goto fail_hash;
 
+	/* If sig gen test, don't need to pre-prepare signatures */
+	if ((testType == TEST_TYPE_SIG_GEN_RATE) ||
+			(testType == TEST_TYPE_SIG_GEN_LATENCY))
+		goto exit;
+
+	/* Generate signatures to verify */
+	sigArray = createSigArray(numElements, hashArray, NUM_KEYS_PERF_TESTS);
+	VTEST_CHECK_RESULT((sigArray == 0), 0);
+	if (!sigArray)
+		goto fail_sig;
+
+	/* Reverse endianness for ECDSA sig verification */
+	reversePubKeyEndianness(pubKeyArray, NUM_KEYS_PERF_TESTS,
+						V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	reverseHashEndianness(hashArray, numElements,
+						V2XSE_256_EC_HASH_SIZE);
+	reverseSigEndianness(sigArray, numElements, V2XSE_256_EC_R_SIGN);
 	goto exit;
 
+fail_sig:
+	free(hashArray);
 fail_hash:
 	free(pubKeyArray);
 fail:
@@ -180,11 +312,104 @@ exit:
  */
 static void freeTestData(uint32_t testType)
 {
-	if ((testType == TEST_TYPE_SIG_GEN_LATENCY) ||
-				(testType != TEST_TYPE_SIG_GEN_RATE)) {
+	if ((testType <= TEST_TYPE_SIG_GEN_LATENCY) &&
+				(testType != TEST_TYPE_SIG_VERIF_LATENCY)) {
 		free(pubKeyArray);
 		free(hashArray);
 	}
+	if (testType == TEST_TYPE_SIG_VERIF_RATE)
+		free(sigArray);
+}
+
+/**
+ * @brief   Signature verification callback: rate tests
+ *
+ * @param[in]  sequence_number       sequence operation id (not used?)
+ * @param[out] ret                   returned value by the dispatcher
+ * @param[out] verification_result   verification result
+ *
+ */
+static void signatureVerificationCallback_rate(void *sequence_number,
+	disp_ReturnValue_t ret,
+	disp_VerificationResult_t verification_result)
+{
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, DISP_VERIFRES_SUCCESS);
+	if (--loopCount > 0) {
+		/* Setup ECDSA pointers for next loop */
+		SETUP_ECDSA_SIG_VERIF_PTRS(loopCount);
+		/* Launch next loop */
+		VTEST_CHECK_RESULT_ASYNC_INC(
+			disp_ecc_verify_signature((void *) 0, 0,
+			DISP_CURVE_NISTP256, &verif_pubKey, verif_hash,
+			&verif_sig, signatureVerificationCallback_rate),
+			DISP_RETVAL_NO_ERROR, count_async);
+	} else {
+		/* Log end time */
+		if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
+			VTEST_FLAG_CONF();
+			return;
+		}
+	}
+}
+
+/**
+ *
+ * @brief Test rate of signature verification
+ *
+ * This function tests the rate of signature verification
+ *
+ */
+void test_sigVerifRate(void)
+{
+	long nsTimeDiff;
+	long sigVerifRate;
+
+	/* Populate data for test */
+	if (populateTestData(TEST_TYPE_SIG_VERIF_RATE))
+		return;
+
+	/* Set up system for signature verification */
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	loopCount = SIG_RATE_VERIF_NUM;
+
+	/* Setup ECDSA variables to point to first data to verify */
+	SETUP_ECDSA_SIG_VERIF_PTRS(loopCount);
+
+	/* Log start time */
+	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
+		VTEST_FLAG_CONF();
+		/* Free allocated data */
+		freeTestData(TEST_TYPE_SIG_VERIF_RATE);
+		return;
+	}
+
+	/* Start verification loops */
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
+		DISP_CURVE_NISTP256, &verif_pubKey, verif_hash, &verif_sig,
+		signatureVerificationCallback_rate), DISP_RETVAL_NO_ERROR,
+		count_async);
+	/* Wait for end of loop */
+	VTEST_CHECK_RESULT_ASYNC_LOOP(count_async, loopCount);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+
+	/* If test finished as expected */
+	if (!loopCount) {
+		/* Calculate elapsed time and sign verif rate */
+		CALCULATE_TIME_DIFF_NS(startTime, endTime, nsTimeDiff);
+		VTEST_LOG("Elapsed time for %d signature verifications:"
+			" %ld ms\n", SIG_RATE_VERIF_NUM, nsTimeDiff/1000000);
+		sigVerifRate = SIG_RATE_VERIF_NUM * 1000000000 / nsTimeDiff;
+		VTEST_LOG("Signature verification rate: %ld verifs/sec"
+			" (expect %d)\n", sigVerifRate,
+			SIG_VERIF_RATE_THRESHOLD);
+
+		/* Compare to requirement */
+		VTEST_CHECK_RESULT(sigVerifRate < SIG_VERIF_RATE_THRESHOLD, 0);
+	}
+
+	/* Free allocated data */
+	freeTestData(TEST_TYPE_SIG_VERIF_RATE);
 }
 
 /**
