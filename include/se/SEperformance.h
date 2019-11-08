@@ -57,6 +57,8 @@
 		"Test latency of signature verification")\
 	VTEST_DEFINE_TEST(130402, &test_sigVerifLatencyUnloaded, \
 		"Test latency of signature verification")\
+	VTEST_DEFINE_TEST(130501, &test_sigGenLatencyLoaded, \
+		"Test latency of signature generation")\
 	VTEST_DEFINE_TEST(130502, &test_sigGenLatencyUnloaded, \
 		"Test latency of signature generation")\
 
@@ -64,6 +66,7 @@ void test_sigVerifRate(void);
 void test_sigGenRate(void);
 void test_sigVerifLatencyLoaded(void);
 void test_sigVerifLatencyUnloaded(void);
+void test_sigGenLatencyLoaded(void);
 void test_sigGenLatencyUnloaded(void);
 
 /** Number of keys to use for signing in performance tests */

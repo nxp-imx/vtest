@@ -75,6 +75,34 @@ static TypeHash_t cannedHash = {{
 	}
 };
 
+static uint8_t cannedPubkeyNIST256_X[V2XSE_256_EC_PUB_KEY_XY_SIZE] = {
+	0x89, 0x51, 0x78, 0x75, 0xb5, 0xd8, 0xf2, 0x87,
+	0xec, 0xd3, 0xeb, 0x89, 0xfb, 0xdc, 0xb7, 0x20,
+	0x40, 0xaf, 0x42, 0x9e, 0xcd, 0x84, 0xb3, 0x13,
+	0x11, 0x62, 0x2e, 0xcf, 0xec, 0xc4, 0xb3, 0x57
+};
+
+static uint8_t cannedPubkeyNIST256_Y[V2XSE_256_EC_PUB_KEY_XY_SIZE] = {
+	0x69, 0xf7, 0x0d, 0xba, 0x3d, 0xdd, 0xb3, 0x9c,
+	0xbf, 0x41, 0xf2, 0xfb, 0x81, 0x6d, 0x6b, 0xb6,
+	0x4d, 0xe9, 0x04, 0xe5, 0x46, 0xff, 0x7b, 0x48,
+	0xb3, 0x67, 0x06, 0x6d, 0x06, 0x74, 0xf6, 0x3e
+};
+
+static uint8_t cannedSigNIST256_R[V2XSE_256_EC_R_SIGN] = {
+	0x7b, 0x38, 0xc4, 0xeb, 0xf6, 0x84, 0xdd, 0x73,
+	0xb5, 0x04, 0xdf, 0xb3, 0x5f, 0x24, 0x8d, 0xe5,
+	0x55, 0xe7, 0x1f, 0xef, 0x48, 0xf1, 0x8a, 0xf7,
+	0x4d, 0x61, 0x9f, 0x55, 0x70, 0x7b, 0xe2, 0x6a
+};
+
+static uint8_t cannedSigNIST256_S[V2XSE_256_EC_S_SIGN] = {
+	0x99, 0x73, 0x68, 0xda, 0x6e, 0xde, 0x7c, 0x50,
+	0x9d, 0x76, 0x85, 0x2e, 0x7d, 0x85, 0xc5, 0x63,
+	0x1b, 0x5d, 0x29, 0x82, 0x30, 0x1d, 0xbd, 0x99,
+	0xce, 0xa0, 0xda, 0x00, 0x4d, 0x05, 0x54, 0x76
+};
+
 
 /**
  * @brief   Create an array of hash values for signature generation
@@ -414,6 +442,30 @@ static void signatureVerificationCallback_latency(void *sequence_number,
 }
 
 /**
+ * @brief   Signature verification callback: background (no measurement)
+ *
+ * @param[in]  sequence_number       sequence operation id (not used?)
+ * @param[out] ret                   returned value by the dispatcher
+ * @param[out] verification_result   verification result
+ *
+ */
+static void signatureVerificationCallback_background(void *sequence_number,
+	disp_ReturnValue_t ret,
+	disp_VerificationResult_t verification_result)
+{
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, DISP_VERIFRES_SUCCESS);
+	if (--loopCount > 0) {
+		/* Launch next loop */
+		VTEST_CHECK_RESULT_ASYNC_INC(
+			disp_ecc_verify_signature((void *) 0, 0,
+			DISP_CURVE_NISTP256, &verif_pubKey, verif_hash,
+			&verif_sig, signatureVerificationCallback_background),
+			DISP_RETVAL_NO_ERROR, count_async);
+	}
+}
+
+/**
  *
  * @brief Test rate of signature verification
  *
@@ -663,14 +715,14 @@ void test_sigVerifLatencyUnloaded(void)
 
 /**
  *
- * @brief Test latency of signature generation in an unloaded system
+ * @brief Test latency of signature generation.
  *
- * This function tests the latency of signature generation in an unloaded
- * system. Only the signature generation is performed when the latency is
- * measured.
+ * This function tests the latency of signature generation.  If requested,
+ * simulation of a loaded system is done using constant signature verifications
+ * in parallel with the signature generations.
  *
  */
-void test_sigGenLatencyUnloaded(void)
+void test_sigGenLatency(uint32_t testType)
 {
 	TypeSW_t statusCode;
 	TypeSignature_t signature;
@@ -686,6 +738,35 @@ void test_sigGenLatencyUnloaded(void)
 	/* Move to ACTIVATED state, normal operating mode */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 
+	if (testType == LOADED_TEST) {
+		/* Set up for parallel signature verification */
+		VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+		/*
+		 * Assume sig verif is not 10 times faster than sig gen,
+		 * so loop count below will keep the verifs running during
+		 * the whole test.
+		 * The count will be forced to 0 at the end to stop the test.
+		 */
+		loopCount = SIG_LATENCY_GEN_NUM * 10;
+		/*
+		 * Use canned hash, key & sig for parallel sig verif.
+		 * Performance of sig verif operations not measured so don't
+		 * care about possible cache effects of always using same data.
+		 */
+		verif_hash = (disp_Hash_t)cannedHash.data;
+		verif_pubKey.x = cannedPubkeyNIST256_X;
+		verif_pubKey.y = cannedPubkeyNIST256_Y;
+		verif_sig.r = cannedSigNIST256_R;
+		verif_sig.s = cannedSigNIST256_S;
+
+		/* Start parallel signature verification */
+		VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature(
+			(void *) 0, 0, DISP_CURVE_NISTP256, &verif_pubKey,
+			verif_hash, &verif_sig,
+			signatureVerificationCallback_background),
+			DISP_RETVAL_NO_ERROR, count_async);
+	}
+
 	/* Init max & min before first measurement */
 	nsMinLatency = SIG_LATENCY_MIN_INIT;
 	nsMaxLatency = SIG_LATENCY_MAX_INIT;
@@ -695,8 +776,7 @@ void test_sigGenLatencyUnloaded(void)
 		/* Get start time */
 		if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
 			VTEST_FLAG_CONF();
-			freeTestData(TEST_TYPE_SIG_GEN_LATENCY);
-			return;
+			goto stopGenLatencyTest;
 		}
 		/* Generate the signature */
 		VTEST_CHECK_RESULT(v2xSe_createRtSign(i % NUM_KEYS_PERF_TESTS,
@@ -705,8 +785,7 @@ void test_sigGenLatencyUnloaded(void)
 		/* Get end time */
 		if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
 			VTEST_FLAG_CONF();
-			freeTestData(TEST_TYPE_SIG_GEN_LATENCY);
-			return;
+			goto stopGenLatencyTest;
 		}
 
 		/* Calculate latency */
@@ -717,22 +796,58 @@ void test_sigGenLatencyUnloaded(void)
 			nsMaxLatency = nsLatency;
 		if (nsLatency < nsMinLatency)
 			nsMinLatency = nsLatency;
-
 	}
-
-	/* Free allocated data */
-	freeTestData(TEST_TYPE_SIG_GEN_LATENCY);
 
 	/* Calculate max/min latency */
 	sigGenMinLatencyMs = nsMinLatency / (float)1000000;
 	sigGenMaxLatencyMs = nsMaxLatency / (float)1000000;
 	VTEST_LOG("Sig gen latency: %.2f ms min, %.2f ms max (allow %.2f)\n",
 			sigGenMinLatencyMs, sigGenMaxLatencyMs,
-			SIG_GEN_LATENCY_THRESHOLD);
+			SIG_VERIF_LATENCY_THRESHOLD);
 
 	/* Compare to requirement */
 	VTEST_CHECK_RESULT(sigGenMaxLatencyMs > SIG_GEN_LATENCY_THRESHOLD, 0);
 
+stopGenLatencyTest:
+	if (testType == LOADED_TEST) {
+		/* Stop parallel signature verification */
+		loopCount = 0;
+		/* Clean up - loops should be finished soon */
+		VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+		VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	}
+
+	/* Free allocated data */
+	freeTestData(TEST_TYPE_SIG_GEN_LATENCY);
+
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test latency of signature generation in a loaded system
+ *
+ * This function tests the latency of signature generation in a loaded
+ * system. Simulation of a loaded system is done using constant signature
+ * verifications in parallel with the signature generations.
+ *
+ */
+void test_sigGenLatencyLoaded(void)
+{
+	test_sigGenLatency(LOADED_TEST);
+}
+
+/**
+ *
+ * @brief Test latency of signature generation in an unloaded system
+ *
+ * This function tests the latency of signature generation in an unloaded
+ * system. Only the signature generation is performed when the latency is
+ * measured.
+ *
+ */
+void test_sigGenLatencyUnloaded(void)
+{
+	test_sigGenLatency(UNLOADED_TEST);
 }
