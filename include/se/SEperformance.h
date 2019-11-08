@@ -49,13 +49,21 @@
  * Tests should be listed in order of incrementing test number
  */
 #define SE_PERFORMANCE_TESTS \
+	VTEST_DEFINE_TEST(130301, &test_sigGenRate, \
+		"Test rate of signature generation")\
 	VTEST_DEFINE_TEST(130502, &test_sigGenLatencyUnloaded, \
 		"Test latency of signature generation")\
 
+void test_sigGenRate(void);
 void test_sigGenLatencyUnloaded(void);
 
 /** Number of keys to use for signing in performance tests */
 #define NUM_KEYS_PERF_TESTS	5
+
+/** Number of signatures generated during signature generation rate test */
+#define SIG_RATE_GEN_NUM 400l
+/** Signature generation rate pass/fail threshold */
+#define SIG_GEN_RATE_THRESHOLD		200
 
 /** Number of signatures generated during signature generation latency test */
 #define SIG_LATENCY_GEN_NUM 1000

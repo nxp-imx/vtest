@@ -48,6 +48,7 @@
 #include "SEmisc.h"
 #include "SEperformance.h"
 
+static struct timespec startTime, endTime;
 static long nsMinLatency, nsMaxLatency;
 
 static TypePublicKey_t *pubKeyArray;
@@ -125,8 +126,10 @@ static uint32_t populateTestData(uint32_t testType)
 	uint32_t retVal = VTEST_PASS;
 	uint32_t numElements;
 
-	VTEST_CHECK_RESULT(testType != TEST_TYPE_SIG_GEN_LATENCY, 0);
-	if (testType != TEST_TYPE_SIG_GEN_LATENCY)
+	VTEST_CHECK_RESULT((testType != TEST_TYPE_SIG_GEN_LATENCY) &&
+				(testType != TEST_TYPE_SIG_GEN_RATE), 0);
+	if ((testType != TEST_TYPE_SIG_GEN_LATENCY) &&
+				(testType != TEST_TYPE_SIG_GEN_RATE))
 		goto fail;
 
 	/* Move to ACTIVATED state, normal operating mode for SE functions */
@@ -141,9 +144,14 @@ static uint32_t populateTestData(uint32_t testType)
 
 	/* Determine number of hash/sigs to generate for test type */
 	switch (testType) {
+	case TEST_TYPE_SIG_GEN_RATE:
+		numElements = SIG_RATE_GEN_NUM;
+		break;
 	case TEST_TYPE_SIG_GEN_LATENCY:
 		numElements = SIG_LATENCY_GEN_NUM;
 		break;
+	default:
+		goto fail_hash;
 	}
 
 	/* Generate random hashes to sign */
@@ -172,10 +180,72 @@ exit:
  */
 static void freeTestData(uint32_t testType)
 {
-	if (testType == TEST_TYPE_SIG_GEN_LATENCY) {
+	if ((testType == TEST_TYPE_SIG_GEN_LATENCY) ||
+				(testType != TEST_TYPE_SIG_GEN_RATE)) {
 		free(pubKeyArray);
 		free(hashArray);
 	}
+}
+
+/**
+ *
+ * @brief Test rate of signature generation
+ *
+ * This function tests the rate of signature generation
+ *
+ */
+void test_sigGenRate(void)
+{
+	TypeSW_t statusCode;
+	TypeSignature_t signature;
+	int i;
+	long nsTimeDiff;
+	long sigGenRate;
+
+	/* Populate data for test */
+	if (populateTestData(TEST_TYPE_SIG_GEN_RATE))
+		return;
+
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+
+	/* Log start time */
+	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
+		VTEST_FLAG_CONF();
+		freeTestData(TEST_TYPE_SIG_GEN_RATE);
+		return;
+	}
+
+	/* Generate the signatures */
+	for (i = 0; i < SIG_RATE_GEN_NUM; i++) {
+		VTEST_CHECK_RESULT(v2xSe_createRtSign(i % NUM_KEYS_PERF_TESTS,
+				&hashArray[i],	&statusCode, &signature),
+				V2XSE_SUCCESS);
+	}
+
+	/* Log end time */
+	if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
+		VTEST_FLAG_CONF();
+		freeTestData(TEST_TYPE_SIG_GEN_RATE);
+		return;
+	}
+
+	/* Free allocated data */
+	freeTestData(TEST_TYPE_SIG_GEN_RATE);
+
+	/* Calculate elapsed time and sig gen rate */
+	CALCULATE_TIME_DIFF_NS(startTime, endTime, nsTimeDiff);
+	VTEST_LOG("Elapsed time for %d signature generations: %ld ns\n",
+					SIG_RATE_GEN_NUM, nsTimeDiff);
+	sigGenRate = SIG_RATE_GEN_NUM * 1000000000 / nsTimeDiff;
+	VTEST_LOG("Signature generation rate: %ld sig/sec (expect %d)\n",
+					sigGenRate, SIG_GEN_RATE_THRESHOLD);
+
+	/* Compare to requirement */
+	VTEST_CHECK_RESULT(sigGenRate < SIG_GEN_RATE_THRESHOLD, 0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -192,7 +262,6 @@ void test_sigGenLatencyUnloaded(void)
 	TypeSW_t statusCode;
 	TypeSignature_t signature;
 	int32_t i;
-	struct timespec startTime, endTime;
 	float sigGenMinLatencyMs;
 	float sigGenMaxLatencyMs;
 	long nsLatency;
