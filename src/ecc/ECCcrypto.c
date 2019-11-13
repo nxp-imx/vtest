@@ -54,6 +54,8 @@ static volatile int count_async = ASYNC_COUNT_RESET;
 #define MEMCMP_IDENTICAL      0
 /** Size of "message" for hash */
 #define HASH_MSG_SIZE         7
+/** Not supported curve */
+#define DISP_CURVE_NOT_SUPP   ((disp_CurveId_t)0xFF)
 
 /* Dataset for signature verification tests */
 /** Hash of "message" */
@@ -292,6 +294,32 @@ void ecc_test_signature_verification_negative(void)
 
 /**
  *
+ * @brief Negative test of disp_ecc_verify_signature with a curve not suppported
+ *
+ */
+void ecc_test_signature_verification_not_supp(void)
+{
+	disp_PubKey_t pubKey;
+	disp_Hash_t hash;
+	disp_Sig_t sig;
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+
+	/* Not supported curve test */
+	pubKey.x = (uint8_t *) pubKey_ver_x;
+	pubKey.y = (uint8_t *) pubKey_ver_y;
+	sig.r    = (uint8_t *) sign_ver_r;
+	sig.s    = (uint8_t *) sign_ver_s;
+	hash     = (disp_Hash_t) hash_ver;
+	VTEST_CHECK_RESULT(disp_ecc_verify_signature((void *) 0, 0,
+		DISP_CURVE_NOT_SUPP, &pubKey, hash, &sig,
+		disp_VerifSigOfHashCallback),
+		DISP_RETVAL_CRYPTO_FUNC_NOT_AVAIL);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
  * @brief Positive test of disp_ecc_decompressPublicKey with NISTP256
  *
  */
@@ -328,6 +356,26 @@ void ecc_test_pubkey_decompression_negative(void)
 		my_disp_DecompressPubKeyCallback_negative),
 		DISP_RETVAL_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Test of disp_ecc_decompressPublicKey with not supported curve
+ *
+ */
+void ecc_test_pubkey_decompression_not_supp(void)
+{
+	disp_PubKey_t pubKey;
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+
+	pubKey.x = pubKey_x;
+	pubKey.y = pubKey_y_neg;
+	VTEST_CHECK_RESULT(disp_ecc_decompressPublicKey((void *)0, 0,
+		DISP_CURVE_NOT_SUPP, &pubKey,
+		my_disp_DecompressPubKeyCallback),
+		DISP_RETVAL_CRYPTO_FUNC_NOT_AVAIL);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 

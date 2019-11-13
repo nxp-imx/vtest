@@ -54,19 +54,23 @@
 		"Test signature verification")                                \
 	VTEST_DEFINE_TEST(30102, &ecc_test_signature_verification_negative,   \
 		"Test signature verification failure")                        \
-	VTEST_DEFINE_TEST(30103, &ecc_test_signature_verification_message,    \
-		"Test signature verification of a message")                   \
-	VTEST_DEFINE_TEST(30104, &ecc_test_signature_verification_key,        \
+	VTEST_DEFINE_TEST(30103, &ecc_test_signature_verification_not_supp,   \
+		"Test not supported curve in signature verification")         \
+	VTEST_DEFINE_TEST(30201, &ecc_test_signature_verification_key,        \
 		"Test signature verification with key storage")               \
-	VTEST_DEFINE_TEST(30105, &ecc_test_signature_verification_key_of_msg, \
+	VTEST_DEFINE_TEST(30301, &ecc_test_signature_verification_message,    \
+		"Test signature verification of a message")                   \
+	VTEST_DEFINE_TEST(30401, &ecc_test_signature_verification_key_of_msg, \
 		"Test signature verification of a message with key storage")  \
-	VTEST_DEFINE_TEST(30106, &ecc_test_pubkey_decompression,              \
+	VTEST_DEFINE_TEST(30501, &ecc_test_pubkey_decompression,              \
 		"Test public key decompression")                              \
-	VTEST_DEFINE_TEST(30107, &ecc_test_pubkey_decompression_negative,     \
+	VTEST_DEFINE_TEST(30502, &ecc_test_pubkey_decompression_negative,     \
 		"Test public key decompression failure")                      \
-	VTEST_DEFINE_TEST(30108, &ecc_test_hash,                              \
+	VTEST_DEFINE_TEST(30503, &ecc_test_pubkey_decompression_not_supp,     \
+		"Test public key decompression with not supported curve")     \
+	VTEST_DEFINE_TEST(40101, &ecc_test_hash,                              \
 		"Test hash functions")                                        \
-	VTEST_DEFINE_TEST(30109, &ecc_test_hash_negative,                     \
+	VTEST_DEFINE_TEST(40102, &ecc_test_hash_negative,                     \
 		"Test hash functions failure")                                \
 
 void ecc_test_signature_verification(void);
@@ -78,5 +82,7 @@ void ecc_test_pubkey_decompression(void);
 void ecc_test_pubkey_decompression_negative(void);
 void ecc_test_hash(void);
 void ecc_test_hash_negative(void);
+void ecc_test_signature_verification_not_supp(void);
+void ecc_test_pubkey_decompression_not_supp(void);
 
 #endif /* ECC_CRYPTO_H */
