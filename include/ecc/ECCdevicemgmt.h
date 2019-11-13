@@ -71,26 +71,29 @@
 #define ECC_DEVICEMGMT_TESTS \
 	VTEST_DEFINE_TEST(10101, &ecc_test_activate,                    \
 		"Test initialization of ECC dispatcher")                \
-	VTEST_DEFINE_TEST(10102, &ecc_test_deactivate_negative,         \
-		"Test deactivation of ECC dispatcher when not active")  \
-	VTEST_DEFINE_TEST(10103, &ecc_test_get_versions,                \
-		"Test to retrieve versions")                            \
-	VTEST_DEFINE_TEST(10104, &ecc_test_get_versions_negative,       \
-		"Test to retrieve versions when not active")            \
-	VTEST_DEFINE_TEST(10105, &ecc_test_activate_negative,           \
+	VTEST_DEFINE_TEST(10102, &ecc_test_activate_twice,              \
 		"Test initialization of dispatcher twice")              \
-	VTEST_DEFINE_TEST(10106, &ecc_test_cputime,                     \
+	VTEST_DEFINE_TEST(10201, &ecc_test_deactivate,                  \
+		"Test deactivation of ECC dispatcher")                  \
+	VTEST_DEFINE_TEST(10202, &ecc_test_deactivate_not_active,       \
+		"Test deactivation of ECC dispatcher when not active")  \
+	VTEST_DEFINE_TEST(10301, &ecc_test_get_versions,                \
+		"Test to retrieve versions")                            \
+	VTEST_DEFINE_TEST(10302, &ecc_test_get_versions_negative,       \
+		"Test to retrieve versions when not active")            \
+	VTEST_DEFINE_TEST(10601, &ecc_test_cputime,                     \
 		"Test setting load of executing units")                 \
-	VTEST_DEFINE_TEST(10107, &ecc_test_cputime_async,               \
+	VTEST_DEFINE_TEST(10701, &ecc_test_cputime_async,               \
 		"Test asynchronous setting load of executing units")    \
 
 void ecc_test_activate(void);
-void ecc_test_deactivate_negative(void);
+void ecc_test_deactivate_not_active(void);
 void ecc_test_get_versions(void);
 void ecc_test_get_versions_negative(void);
-void ecc_test_activate_negative(void);
+void ecc_test_activate_twice(void);
 void ecc_test_cputime(void);
 void ecc_test_cputime_async(void);
+void ecc_test_deactivate(void);
 
 #endif /* ECCDEVICEMGMT_H */
 

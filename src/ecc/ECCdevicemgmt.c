@@ -54,18 +54,39 @@ static volatile int count_async = ASYNC_COUNT_RESET;
  */
 void ecc_test_activate(void)
 {
+	disp_DispatcherVersion_t ver;
+
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(disp_getDispatcherVersion(&ver),
+		DISP_RETVAL_NO_ERROR);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
 /**
  *
- * @brief Negative test of disp_Deactivate
+ * @brief Test disp_Deactivate when not active
  *
  */
-void ecc_test_deactivate_negative(void)
+void ecc_test_deactivate_not_active(void)
 {
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Test of disp_Deactivate
+ *
+ */
+void ecc_test_deactivate(void)
+{
+	disp_DispatcherVersion_t ver;
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(disp_getDispatcherVersion(&ver),
+		DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(disp_getDispatcherVersion(&ver),
+		DISP_RETVAL_NOT_INITIATED);
 }
 
 /**
@@ -128,13 +149,17 @@ void ecc_test_get_versions_negative(void)
 
 /**
  *
- * @brief Negative test of disp_Activate
+ * @brief Test disp_Activate call if already active
  *
  */
-void ecc_test_activate_negative(void)
+void ecc_test_activate_twice(void)
 {
+	disp_DispatcherVersion_t ver;
+
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(disp_getDispatcherVersion(&ver),
+		DISP_RETVAL_NO_ERROR);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
