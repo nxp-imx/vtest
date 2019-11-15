@@ -55,6 +55,7 @@
  * The following behaviours are tested:
  *  - generated random number does not exceed requested size
  *  - two successive random numbers are different
+ *  - random number request for maximum size does not fail
  *
  */
 void test_getRandomNumber(void)
@@ -87,6 +88,11 @@ void test_getRandomNumber(void)
 						&rand2), V2XSE_SUCCESS);
 	/* Make sure they are different */
 	VTEST_CHECK_RESULT(!memcmp(rand1.data, rand2.data, sizeof(long)), 0);
+
+/* Test random number request for maximum size does not fail */
+	/* Get max size random number */
+	VTEST_CHECK_RESULT(v2xSe_getRandomNumber(V2XSE_MAX_RND_NUM_SIZE,
+					&statusCode, &rand2), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
