@@ -45,122 +45,16 @@
 #include "ECCcrypto.h"
 #include "ecc_dispatcher.h"
 #include "vtest_async.h"
+#include "ECCcrypto_data.h"
 
 static volatile int count_async = ASYNC_COUNT_RESET;
 
 /** Size of public key coordinate */
-#define PUBKEY_COORD_SIZE    32
+#define PUBKEY_COORD_SIZE    LENGTH_DOMAIN_PARAMS_256
 /** Result of memcmp when values match */
 #define MEMCMP_IDENTICAL      0
-/** Size of "message" for hash */
-#define HASH_MSG_SIZE         7
 /** Not supported curve */
 #define DISP_CURVE_NOT_SUPP   ((disp_CurveId_t)0xFF)
-
-/* Dataset for signature verification tests */
-/** Hash of "message" */
-static uint8_t hash_ver[32] = {
-	          0x1D, 0x6D, 0x0C, 0x46, 0x2B, 0xF0, 0xFB, 0x1A,
-	          0xEA, 0x1C, 0xF7, 0x22, 0xFB, 0xF3, 0xD1, 0xCF,
-	          0x94, 0xA9, 0xFB, 0xE3, 0xB7, 0xF9, 0x79, 0x2B,
-	          0x98, 0x14, 0x59, 0xE4, 0x13, 0x0A, 0x53, 0xAB
-	          };
-/** Message is "message" */
-static uint8_t msg_ver[HASH_MSG_SIZE] = {
-	          0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65
-	          };
-/** Public key x coordinate for verification*/
-static uint8_t pubKey_ver_x[32] = {
-	          0xC6, 0xA8, 0xBB, 0x62, 0xD9, 0x3E, 0x98, 0x0A,
-	          0xC4, 0x67, 0xC4, 0x4D, 0x38, 0x2C, 0xFB, 0x5E,
-	          0x7B, 0x40, 0x6A, 0x4E, 0x18, 0x14, 0x93, 0x80,
-	          0x1F, 0x4C, 0xCD, 0x68, 0x56, 0x9E, 0x6D, 0x3A
-	          };
-/** Public key y coordinate for verification */
-static uint8_t pubKey_ver_y[32] = {
-	          0x05, 0x2A, 0xA2, 0xE6, 0xEB, 0xD1, 0xE7, 0x73,
-	          0x7B, 0x9B, 0x79, 0x7C, 0xD4, 0x22, 0xF6, 0x17,
-	          0x66, 0x7A, 0x5A, 0xE3, 0x4E, 0xBD, 0xD9, 0xE6,
-	          0x52, 0xC0, 0x81, 0x93, 0xC2, 0x5F, 0x2D, 0x97
-	          };
-/** Signature r value to verify*/
-static uint8_t sign_ver_r[32] = {
-	          0x73, 0x5D, 0x9E, 0x22, 0x83, 0xCE, 0x2B, 0x1D,
-	          0xA6, 0xDA, 0x4A, 0x1C, 0x7A, 0x8D, 0x98, 0x21,
-	          0x4E, 0x9A, 0x9F, 0xC8, 0x6F, 0xC1, 0x0C, 0x51,
-	          0x93, 0x35, 0x52, 0x9D, 0xFF, 0xE9, 0x4B, 0x91
-	          };
-/** Signature s value to verify*/
-static uint8_t sign_ver_s[32] = {
-	          0x20, 0x14, 0xE4, 0x03, 0x57, 0xA4, 0x6E, 0x39,
-	          0xEA, 0x8B, 0x2E, 0xF1, 0xCB, 0x64, 0xE5, 0x6F,
-	          0xEF, 0x34, 0xD1, 0xDE, 0x93, 0x6B, 0xC8, 0x39,
-	          0x44, 0x86, 0xFD, 0x6F, 0x64, 0x26, 0x7A, 0xE6
-	          };
-/*
- * Dataset for public key decompression tests
- */
-/**
- * X-coordinate of public key
- * this will be the Y input for the test
- */
-static uint8_t pubKey_x[32] = {
-	          0x3c, 0x23, 0xa9, 0x76, 0x3a, 0x2f, 0x12, 0xbb,
-	          0x12, 0xe8, 0xde, 0xee, 0xb2, 0x69, 0x1c, 0x9e,
-	          0x79, 0x00, 0x30, 0xb7, 0xfc, 0x2e, 0xcf, 0xad,
-	          0xe3, 0x1e, 0x99, 0x51, 0x5b, 0x8b, 0xf1, 0x44
-	          };
-/**
- * Y-coordinate of public key before decompression test:
- * this will be the Y input for the test.
- * The first byte is:
- *     - 0x00 if LSB of Y-coordinate is 0
- *     - 0x01 if LSB of Y-coordinate is 1
- */
-static uint8_t pubKey_y[32] = {
-	          0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-	          };
-/**
- * Y-coordinate of public key: this is the expected output
- */
-static uint8_t pubKey_y_exp[32] = {
-	          0xed, 0x61, 0x30, 0x99, 0x9e, 0xe0, 0x2f, 0x23,
-	          0x10, 0x63, 0xf1, 0x40, 0x0c, 0x0a, 0xd1, 0x8c,
-	          0x02, 0x54, 0xbb, 0x24, 0xe8, 0x51, 0xaa, 0x52,
-	          0xdc, 0x4b, 0x27, 0x92, 0x4f, 0xcb, 0x06, 0x6d
-	          };
-/**
- * Y-coordinate of public key before decompression test:
- * this will be the Y input for the negative test.
- */
-static uint8_t pubKey_y_neg[32] = {
-	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-	          };
-
-/*
- * Dataset for sha256 tests
- */
-/** msg is "message" */
-static uint8_t sha256_msg[HASH_MSG_SIZE] = {
-	          0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65
-	          };
-/** Expected hash of "message" using SHA256 */
-static uint8_t sha256_hash_exp[32] = {
-	          0xab, 0x53, 0x0a, 0x13, 0xe4, 0x59, 0x14, 0x98,
-	          0x2b, 0x79, 0xf9, 0xb7, 0xe3, 0xfb, 0xa9, 0x94,
-	          0xcf, 0xd1, 0xf3, 0xfb, 0x22, 0xf7, 0x1c, 0xea,
-	          0x1a, 0xfb, 0xf0, 0x2b, 0x46, 0x0c, 0x6d, 0x1d
-	          };
-/** msg is "messagg": this is used for negative test */
-static uint8_t sha256_msg_neg[HASH_MSG_SIZE] = {
-	          0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x67
-	          };
 
 /**
  * @brief   Signature verification callback: positive test
@@ -211,8 +105,8 @@ void my_disp_DecompressPubKeyCallback(void *sequence_number,
 	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
 	/* Compare decompressed and expected Y-coordinate */
 	VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
-		(const void *) pubKey_y_exp, PUBKEY_COORD_SIZE),
-		MEMCMP_IDENTICAL);
+		(const void *) test_dec_pubKey_y_exp_nistp256,
+		PUBKEY_COORD_SIZE), MEMCMP_IDENTICAL);
 }
 
 /**
@@ -233,8 +127,8 @@ void my_disp_DecompressPubKeyCallback_negative(void *sequence_number,
 	 * This time if memcmp is not 0, the test PASS
 	 */
 	VTEST_CHECK_RESULT(!memcmp((const void *) pubKey_decompressed->y,
-		(const void *) pubKey_y_exp, PUBKEY_COORD_SIZE),
-		MEMCMP_IDENTICAL);
+		(const void *) test_dec_pubKey_y_exp_nistp256,
+		PUBKEY_COORD_SIZE), MEMCMP_IDENTICAL);
 }
 
 /**
@@ -250,12 +144,12 @@ void ecc_test_signature_verification(void)
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
-	/* Positive verification test */
-	pubKey.x = (uint8_t *) pubKey_ver_x;
-	pubKey.y = (uint8_t *) pubKey_ver_y;
-	sig.r    = (uint8_t *) sign_ver_r;
-	sig.s    = (uint8_t *) sign_ver_s;
-	hash     = (disp_Hash_t) hash_ver;
+	/* Positive verification test NISTP256 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
+	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
+	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
+	hash     = (disp_Hash_t) test_ver_hash_256;
 	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
 		DISP_CURVE_NISTP256, &pubKey, hash, &sig,
 		disp_VerifSigOfHashCallback), DISP_RETVAL_NO_ERROR,
@@ -278,12 +172,12 @@ void ecc_test_signature_verification_negative(void)
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
 	/* Negative verification test */
-	pubKey.x = (uint8_t *) pubKey_ver_x;
-	pubKey.y = (uint8_t *) pubKey_ver_y;
-        sig.r    = (uint8_t *) sign_ver_r;
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
+	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
 	/* Using twice r: giving (r,r) instead of (r,s) */
-        sig.s    = (uint8_t *) sign_ver_r;
-        hash     = (disp_Hash_t) hash_ver;
+	sig.s    = (uint8_t *) test_ver_sign_r_nistp256;
+	hash     = (disp_Hash_t) test_ver_hash_256;
 	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
 		DISP_CURVE_NISTP256, &pubKey, hash, &sig,
 		disp_VerifSigOfHashCallback_negative), DISP_RETVAL_NO_ERROR,
@@ -306,11 +200,11 @@ void ecc_test_signature_verification_not_supp(void)
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
 	/* Not supported curve test */
-	pubKey.x = (uint8_t *) pubKey_ver_x;
-	pubKey.y = (uint8_t *) pubKey_ver_y;
-	sig.r    = (uint8_t *) sign_ver_r;
-	sig.s    = (uint8_t *) sign_ver_s;
-	hash     = (disp_Hash_t) hash_ver;
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
+	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
+	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
+	hash     = (disp_Hash_t) test_ver_hash_256;
 	VTEST_CHECK_RESULT(disp_ecc_verify_signature((void *) 0, 0,
 		DISP_CURVE_NOT_SUPP, &pubKey, hash, &sig,
 		disp_VerifSigOfHashCallback),
@@ -329,8 +223,8 @@ void ecc_test_pubkey_decompression(void)
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
-	pubKey.x = pubKey_x;
-	pubKey.y = pubKey_y;
+	pubKey.x = test_dec_pubKey_x_nistp256;
+	pubKey.y = test_dec_pubKey_y_nistp256;
 	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_decompressPublicKey((void *)0, 0,
 		DISP_CURVE_NISTP256, &pubKey, my_disp_DecompressPubKeyCallback),
 		DISP_RETVAL_NO_ERROR, count_async);
@@ -349,8 +243,8 @@ void ecc_test_pubkey_decompression_negative(void)
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
-	pubKey.x = pubKey_x;
-	pubKey.y = pubKey_y_neg;
+	pubKey.x = test_dec_pubKey_x_nistp256;
+	pubKey.y = test_dec_pubKey_y_neg_nistp256;
 	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_decompressPublicKey((void *)0, 0,
 		DISP_CURVE_NISTP256, &pubKey,
 		my_disp_DecompressPubKeyCallback_negative),
@@ -370,8 +264,8 @@ void ecc_test_pubkey_decompression_not_supp(void)
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
-	pubKey.x = pubKey_x;
-	pubKey.y = pubKey_y_neg;
+	pubKey.x = test_dec_pubKey_x_nistp256;
+	pubKey.y = test_dec_pubKey_y_neg_nistp256;
 	VTEST_CHECK_RESULT(disp_ecc_decompressPublicKey((void *)0, 0,
 		DISP_CURVE_NOT_SUPP, &pubKey,
 		my_disp_DecompressPubKeyCallback),
@@ -386,12 +280,14 @@ void ecc_test_pubkey_decompression_not_supp(void)
  */
 void ecc_test_hash(void)
 {
-	uint8_t sha256_hash_got[32];
+	uint8_t sha256_hash_got[LENGTH_DOMAIN_PARAMS_256];
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	disp_SHA256((const void *) sha256_msg, HASH_MSG_SIZE, sha256_hash_got);
-	VTEST_CHECK_RESULT(memcmp((const void *) sha256_hash_exp,
-		(const void *) sha256_hash_got, 32), MEMCMP_IDENTICAL);
+	disp_SHA256((const void *) test_hash_msg_256, HASH_MSG_SIZE,
+		sha256_hash_got);
+	VTEST_CHECK_RESULT(memcmp((const void *) test_hash_msg_exp_256,
+		(const void *) sha256_hash_got, LENGTH_DOMAIN_PARAMS_256),
+		MEMCMP_IDENTICAL);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
@@ -402,13 +298,14 @@ void ecc_test_hash(void)
  */
 void ecc_test_hash_negative(void)
 {
-	uint8_t sha256_hash_got[32];
+	uint8_t sha256_hash_got[LENGTH_DOMAIN_PARAMS_256];
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	disp_SHA256((const void *) sha256_msg_neg, HASH_MSG_SIZE,
+	disp_SHA256((const void *) test_hash_msg_neg_256, HASH_MSG_SIZE,
 		sha256_hash_got);
-	VTEST_CHECK_RESULT(!memcmp((const void *) sha256_hash_exp,
-		(const void *) sha256_hash_got, 32), MEMCMP_IDENTICAL);
+	VTEST_CHECK_RESULT(!memcmp((const void *) test_hash_msg_exp_256,
+		(const void *) sha256_hash_got, LENGTH_DOMAIN_PARAMS_256),
+		MEMCMP_IDENTICAL);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
@@ -423,13 +320,13 @@ void ecc_test_signature_verification_message(void)
 	disp_Sig_t sig;
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	pubKey.x = (uint8_t *) pubKey_ver_x;
-	pubKey.y = (uint8_t *) pubKey_ver_y;
-	sig.r    = (uint8_t *) sign_ver_r;
-	sig.s    = (uint8_t *) sign_ver_s;
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
+	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
+	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
 	VTEST_CHECK_RESULT_ASYNC_INC(
 		disp_ecc_verify_signature_of_message((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey, (const void *) msg_ver,
+		DISP_CURVE_NISTP256, &pubKey, (const void *) test_ver_msg,
 		HASH_MSG_SIZE, &sig, disp_VerifSigOfHashCallback),
 		DISP_RETVAL_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
@@ -452,11 +349,11 @@ void ecc_test_signature_verification_key(void)
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
 	/* Positive verification test */
-	pubKey.x = (uint8_t *) pubKey_ver_x;
-	pubKey.y = (uint8_t *) pubKey_ver_y;
-	sig.r    = (uint8_t *) sign_ver_r;
-	sig.s    = (uint8_t *) sign_ver_s;
-	hash     = (disp_Hash_t) hash_ver;
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
+	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
+	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
+	hash     = (disp_Hash_t) test_ver_hash_256;
 	/* First parameter of the API is the key storage ID, which is ignored.
 	 * See function's description above
 	 */
@@ -479,16 +376,16 @@ void ecc_test_signature_verification_key_of_msg(void)
 	disp_Sig_t sig;
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	pubKey.x = (uint8_t *) pubKey_ver_x;
-	pubKey.y = (uint8_t *) pubKey_ver_y;
-	sig.r    = (uint8_t *) sign_ver_r;
-	sig.s    = (uint8_t *) sign_ver_s;
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
+	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
+	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
 	/* First parameter of the API is the key storage ID, which is ignored.
 	 * See function's description above
 	 */
 	VTEST_CHECK_RESULT_ASYNC_INC(
 		disp_ecc_verify_signature_key_of_message(0, (void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey, (const void *) msg_ver,
+		DISP_CURVE_NISTP256, &pubKey, (const void *) test_ver_msg,
 		HASH_MSG_SIZE, &sig, disp_VerifSigOfHashCallback),
 		DISP_RETVAL_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
