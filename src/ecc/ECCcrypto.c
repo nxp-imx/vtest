@@ -155,6 +155,31 @@ void ecc_test_signature_verification(void)
 		disp_VerifSigOfHashCallback), DISP_RETVAL_NO_ERROR,
 		count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL256R1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp256r1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp256r1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp256r1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp256r1;
+	hash     = (disp_Hash_t) test_ver_hash_256;
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
+		DISP_CURVE_BP256R1, &pubKey, hash, &sig,
+		disp_VerifSigOfHashCallback), DISP_RETVAL_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL384R1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp384r1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp384r1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp384r1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp384r1;
+	hash     = (disp_Hash_t) test_ver_hash_384;
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
+		DISP_CURVE_BP384R1, &pubKey, hash, &sig,
+		disp_VerifSigOfHashCallback), DISP_RETVAL_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
@@ -171,7 +196,7 @@ void ecc_test_signature_verification_negative(void)
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
-	/* Negative verification test */
+	/* Negative verification test NISTP256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
 	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
 	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
@@ -183,6 +208,33 @@ void ecc_test_signature_verification_negative(void)
 		disp_VerifSigOfHashCallback_negative), DISP_RETVAL_NO_ERROR,
 		count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Negative verification test BRAINPOOL256R1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp256r1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp256r1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp256r1;
+	/* Using twice r: giving (r,r) instead of (r,s) */
+	sig.s    = (uint8_t *) test_ver_sign_r_bp256r1;
+	hash     = (disp_Hash_t) test_ver_hash_256;
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
+		DISP_CURVE_BP256R1, &pubKey, hash, &sig,
+		disp_VerifSigOfHashCallback_negative), DISP_RETVAL_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Negative verification test BRAINPOOL384R1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp384r1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp384r1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp384r1;
+	/* Using twice r: giving (r,r) instead of (r,s) */
+	sig.s    = (uint8_t *) test_ver_sign_r_bp384r1;
+	hash     = (disp_Hash_t) test_ver_hash_384;
+	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
+		DISP_CURVE_BP384R1, &pubKey, hash, &sig,
+		disp_VerifSigOfHashCallback_negative), DISP_RETVAL_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
