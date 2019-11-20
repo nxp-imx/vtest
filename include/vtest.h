@@ -84,8 +84,7 @@ typedef struct {
 void outputLog(const char *const fileName, const int lineNumber,
 					const char *const format, ...);
 
-#define VTEST_LOG(format, ...)	\
-		outputLog( __FILE__, __LINE__, format, __VA_ARGS__)
+#define VTEST_LOG(...)        outputLog(__FILE__, __LINE__, __VA_ARGS__)
 
 void checkResult(const char *const fileName,
 		const int lineNumber, int actual, int expected);
