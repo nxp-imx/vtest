@@ -98,7 +98,7 @@ do {								\
 	printf("Running test %06d: %s\n", num, name);		\
 } while (0)
 
-#define VTEST_END_TEST_CASE()					\
+#define VTEST_END_TEST_CASE(num)				\
 do {								\
 	overallTestStatus.numSubTestsRun +=			\
 			currentTestStatus.currentSubTestsRun;	\
@@ -107,10 +107,13 @@ do {								\
 	overallTestStatus.numTestsRun++;			\
 	if (currentTestStatus.currentSubTestsFail) {		\
 		overallTestStatus.numTestsFail++;		\
+		printf("Test %06d: FAIL\n", num);		\
 	} else if (currentTestStatus.currentTestConfFlagged){	\
 		overallTestStatus.numTestsConf++;		\
+		printf("Test %06d: CONF\n", num);		\
 	} else {						\
 		overallTestStatus.numTestsPass++;		\
+		printf("Test %06d: PASS\n", num);		\
 	}							\
 } while (0)
 

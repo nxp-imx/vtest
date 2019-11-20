@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 			VTEST_START_TEST_CASE(allTests[i].testNum,
 						allTests[i].testName);
 			allTests[i].testFn();
-			VTEST_END_TEST_CASE();
+			VTEST_END_TEST_CASE(allTests[i].testNum);
 		} else {
 			VTEST_SKIP_TEST_CASE();
 		}
