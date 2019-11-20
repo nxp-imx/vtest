@@ -164,6 +164,8 @@ int main(int argc, char* argv[])
 	int minTest = BEFORE_FIRST_TEST;
 	int maxTest = AFTER_LAST_TEST;
 	int numDefinedTests = getNumTests();
+	char strMinTest[7]; /* 6-digits test number + null byte */
+	char strMaxTest[7]; /* 6-digits test number + null byte */
 
 	printf("vtest version "VERSION": Start\n");
 
@@ -172,9 +174,36 @@ int main(int argc, char* argv[])
 	} else if (argc == 2) {
 		if (!strcmp(argv[1], "clean"))
 			return seClean();
-		printf("Running single test\n");
-		minTest = getTestNum(argv[1]);
-		maxTest = minTest;
+		if (strlen(argv[1]) == 2) {
+			/*
+			 * If only the test suite prefix is specified (i.e. the
+			 * first two digits XX), this will be parsed to run the
+			 * full range of tests between XX0101 XX9999.
+			 * e.g. "$ vtest 01" will run all the 01 test suite,
+			 * from 010101 to 019999.
+			 */
+			printf("Running test suite %s\n", argv[1]);
+			/* Copy first two digits + null byte */
+			strncpy(strMinTest, argv[1], 3);
+			/*
+			 * Concatenate 0101 to have the first possible test of
+			 * the test suite. strncat adds a null byte at the end
+			 */
+			strncat(strMinTest, "0101", 4);
+			minTest = getTestNum(strMinTest);
+			/* Copy first two digits + null byte */
+			strncpy(strMaxTest, argv[1], 3);
+			/*
+			 * Concatenate 9999 to have the last possible test of
+			 * the test suite. strncat adds a null byte at the end
+			 */
+			strncat(strMaxTest, "9999", 4);
+			maxTest = getTestNum(strMaxTest);
+		} else {
+			printf("Running single test\n");
+			minTest = getTestNum(argv[1]);
+			maxTest = minTest;
+		}
 	} else if (argc == 3) {
 		printf("Running range of tests\n");
 		minTest = getTestNum(argv[1]);
