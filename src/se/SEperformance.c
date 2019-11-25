@@ -721,6 +721,8 @@ void test_sigVerifLatencyUnloaded(void)
  * simulation of a loaded system is done using constant signature verifications
  * in parallel with the signature generations.
  *
+ * @param testType indicates whether test should run on loaded system or not
+ *
  */
 void test_sigGenLatency(uint32_t testType)
 {

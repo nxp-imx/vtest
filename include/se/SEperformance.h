@@ -109,6 +109,7 @@ void test_sigGenLatencyUnloaded(void);
 /** Test should be with in unloaded system */
 #define UNLOADED_TEST		1
 
+/** Set up data pointers for next signature verification loop */
 #define SETUP_ECDSA_SIG_VERIF_PTRS(loop)				\
 do {									\
 	verif_pubKey.x = pubKeyArray[(loop - 1) % NUM_KEYS_PERF_TESTS].x;\
@@ -118,6 +119,7 @@ do {									\
 	verif_sig.s = sigArray[loop - 1].s;				\
 } while (0)
 
+/** Calculate difference in ns between two timespec structs */
 #define CALCULATE_TIME_DIFF_NS(start, end, diff)			\
 do {									\
 	diff = (end.tv_sec - start.tv_sec) * 1000000000;		\
