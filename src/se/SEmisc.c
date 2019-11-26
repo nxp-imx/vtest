@@ -68,7 +68,7 @@ int seClean(void)
 		printf("Error removing US state\n");
 		error_seen = 1;
 	}
-	if (system("rm /etc/seco_hsm/*")) {
+	if (system("rm -f /etc/seco_hsm/*")) {
 		printf("Error removing seco blob files\n");
 		error_seen = 1;
 	}
