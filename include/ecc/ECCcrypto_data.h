@@ -43,7 +43,10 @@
 #ifndef ECC_CRYPTO_DATA_H
 #define ECC_CRYPTO_DATA_H
 
+/* Curve domain parameters */
+/** 32 bytes for 256-bit Elliptic Curve Domain Parameter */
 #define LENGTH_DOMAIN_PARAMS_256 32
+/** 48 bytes for 384-bit Elliptic Curve Domain Parameter */
 #define LENGTH_DOMAIN_PARAMS_384 48
 
 /** Size of "message" for hash */
