@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
 			 * Concatenate 0101 to have the first possible test of
 			 * the test suite. strncat adds a null byte at the end
 			 */
-			strncat(strMinTest, "0101", 4);
+			strncat(strMinTest, "0101", 5);
 			minTest = getTestNum(strMinTest);
 			/* Copy first two digits + null byte */
 			strncpy(strMaxTest, argv[1], 3);
@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 			 * Concatenate 9999 to have the last possible test of
 			 * the test suite. strncat adds a null byte at the end
 			 */
-			strncat(strMaxTest, "9999", 4);
+			strncat(strMaxTest, "9999", 5);
 			maxTest = getTestNum(strMaxTest);
 		} else {
 			printf("Running single test\n");
