@@ -58,9 +58,14 @@ target_link_libraries (vtest
 	${DISP_SRC}/libNxDispatcher.so.0.1
 	pthread
 	rt
+	${LTTNG_LIB}
+	dl
 	)
 
 target_compile_options(vtest PRIVATE -Werror -Wall)
+
+target_link_options(vtest PRIVATE
+	-Wl,--unresolved-symbols=ignore-in-shared-libs)
 
 install (TARGETS vtest RUNTIME DESTINATION bin)
 
