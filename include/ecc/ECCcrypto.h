@@ -68,6 +68,12 @@
 		"Test public key decompression failure")                      \
 	VTEST_DEFINE_TEST(30503, &ecc_test_pubkey_decompression_not_supp,     \
 		"Test public key decompression with not supported curve")     \
+	VTEST_DEFINE_TEST(30601, &ecc_test_pubkey_reconstruction,             \
+		"Test public key reconstruction")                             \
+	VTEST_DEFINE_TEST(30602, &ecc_test_pubkey_reconstruction_negative,    \
+		"Test public key reconstruction failure")                     \
+	VTEST_DEFINE_TEST(30603, &ecc_test_pubkey_reconstruction_not_supp,    \
+		"Test public key reconstruction with not supported curve")    \
 	VTEST_DEFINE_TEST(40101, &ecc_test_hash,                              \
 		"Test hash functions")                                        \
 	VTEST_DEFINE_TEST(40102, &ecc_test_hash_negative,                     \
@@ -84,5 +90,8 @@ void ecc_test_hash(void);
 void ecc_test_hash_negative(void);
 void ecc_test_signature_verification_not_supp(void);
 void ecc_test_pubkey_decompression_not_supp(void);
+void ecc_test_pubkey_reconstruction(void);
+void ecc_test_pubkey_reconstruction_negative(void);
+void ecc_test_pubkey_reconstruction_not_supp(void);
 
 #endif /* ECC_CRYPTO_H */

@@ -132,6 +132,112 @@ void my_disp_DecompressPubKeyCallback_negative(void *sequence_number,
 }
 
 /**
+ * @brief   Public key reconstruction callback: positive test
+ *
+ * @param[in]  callback data              the curve id
+ * @param[out] ret                        returned value by the dispatcher
+ * @param[out] reconstructed_public_key   reconstructed public key
+ *
+ */
+static void my_disp_ReconPubKeyCallback(void *callbackData,
+	disp_ReturnValue_t ret, disp_PubKey_t *reconstructed_public_key)
+{
+	disp_CurveId_t curveID;
+
+	/* Use callback data to store curve id */
+	curveID = *(disp_CurveId_t *) callbackData;
+
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+
+	switch (curveID) {
+
+	case DISP_CURVE_NISTP256:
+		VTEST_CHECK_RESULT(memcmp(
+			(const void *) reconstructed_public_key->x,
+			(const void *) test_rec_pubKey_x_exp_nistp256,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+
+		VTEST_CHECK_RESULT(memcmp(
+			(const void *) reconstructed_public_key->y,
+			(const void *) test_rec_pubKey_y_exp_nistp256,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	case DISP_CURVE_BP256R1:
+		VTEST_CHECK_RESULT(memcmp(
+			(const void *) reconstructed_public_key->x,
+			(const void *) test_rec_pubKey_x_exp_bp256r1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+
+		VTEST_CHECK_RESULT(memcmp(
+			(const void *) reconstructed_public_key->y,
+			(const void *) test_rec_pubKey_y_exp_bp256r1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	default:
+		/*
+		 * This should be never executed.
+		 * If it is executed, it prints an error and the test fails.
+		 */
+		VTEST_LOG("Curve not supported");
+		VTEST_CHECK_RESULT(curveID, DISP_CURVE_NOT_SUPP);
+		break;
+	}
+}
+
+/**
+ * @brief   Public key reconstruction callback: negative test
+ *
+ * @param[in]  callback data              the curve id
+ * @param[out] ret                        returned value by the dispatcher
+ * @param[out] reconstructed_public_key   reconstructed public key
+ *
+ */
+static void my_disp_ReconPubKeyCallback_negative(void *callbackData,
+	disp_ReturnValue_t ret, disp_PubKey_t *reconstructed_public_key)
+{
+	disp_CurveId_t curveID;
+
+	/* Use callback data to store curve id */
+	curveID = *(disp_CurveId_t *) callbackData;
+
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+
+	switch (curveID) {
+
+	case DISP_CURVE_NISTP256:
+		VTEST_CHECK_RESULT(!memcmp(
+			(const void *) reconstructed_public_key->x,
+			(const void *) test_rec_pubKey_x_exp_nistp256,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+
+		VTEST_CHECK_RESULT(!memcmp(
+			(const void *) reconstructed_public_key->y,
+			(const void *) test_rec_pubKey_y_exp_nistp256,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	case DISP_CURVE_BP256R1:
+		VTEST_CHECK_RESULT(!memcmp(
+			(const void *) reconstructed_public_key->x,
+			(const void *) test_rec_pubKey_x_exp_bp256r1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+
+		VTEST_CHECK_RESULT(!memcmp(
+			(const void *) reconstructed_public_key->y,
+			(const void *) test_rec_pubKey_y_exp_bp256r1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	default:
+		/*
+		 * This should be never executed.
+		 * If it is executed, it prints an error and the test fails.
+		 */
+		VTEST_LOG("Curve not supported");
+		VTEST_CHECK_RESULT(curveID, DISP_CURVE_NOT_SUPP);
+		break;
+	}
+}
+
+/**
  *
  * @brief Positive test of disp_ecc_verify_signature with NISTP256
  *
@@ -441,5 +547,124 @@ void ecc_test_signature_verification_key_of_msg(void)
 		HASH_MSG_SIZE, &sig, disp_VerifSigOfHashCallback),
 		DISP_RETVAL_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Positive test of disp_ecc_reconstructPublicKey
+ *
+ */
+void ecc_test_pubkey_reconstruction(void)
+{
+	disp_Hash_t hash;
+	disp_Point_t rec_data;
+	disp_Point_t caPubKey;
+	disp_CurveId_t curveID;
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+
+	/* Positive reconstruction test NISTP256 */
+	curveID    = DISP_CURVE_NISTP256;
+	hash       = (uint8_t *) test_rec_hash_256;
+	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_nistp256;
+	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_nistp256;
+	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_x_nistp256;
+	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_nistp256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_reconstructPublicKey((void *) &curveID, 0,
+		curveID, hash, &rec_data, &caPubKey,
+		my_disp_ReconPubKeyCallback), DISP_RETVAL_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive reconstruction test BP256R1 */
+	curveID    = DISP_CURVE_BP256R1;
+	hash       = (uint8_t *) test_rec_hash_256;
+	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_bp256r1;
+	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_bp256r1;
+	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_x_bp256r1;
+	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_bp256r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_reconstructPublicKey((void *) &curveID, 0,
+		curveID, hash, &rec_data, &caPubKey,
+		my_disp_ReconPubKeyCallback), DISP_RETVAL_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Negative test of disp_ecc_reconstructPublicKey
+ *
+ */
+void ecc_test_pubkey_reconstruction_negative(void)
+{
+	disp_Hash_t hash;
+	disp_Point_t rec_data;
+	disp_Point_t caPubKey;
+	disp_CurveId_t curveID;
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+
+	/* Negative reconstruction test NISTP256 */
+	curveID    = DISP_CURVE_NISTP256;
+	hash       = (uint8_t *) test_rec_hash_256;
+	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_nistp256;
+	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_nistp256;
+	/* Using y coordinate twice for CA public key */
+	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_y_nistp256;
+	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_nistp256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_reconstructPublicKey((void *) &curveID, 0,
+		curveID, hash, &rec_data, &caPubKey,
+		my_disp_ReconPubKeyCallback_negative), DISP_RETVAL_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Negative reconstruction test BP256R1 */
+	curveID    = DISP_CURVE_BP256R1;
+	hash       = (uint8_t *) test_rec_hash_256;
+	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_bp256r1;
+	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_bp256r1;
+	/* Using y coordinate twice for CA public key */
+	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_y_bp256r1;
+	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_bp256r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_reconstructPublicKey((void *) &curveID, 0,
+		curveID, hash, &rec_data, &caPubKey,
+		my_disp_ReconPubKeyCallback_negative), DISP_RETVAL_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Test of disp_ecc_reconstructPublicKey with a not supported curve
+ *
+ */
+void ecc_test_pubkey_reconstruction_not_supp(void)
+{
+	disp_Hash_t hash;
+	disp_Point_t rec_data;
+	disp_Point_t caPubKey;
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+
+	hash       = (uint8_t *) test_rec_hash_256;
+	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_nistp256;
+	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_nistp256;
+	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_x_nistp256;
+	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_nistp256;
+	VTEST_CHECK_RESULT(
+		disp_ecc_reconstructPublicKey((void *)0, 0,
+		DISP_CURVE_NOT_SUPP, hash, &rec_data, &caPubKey,
+		my_disp_ReconPubKeyCallback),
+		DISP_RETVAL_CRYPTO_FUNC_NOT_AVAIL);
+
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
