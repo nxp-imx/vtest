@@ -49,8 +49,6 @@
 
 static volatile int count_async = ASYNC_COUNT_RESET;
 
-/** Size of public key coordinate */
-#define PUBKEY_COORD_SIZE    LENGTH_DOMAIN_PARAMS_256
 /** Result of memcmp when values match */
 #define MEMCMP_IDENTICAL      0
 /** Not supported curve */
@@ -93,42 +91,103 @@ void disp_VerifSigOfHashCallback_negative(void *sequence_number,
 /**
  * @brief   Public key decompression callback: positive test
  *
- * @param[in]  sequence_number       sequence operation id (not used?)
+ * @param[in]  callbackData          the curve id
  * @param[out] ret                   returned value by the dispatcher
  * @param[out] pubKey_decompressed   decompressed public key
  *
  */
-void my_disp_DecompressPubKeyCallback(void *sequence_number,
+void my_disp_DecompressPubKeyCallback(void *callbackData,
 	disp_ReturnValue_t ret,
 	disp_PubKey_t *pubKey_decompressed)
 {
+	disp_CurveId_t curveID;
+
+	/* Callback data used to store curve id */
+	curveID = *(disp_CurveId_t *) callbackData;
+
 	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
-	/* Compare decompressed and expected Y-coordinate */
-	VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
-		(const void *) test_dec_pubKey_y_exp_nistp256,
-		PUBKEY_COORD_SIZE), MEMCMP_IDENTICAL);
+
+	switch (curveID) {
+	/*
+	 * Compare decompressed and expected Y-coordinate
+	 */
+	case DISP_CURVE_NISTP256:
+		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_nistp256,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	case DISP_CURVE_BP256R1:
+		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_bp256r1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	case DISP_CURVE_BP384R1:
+		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_bp384r1,
+			LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
+		break;
+	default:
+		/*
+		 * This should be never executed.
+		 * If it is executed, it prints an error and the test fails.
+		 */
+		VTEST_LOG("Curve not supported");
+		VTEST_CHECK_RESULT(curveID, DISP_CURVE_NOT_SUPP);
+		break;
+	}
 }
 
 /**
  * @brief   Public key decompression callback: negative test
  *
- * @param[in]  sequence_number       sequence operation id (not used?)
+ * @param[in]  callbackData          the curve id
  * @param[out] ret                   returned value by the dispatcher
  * @param[out] pubKey_decompressed   decompressed public key
  *
  */
-void my_disp_DecompressPubKeyCallback_negative(void *sequence_number,
+void my_disp_DecompressPubKeyCallback_negative(void *callbackData,
 	disp_ReturnValue_t ret,
 	disp_PubKey_t *pubKey_decompressed)
 {
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	disp_CurveId_t curveID;
+
+	/* Callback data used to store curve id */
+	curveID = *(disp_CurveId_t *) callbackData;
+
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR,	count_async);
+
+	switch (curveID) {
 	/*
-	 * Compare decompressed and expected Y-coordinate
+	 * Compare decompressed and expected Y. They must be different.
 	 * This time if memcmp is not 0, the test PASS
 	 */
-	VTEST_CHECK_RESULT(!memcmp((const void *) pubKey_decompressed->y,
-		(const void *) test_dec_pubKey_y_exp_nistp256,
-		PUBKEY_COORD_SIZE), MEMCMP_IDENTICAL);
+	case DISP_CURVE_NISTP256:
+		VTEST_CHECK_RESULT(
+			!memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_nistp256,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	case DISP_CURVE_BP256R1:
+		VTEST_CHECK_RESULT(
+			!memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_bp256r1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	case DISP_CURVE_BP384R1:
+		VTEST_CHECK_RESULT(
+			!memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_bp384r1,
+			LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
+		break;
+	default:
+		/*
+		 * This should be never executed.
+		 * If it is executed, it prints an error and the test fails.
+		 */
+		VTEST_LOG("Curve not supported");
+		VTEST_CHECK_RESULT(curveID, DISP_CURVE_NOT_SUPP);
+		break;
+	}
 }
 
 /**
@@ -372,42 +431,91 @@ void ecc_test_signature_verification_not_supp(void)
 
 /**
  *
- * @brief Positive test of disp_ecc_decompressPublicKey with NISTP256
+ * @brief Positive test of disp_ecc_decompressPublicKey
  *
  */
 void ecc_test_pubkey_decompression(void)
 {
 	disp_PubKey_t pubKey;
+	disp_CurveId_t curveID;
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
+	/* Positive key decompression test NISTP256 */
+	curveID = DISP_CURVE_NISTP256;
 	pubKey.x = test_dec_pubKey_x_nistp256;
 	pubKey.y = test_dec_pubKey_y_nistp256;
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_decompressPublicKey((void *)0, 0,
-		DISP_CURVE_NISTP256, &pubKey, my_disp_DecompressPubKeyCallback),
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_decompressPublicKey((void *) &curveID, 0,
+		curveID, &pubKey, my_disp_DecompressPubKeyCallback),
 		DISP_RETVAL_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive key decompression test BP256R1 */
+	curveID = DISP_CURVE_BP256R1;
+	pubKey.x = test_dec_pubKey_x_bp256r1;
+	pubKey.y = test_dec_pubKey_y_bp256r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_decompressPublicKey((void *) &curveID, 0,
+		curveID, &pubKey, my_disp_DecompressPubKeyCallback),
+		DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive key decompression test BP384R1 */
+	curveID = DISP_CURVE_BP384R1;
+	pubKey.x = test_dec_pubKey_x_bp384r1;
+	pubKey.y = test_dec_pubKey_y_bp384r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_decompressPublicKey((void *) &curveID, 0,
+		curveID, &pubKey, my_disp_DecompressPubKeyCallback),
+		DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
 /**
  *
- * @brief Negative test of disp_ecc_decompressPublicKey with NISTP256
+ * @brief Negative test of disp_ecc_decompressPublicKey
  *
  */
 void ecc_test_pubkey_decompression_negative(void)
 {
 	disp_PubKey_t pubKey;
+	disp_CurveId_t curveID;
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
+	/* Negative key decompression test NISTP256 */
+	curveID = DISP_CURVE_NISTP256;
 	pubKey.x = test_dec_pubKey_x_nistp256;
 	pubKey.y = test_dec_pubKey_y_neg_nistp256;
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_decompressPublicKey((void *)0, 0,
-		DISP_CURVE_NISTP256, &pubKey,
-		my_disp_DecompressPubKeyCallback_negative),
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_decompressPublicKey((void *) &curveID, 0,
+		curveID, &pubKey, my_disp_DecompressPubKeyCallback_negative),
 		DISP_RETVAL_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Negative key decompression test BP256R1 */
+	curveID = DISP_CURVE_BP256R1;
+	pubKey.x = test_dec_pubKey_x_bp256r1;
+	pubKey.y = test_dec_pubKey_y_neg_bp256r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_decompressPublicKey((void *) &curveID, 0,
+		curveID, &pubKey, my_disp_DecompressPubKeyCallback_negative),
+		DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Negative key decompression test BP384R1 */
+	curveID = DISP_CURVE_BP384R1;
+	pubKey.x = test_dec_pubKey_x_bp384r1;
+	pubKey.y = test_dec_pubKey_y_neg_bp384r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_decompressPublicKey((void *) &curveID, 0,
+		curveID, &pubKey, my_disp_DecompressPubKeyCallback_negative),
+		DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
