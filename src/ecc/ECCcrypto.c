@@ -43,7 +43,7 @@
 #include <string.h>
 
 #include "ECCcrypto.h"
-#include "ecc_dispatcher.h"
+#include "ecdsa.h"
 #include "vtest_async.h"
 #include "ECCcrypto_data.h"
 
@@ -298,7 +298,7 @@ static void my_disp_ReconPubKeyCallback_negative(void *callbackData,
 
 /**
  *
- * @brief Positive test of disp_ecc_verify_signature with NISTP256
+ * @brief Positive test of disp_ecc_verify_signature
  *
  */
 void ecc_test_signature_verification(void)
@@ -350,7 +350,31 @@ void ecc_test_signature_verification(void)
 
 /**
  *
- * @brief Negative test of disp_ecc_verify_signature with NISTP256
+ * @brief Positive test of disp_ecc_verify_signature_of_message
+ *
+ */
+void ecc_test_signature_verification_message(void)
+{
+	disp_PubKey_t pubKey;
+	disp_Sig_t sig;
+
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
+	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
+	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		disp_ecc_verify_signature_of_message((void *) 0, 0,
+		DISP_CURVE_NISTP256, &pubKey, (const void *) test_ver_msg,
+		HASH_MSG_SIZE, &sig, disp_VerifSigOfHashCallback),
+		DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Negative test of disp_ecc_verify_signature
  *
  */
 void ecc_test_signature_verification_negative(void)
@@ -572,89 +596,6 @@ void ecc_test_hash_negative(void)
 	VTEST_CHECK_RESULT(!memcmp((const void *) test_hash_msg_exp_256,
 		(const void *) sha256_hash_got, LENGTH_DOMAIN_PARAMS_256),
 		MEMCMP_IDENTICAL);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
-}
-
-/**
- *
- * @brief Positive test of disp_ecc_verify_signature_of_message
- *
- */
-void ecc_test_signature_verification_message(void)
-{
-	disp_PubKey_t pubKey;
-	disp_Sig_t sig;
-
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
-	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
-	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
-	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
-	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_verify_signature_of_message((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey, (const void *) test_ver_msg,
-		HASH_MSG_SIZE, &sig, disp_VerifSigOfHashCallback),
-		DISP_RETVAL_NO_ERROR, count_async);
-	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
-}
-
-/**
- *
- * @brief Positive test of disp_ecc_verify_signature_key
- * Note from API source code:
- * same as disp_ecc_verify_signature_of_message (ignoring key_storage)
- *
- */
-void ecc_test_signature_verification_key(void)
-{
-	disp_PubKey_t pubKey;
-	disp_Hash_t hash;
-	disp_Sig_t sig;
-
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-
-	/* Positive verification test */
-	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
-	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
-	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
-	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
-	hash     = (disp_Hash_t) test_ver_hash_256;
-	/* First parameter of the API is the key storage ID, which is ignored.
-	 * See function's description above
-	 */
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature_key(0,
-		(void *) 0, 0, DISP_CURVE_NISTP256, &pubKey, hash, &sig,
-		disp_VerifSigOfHashCallback), DISP_RETVAL_NO_ERROR,
-		count_async);
-	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
-}
-
-/**
- *
- * @brief Positive test of disp_ecc_verify_signature_key_of_message
- *
- */
-void ecc_test_signature_verification_key_of_msg(void)
-{
-	disp_PubKey_t pubKey;
-	disp_Sig_t sig;
-
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
-	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
-	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
-	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
-	/* First parameter of the API is the key storage ID, which is ignored.
-	 * See function's description above
-	 */
-	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_verify_signature_key_of_message(0, (void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey, (const void *) test_ver_msg,
-		HASH_MSG_SIZE, &sig, disp_VerifSigOfHashCallback),
-		DISP_RETVAL_NO_ERROR, count_async);
-	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 

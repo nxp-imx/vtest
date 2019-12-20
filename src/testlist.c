@@ -44,7 +44,6 @@
 #include "vtest.h"
 #include "ECCcrypto.h"
 #include "ECCdevicemgmt.h"
-#include "ECClifecycle.h"
 #include "SEdevicemanagement.h"
 #include "SEkeymanagement.h"
 #include "SEsignature.h"
@@ -63,7 +62,6 @@
  */
 testEntry_t allTests[] = {
 	ECC_DEVICEMGMT_TESTS
-	ECC_LIFECYCLE_TESTS
 	ECC_CRYPTO_TESTS
 	SE_DEVICE_MANAGEMENT_TESTS
 	SE_KEY_MANAGEMENT_TESTS

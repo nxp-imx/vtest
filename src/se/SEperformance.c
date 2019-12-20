@@ -43,11 +43,12 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 #include <v2xSe.h>
 #include "vtest.h"
 #include "SEmisc.h"
 #include "SEperformance.h"
-#include "ecc_dispatcher.h"
+#include "ecdsa.h"
 #include "vtest_async.h"
 
 static volatile int count_async = ASYNC_COUNT_RESET;

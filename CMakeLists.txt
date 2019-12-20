@@ -39,7 +39,6 @@ add_executable (vtest
 	src/se/SEmisc.c
 	src/ecc/ECCcrypto.c
 	src/ecc/ECCdevicemgmt.c
-	src/ecc/ECClifecycle.c
 	)
 
 target_include_directories (vtest
@@ -47,7 +46,7 @@ target_include_directories (vtest
 	PRIVATE include/se
 	PRIVATE include/ecc
 	PRIVATE ../include
-	PRIVATE ${DISP_SRC}/../../inc
+	PRIVATE ${ECC_SRC}/../../include
 	PRIVATE ${SECO_LIBS_DIR}/include
 	)
 
@@ -55,7 +54,7 @@ target_link_libraries (vtest
 	v2xCrypto
 	${SECO_LIBS_DIR}/hsm_lib.a
 	${ZLIB_DIR}/libz.a
-	${DISP_SRC}/libNxDispatcher.so.0.1
+	${ECC_SRC}/libECDSA.so
 	pthread
 	rt
 	${LTTNG_LIB}

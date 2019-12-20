@@ -56,12 +56,8 @@
 		"Test signature verification failure")                        \
 	VTEST_DEFINE_TEST(30103, &ecc_test_signature_verification_not_supp,   \
 		"Test not supported curve in signature verification")         \
-	VTEST_DEFINE_TEST(30201, &ecc_test_signature_verification_key,        \
-		"Test signature verification with key storage")               \
 	VTEST_DEFINE_TEST(30301, &ecc_test_signature_verification_message,    \
 		"Test signature verification of a message")                   \
-	VTEST_DEFINE_TEST(30401, &ecc_test_signature_verification_key_of_msg, \
-		"Test signature verification of a message with key storage")  \
 	VTEST_DEFINE_TEST(30501, &ecc_test_pubkey_decompression,              \
 		"Test public key decompression")                              \
 	VTEST_DEFINE_TEST(30502, &ecc_test_pubkey_decompression_negative,     \
@@ -82,8 +78,6 @@
 void ecc_test_signature_verification(void);
 void ecc_test_signature_verification_negative(void);
 void ecc_test_signature_verification_message(void);
-void ecc_test_signature_verification_key(void);
-void ecc_test_signature_verification_key_of_msg(void);
 void ecc_test_pubkey_decompression(void);
 void ecc_test_pubkey_decompression_negative(void);
 void ecc_test_hash(void);
