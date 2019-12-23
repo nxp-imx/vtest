@@ -48,9 +48,6 @@
 #include "SEmisc.h"
 #include "SEkeymanagement.h"
 
-/** Skip selected 384bit tests, to cut number of keystore open/closes */
-#define SKIP_SELECTED_384BIT_TESTS
-
 /**
  *
  * @brief Test v2xSe_generateMaEccKeyPair for expected behaviour
@@ -130,7 +127,6 @@ void test_generateMaEccKeyPair(void)
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
 
-#ifndef SKIP_SELECTED_384BIT_TESTS
 /* Test MA key for curve V2XSE_CURVE_NISTP384 can be generated and retrieved */
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -184,7 +180,6 @@ void test_generateMaEccKeyPair(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
-#endif
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
