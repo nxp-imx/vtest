@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -240,6 +240,12 @@ void test_getMaEccPublicKey(void)
 	/* Verify key contents are different to MA key */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey_MA, &pubKey_different,
 						sizeof(TypePublicKey_t)), 0);
+	/* Delete BA key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+	/* Delete RT key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 }
 
 /**
@@ -276,8 +282,6 @@ void test_generateRtEccKeyPair_empty(void)
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
 	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
-	/* Delete existing Rt key (ignore error if key does not exist) */
-	v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
@@ -289,14 +293,15 @@ void test_generateRtEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Test Rt key can be generated and retrieved for US applet */
 /* Test Rt key for curve V2XSE_CURVE_BP256R1 can be generated and retrieved */
 /* Test Rt key can be generated and retrieved in non-zero slot */
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
-	/* Delete existing Rt key (ignore error if key does not exist) */
-	v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT, &statusCode);
 	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
@@ -308,11 +313,12 @@ void test_generateRtEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Rt key can be generated and retrieved in max slot */
-	/* Delete existing Rt key (ignore error if key does not exist) */
-	v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT, &statusCode);
 	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
@@ -324,6 +330,9 @@ void test_generateRtEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -363,7 +372,7 @@ void test_generateRtEccKeyPair_overwrite(void)
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
 	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
-	/* Create Rt key - may overwrite */
+	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -378,13 +387,16 @@ void test_generateRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Test Rt key can be generated and retrieved for US applet */
 /* Test Rt key for curve V2XSE_CURVE_BP256R1 can be generated and retrieved */
 /* Test Rt key can be generated and retrieved in non-zero slot */
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
-	/* Create Rt key - may overwrite */
+	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -399,10 +411,13 @@ void test_generateRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Rt key can be generated and retrieved in max slot */
-	/* Create Rt key - may overwrite */
+	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -417,6 +432,9 @@ void test_generateRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -454,13 +472,13 @@ void test_deleteRtEccPrivateKey(void)
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
 	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
-	/* Create Rt key in slot 0 - may overwrite */
+	/* Create Rt key in slot 0 */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Rt public key - verify key present */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Create Rt key in non-zero slot - may overwrite */
+	/* Create Rt key in non-zero slot */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Rt public key - verify key present */
@@ -486,7 +504,7 @@ void test_deleteRtEccPrivateKey(void)
 /* Test Rt key can be deleted in max slot */
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
-	/* Create Rt key - may overwrite */
+	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Rt public key */
@@ -549,6 +567,11 @@ void test_getRtEccPublicKey(void)
 	/* Verify keys are different - already compared to Rt1/Rt2 */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey_Rt1, &pubKey_Rt2,
 						sizeof(TypePublicKey_t)), 0);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 }
 
 /**
@@ -588,8 +611,7 @@ void test_generateBaEccKeyPair_empty(void)
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
 	VTEST_CHECK_RESULT(seInfo.maxBaKeysAllowed <= NON_ZERO_SLOT, 0);
-	/* Delete existing Ba key (ignore error if key does not exist) */
-	v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode);
+
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
@@ -601,14 +623,15 @@ void test_generateBaEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Test Ba key can be generated and retrieved for US applet */
 /* Test Ba key for curve V2XSE_CURVE_BP256R1 can be generated and retrieved */
 /* Test Ba key can be generated and retrieved in non-zero slot */
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
-	/* Delete existing Ba key (ignore error if key does not exist) */
-	v2xSe_deleteBaEccPrivateKey(NON_ZERO_SLOT, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
@@ -620,11 +643,12 @@ void test_generateBaEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Ba key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Ba key can be generated and retrieved in max slot */
-	/* Delete existing Ba key (ignore error if key does not exist) */
-	v2xSe_deleteBaEccPrivateKey(MAX_BA_SLOT, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
@@ -636,10 +660,11 @@ void test_generateBaEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(MAX_BA_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Ba key for curve V2XSE_CURVE_NISTP384 can be generated and retrieved */
-	/* Delete existing Ba key (ignore error if key does not exist) */
-	v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP384, &statusCode, &pubKey_create),
@@ -651,10 +676,11 @@ void test_generateBaEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP384);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Test Ba key for curve V2XSE_CURVE_BP384R1 can be generated and retrieved */
-	/* Delete existing Ba key (ignore error if key does not exist) */
-	v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP384R1, &statusCode, &pubKey_create),
@@ -666,10 +692,11 @@ void test_generateBaEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384R1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Test Ba key for curve V2XSE_CURVE_BP384T1 can be generated and retrieved */
-	/* Delete existing Ba key (ignore error if key does not exist) */
-	v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP384T1, &statusCode, &pubKey_create),
@@ -681,6 +708,9 @@ void test_generateBaEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -723,7 +753,7 @@ void test_generateBaEccKeyPair_overwrite(void)
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
 	VTEST_CHECK_RESULT(seInfo.maxBaKeysAllowed <= NON_ZERO_SLOT, 0);
-	/* Create Ba key - may overwrite */
+	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -738,13 +768,17 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+
 
 /* Test Ba key can be generated and retrieved for US applet */
 /* Test Ba key for curve V2XSE_CURVE_BP256R1 can be generated and retrieved */
 /* Test Ba key can be generated and retrieved in non-zero slot */
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
-	/* Create Ba key - may overwrite */
+	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -759,10 +793,13 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Ba key for curve V2XSE_CURVE_BP256T1 can be generated and retrieved */
 /* Test Ba key can be generated and retrieved in max slot */
-	/* Create Ba key - may overwrite */
+	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -777,11 +814,14 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(MAX_BA_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Ba key for curve V2XSE_CURVE_NISTP384 can be generated and retrieved */
-	/* Create Ba key - may overwrite */
+	/* Create a Ba key to overwrite */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
+		V2XSE_CURVE_NISTP384, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
@@ -796,10 +836,7 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP384);
 
 /* Test Ba key for curve V2XSE_CURVE_BP384R1 can be generated and retrieved */
-	/* Create Ba key - may overwrite */
-	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
-								V2XSE_SUCCESS);
+	/* BA key already exists from previous test case */
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP384R1, &statusCode, &pubKey_create),
@@ -813,10 +850,7 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384R1);
 
 /* Test Ba key for curve V2XSE_CURVE_BP384T1 can be generated and retrieved */
-	/* Create Ba key - may overwrite */
-	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
-		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
-								V2XSE_SUCCESS);
+	/* BA key already exists from previous test case */
 	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP384T1, &statusCode, &pubKey_create),
@@ -828,6 +862,9 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -865,13 +902,13 @@ void test_deleteBaEccPrivateKey(void)
 								V2XSE_SUCCESS);
 	/* Check that test constant is in correct range */
 	VTEST_CHECK_RESULT(seInfo.maxBaKeysAllowed <= NON_ZERO_SLOT, 0);
-	/* Create Ba key in slot 0 - may overwrite */
+	/* Create Ba key in slot 0 */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Ba public key - verify key present */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
-	/* Create Ba key in non-zero slot - may overwrite */
+	/* Create Ba key in non-zero slot */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Ba public key - verify key present */
@@ -897,7 +934,7 @@ void test_deleteBaEccPrivateKey(void)
 /* Test Ba key can be deleted in max slot */
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
-	/* Create Ba key - may overwrite */
+	/* Create Ba key */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Retrieve Ba public key */
@@ -960,6 +997,11 @@ void test_getBaEccPublicKey(void)
 	/* Verify keys are different */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey_Ba1, &pubKey_Ba2,
 						sizeof(TypePublicKey_t)), 0);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 }
 
 /**
@@ -1001,9 +1043,7 @@ void test_deriveRtEccKeyPair_empty(void)
 
 /* Test Rt key for curve V2XSE_CURVE_NISTP256 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in slot 0 */
-	/* Delete existing Rt key (ignore error if key does not exist) */
-	v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode);
-	/* Generate Ba key to use in derivation - may overwrite */
+	/* Generate Ba key to use in derivation */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -1020,12 +1060,15 @@ void test_deriveRtEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(MAX_BA_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256R1 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in non-zero slot */
-	/* Delete existing Rt key (ignore error if key does not exist) */
-	v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT, &statusCode);
-	/* Generate Ba key to use in derivation - may overwrite */
+	/* Generate Ba key to use in derivation */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -1042,12 +1085,15 @@ void test_deriveRtEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in max slot */
-	/* Delete existing Rt key (ignore error if key does not exist) */
-	v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT, &statusCode);
-	/* Generate Ba key to use in derivation - may overwrite */
+	/* Generate Ba key to use in derivation */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -1064,6 +1110,11 @@ void test_deriveRtEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -1108,16 +1159,16 @@ void test_deriveRtEccKeyPair_overwrite(void)
 
 /* Test Rt key for curve V2XSE_CURVE_NISTP256 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in slot 0 */
-	/* Create Rt key - may overwrite */
+	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
-	/* Generate Ba key to use in derivation - may overwrite */
+	/* Generate Ba key to use in derivation */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(MAX_BA_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
 	/* Derive Rt key */
-	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(MAX_RT_SLOT, &data1,
+	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair(MAX_BA_SLOT, &data1,
 		&data2,	&data3, SLOT_ZERO, V2XSE_RSP_WITH_PUBKEY, &statusCode,
 				&curveId, &pubKey_create), V2XSE_SUCCESS);
 	/* Verify curveId is correct */
@@ -1129,14 +1180,19 @@ void test_deriveRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(MAX_BA_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256R1 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in non-zero slot */
-	/* Create Rt key - may overwrite */
+	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
-	/* Generate Ba key to use in derivation - may overwrite */
+	/* Generate Ba key to use in derivation */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -1153,14 +1209,19 @@ void test_deriveRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256R1);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Test Rt key for curve V2XSE_CURVE_BP256T1 can be derived and retrieved */
 /* Test Rt key can be derived and retrieved in max slot */
-	/* Create Rt key - may overwrite */
+	/* Create Rt key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
-	/* Generate Ba key to use in derivation - may overwrite */
+	/* Generate Ba key to use in derivation */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey_create),
 								V2XSE_SUCCESS);
@@ -1177,6 +1238,11 @@ void test_deriveRtEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
 						sizeof(TypePublicKey_t)), 0);
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP256T1);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -1204,7 +1270,7 @@ void test_activateRtKeyForSigning(void)
 	hash.data[0] = 20;
 	/* Move to ACTIVATED state, normal operating mode */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
-	/* Make sure RT key exists */
+	/* Create RT key */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey), V2XSE_SUCCESS);
 	/* Activate key for low latency signature */
@@ -1214,6 +1280,9 @@ void test_activateRtKeyForSigning(void)
 	VTEST_CHECK_RESULT(v2xSe_createRtSignLowLatency(&hash, &statusCode,
 				&signature, &fastIndicator), V2XSE_SUCCESS);
 	VTEST_CHECK_RESULT(fastIndicator, 0);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -1245,10 +1314,6 @@ void test_rtKeyCreationSpeed(void)
 	/* Move to ACTIVATED state, normal operating mode */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 
-	/* Delete any existing keys, ignore errors if no key present in slot */
-	for (i = 0; i < KEY_SPEED_CREATE_NUM; i++)
-		v2xSe_deleteRtEccPrivateKey(i, &statusCode);
-
 	/* Log start time */
 	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
 		VTEST_FLAG_CONF();
@@ -1258,13 +1323,18 @@ void test_rtKeyCreationSpeed(void)
 	/* Create the keys */
 	for (i = 0; i < KEY_SPEED_CREATE_NUM; i++)
 		VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(i,
-			V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
+				V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
 								V2XSE_SUCCESS);
 	/* Log end time */
 	if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
 		VTEST_FLAG_CONF();
 		return;
 	}
+
+	/* Delete keys after use */
+	for (i = 0; i < KEY_SPEED_CREATE_NUM; i++)
+		VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(i, &statusCode),
+								V2XSE_SUCCESS);
 
 	/* Calculate elapsed time and key create time */
 	nsTimeDiff = (endTime.tv_sec - startTime.tv_sec) * 1000000000;
@@ -1305,10 +1375,6 @@ void test_baKeyCreationSpeed(void)
 	/* Move to ACTIVATED state, normal operating mode */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
 
-	/* Delete any existing keys, ignore errors if no key present in slot */
-	for (i = 0; i < KEY_SPEED_CREATE_NUM; i++)
-		v2xSe_deleteBaEccPrivateKey(i, &statusCode);
-
 	/* Log start time */
 	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
 		VTEST_FLAG_CONF();
@@ -1320,11 +1386,17 @@ void test_baKeyCreationSpeed(void)
 		VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(i,
 			V2XSE_CURVE_NISTP256, &statusCode, &pubKey),
 								V2XSE_SUCCESS);
+
 	/* Log end time */
 	if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
 		VTEST_FLAG_CONF();
 		return;
 	}
+
+	/* Delete keys after use */
+	for (i = 0; i < KEY_SPEED_CREATE_NUM; i++)
+		VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(i, &statusCode),
+								V2XSE_SUCCESS);
 
 	/* Calculate elapsed time and key create time */
 	nsTimeDiff = (endTime.tv_sec - startTime.tv_sec) * 1000000000;

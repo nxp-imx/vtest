@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -169,6 +169,9 @@ void test_decryptUsingRtEcies(void)
 	/* Verify message is correctly decrypted */
 	VTEST_CHECK_RESULT(size, 16);
 	VTEST_CHECK_RESULT(memcmp(eciesMsg.data, msg.data, size), 0);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -299,6 +302,9 @@ void test_decryptUsingBaEcies(void)
 	/* Verify message is correctly decrypted */
 	VTEST_CHECK_RESULT(size, 16);
 	VTEST_CHECK_RESULT(memcmp(eciesMsg.data, msg.data, size), 0);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);

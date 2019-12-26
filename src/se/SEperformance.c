@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -160,6 +160,30 @@ static TypePublicKey_t *createPubKeyArray(uint32_t numPubKey, TypeCurveId_t
 		}
 	}
 	return pubKeyArray;
+}
+
+/**
+ * @brief   Free an array of public key values used for signature generation
+ *
+ * @param pubKeyArray pointer to array of public keys
+ * @param numPubKey number of public key values that were generated
+ *
+ * @return pointer to public key array, or NULL on failure
+ *
+ */
+static void deletePubKeyArray(TypePublicKey_t *pubKeyArray, uint32_t numPubKey)
+{
+	uint32_t i;
+	TypeSW_t hsmStatusCode;
+
+	if (!pubKeyArray)
+		return;
+
+	/* Delete unneeded private keys */
+	for (i = 0; i < numPubKey; i++)
+		v2xSe_deleteRtEccPrivateKey(i, &hsmStatusCode);
+
+	free(pubKeyArray);
 }
 
 /**
@@ -335,7 +359,7 @@ static uint32_t populateTestData(uint32_t testType)
 fail_sig:
 	free(hashArray);
 fail_hash:
-	free(pubKeyArray);
+	deletePubKeyArray(pubKeyArray, NUM_KEYS_PERF_TESTS);
 fail:
 	retVal = VTEST_FAIL;
 exit:
@@ -681,8 +705,12 @@ stopVerifLatencyTest:
 	}
 
 	/* Go back to init to leave system in known state after test */
-	if (testType == LOADED_TEST)
+	if (testType == LOADED_TEST) {
+		/* Delete key after use */
+		VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
 		VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	}
 }
 
 /**

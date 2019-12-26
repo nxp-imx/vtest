@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -73,6 +73,9 @@ void test_createBaSign(void)
 	/* Create signature */
 	VTEST_CHECK_RESULT(v2xSe_createBaSign(SLOT_ZERO, 32, &hash,
 		&statusCode, &signature), V2XSE_SUCCESS);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -152,6 +155,9 @@ void test_createRtSignLowLatency(void)
 	VTEST_CHECK_RESULT(v2xSe_createRtSignLowLatency(&hash, &statusCode,
 				&signature, &fastIndicator), V2XSE_SUCCESS);
 	VTEST_CHECK_RESULT(fastIndicator, 0);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -187,6 +193,9 @@ void test_createRtSign(void)
 	/* Create signature */
 	VTEST_CHECK_RESULT(v2xSe_createRtSign(NON_ZERO_SLOT, &hash,
 				&statusCode, &signature), V2XSE_SUCCESS);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
