@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -96,7 +96,7 @@ void test_activateRtKeyForSigning(void);
 void test_rtKeyCreationSpeed(void);
 void test_baKeyCreationSpeed(void);
 
-/** Number of keys created during key creation test, limited by hsm */
-#define KEY_SPEED_CREATE_NUM 40
+/** Number of keys created during key creation test */
+#define KEY_SPEED_CREATE_NUM 12800
 
 #endif
