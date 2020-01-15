@@ -565,36 +565,60 @@ void ecc_test_pubkey_decompression_not_supp(void)
 
 /**
  *
- * @brief Positive test of disp_SHA256
+ * @brief Positive test of hash APIs
  *
  */
 void ecc_test_hash(void)
 {
 	uint8_t sha256_hash_got[LENGTH_DOMAIN_PARAMS_256];
+	uint8_t sha384_hash_got[LENGTH_DOMAIN_PARAMS_384];
+	uint8_t sha512_hash_got[LENGTH_DOMAIN_PARAMS_512];
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	disp_SHA256((const void *) test_hash_msg_256, HASH_MSG_SIZE,
+	disp_SHA256((const void *) test_hash_msg, HASH_MSG_SIZE,
 		sha256_hash_got);
 	VTEST_CHECK_RESULT(memcmp((const void *) test_hash_msg_exp_256,
 		(const void *) sha256_hash_got, LENGTH_DOMAIN_PARAMS_256),
+		MEMCMP_IDENTICAL);
+	disp_SHA384((const void *) test_hash_msg, HASH_MSG_SIZE,
+		sha384_hash_got);
+	VTEST_CHECK_RESULT(memcmp((const void *) test_hash_msg_exp_384,
+		(const void *) sha384_hash_got, LENGTH_DOMAIN_PARAMS_384),
+		MEMCMP_IDENTICAL);
+	disp_SHA512((const void *) test_hash_msg, HASH_MSG_SIZE,
+		sha512_hash_got);
+	VTEST_CHECK_RESULT(memcmp((const void *) test_hash_msg_exp_512,
+		(const void *) sha512_hash_got, LENGTH_DOMAIN_PARAMS_512),
 		MEMCMP_IDENTICAL);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
 
 /**
  *
- * @brief Negative test of disp_SHA256
+ * @brief Negative test of hash APIs
  *
  */
 void ecc_test_hash_negative(void)
 {
 	uint8_t sha256_hash_got[LENGTH_DOMAIN_PARAMS_256];
+	uint8_t sha384_hash_got[LENGTH_DOMAIN_PARAMS_384];
+	uint8_t sha512_hash_got[LENGTH_DOMAIN_PARAMS_512];
 
 	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	disp_SHA256((const void *) test_hash_msg_neg_256, HASH_MSG_SIZE,
+	disp_SHA256((const void *) test_hash_msg_neg, HASH_MSG_SIZE,
 		sha256_hash_got);
 	VTEST_CHECK_RESULT(!memcmp((const void *) test_hash_msg_exp_256,
 		(const void *) sha256_hash_got, LENGTH_DOMAIN_PARAMS_256),
+		MEMCMP_IDENTICAL);
+	disp_SHA384((const void *) test_hash_msg_neg, HASH_MSG_SIZE,
+		sha384_hash_got);
+	VTEST_CHECK_RESULT(!memcmp((const void *) test_hash_msg_exp_384,
+		(const void *) sha384_hash_got, LENGTH_DOMAIN_PARAMS_384),
+		MEMCMP_IDENTICAL);
+	disp_SHA512((const void *) test_hash_msg_neg, HASH_MSG_SIZE,
+		sha512_hash_got);
+	VTEST_CHECK_RESULT(!memcmp((const void *) test_hash_msg_exp_512,
+		(const void *) sha512_hash_got, LENGTH_DOMAIN_PARAMS_512),
 		MEMCMP_IDENTICAL);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
 }
