@@ -54,38 +54,41 @@
 		"Test signature verification")                                \
 	VTEST_DEFINE_TEST(30102, &ecc_test_signature_verification_negative,   \
 		"Test signature verification failure")                        \
-	VTEST_DEFINE_TEST(30103, &ecc_test_signature_verification_not_supp,   \
-		"Test not supported curve in signature verification")         \
+	VTEST_DEFINE_TEST(30103, &ecc_test_signature_verification_invalid,    \
+		"Test signature verification with invalid params/state")      \
 	VTEST_DEFINE_TEST(30301, &ecc_test_signature_verification_message,    \
 		"Test signature verification of a message")                   \
 	VTEST_DEFINE_TEST(30501, &ecc_test_pubkey_decompression,              \
 		"Test public key decompression")                              \
 	VTEST_DEFINE_TEST(30502, &ecc_test_pubkey_decompression_negative,     \
 		"Test public key decompression failure")                      \
-	VTEST_DEFINE_TEST(30503, &ecc_test_pubkey_decompression_not_supp,     \
-		"Test public key decompression with not supported curve")     \
+	VTEST_DEFINE_TEST(30503, &ecc_test_pubkey_decompression_invalid,      \
+		"Test public key decompression with invalid params/state")    \
 	VTEST_DEFINE_TEST(30601, &ecc_test_pubkey_reconstruction,             \
 		"Test public key reconstruction")                             \
 	VTEST_DEFINE_TEST(30602, &ecc_test_pubkey_reconstruction_negative,    \
 		"Test public key reconstruction failure")                     \
-	VTEST_DEFINE_TEST(30603, &ecc_test_pubkey_reconstruction_not_supp,    \
-		"Test public key reconstruction with not supported curve")    \
+	VTEST_DEFINE_TEST(30603, &ecc_test_pubkey_reconstruction_invalid,     \
+		"Test public key reconstruction with invalid params/state")   \
 	VTEST_DEFINE_TEST(40101, &ecc_test_hash,                              \
 		"Test hash functions")                                        \
 	VTEST_DEFINE_TEST(40102, &ecc_test_hash_negative,                     \
 		"Test hash functions failure")                                \
+	VTEST_DEFINE_TEST(40103, &ecc_test_hash_invalid,                      \
+		"Test hash functions when invalid state")                     \
 
 void ecc_test_signature_verification(void);
 void ecc_test_signature_verification_negative(void);
 void ecc_test_signature_verification_message(void);
+void ecc_test_signature_verification_invalid(void);
 void ecc_test_pubkey_decompression(void);
 void ecc_test_pubkey_decompression_negative(void);
-void ecc_test_hash(void);
-void ecc_test_hash_negative(void);
-void ecc_test_signature_verification_not_supp(void);
-void ecc_test_pubkey_decompression_not_supp(void);
+void ecc_test_pubkey_decompression_invalid(void);
 void ecc_test_pubkey_reconstruction(void);
 void ecc_test_pubkey_reconstruction_negative(void);
-void ecc_test_pubkey_reconstruction_not_supp(void);
+void ecc_test_pubkey_reconstruction_invalid(void);
+void ecc_test_hash(void);
+void ecc_test_hash_negative(void);
+void ecc_test_hash_invalid(void);
 
 #endif /* ECC_CRYPTO_H */

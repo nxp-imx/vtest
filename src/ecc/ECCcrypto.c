@@ -429,23 +429,31 @@ void ecc_test_signature_verification_negative(void)
 
 /**
  *
- * @brief Negative test of disp_ecc_verify_signature with a curve not suppported
+ * @brief Test of disp_ecc_verify_signature with a curve not supported
+ * and library not active
  *
  */
-void ecc_test_signature_verification_not_supp(void)
+void ecc_test_signature_verification_invalid(void)
 {
 	disp_PubKey_t pubKey;
 	disp_Hash_t hash;
 	disp_Sig_t sig;
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
-	/* Not supported curve test */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
 	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
 	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
 	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
 	hash     = (disp_Hash_t) test_ver_hash_256;
+
+	/* Invalid state test */
+	VTEST_CHECK_RESULT(disp_ecc_verify_signature((void *) 0, 0,
+		DISP_CURVE_NISTP256, &pubKey, hash, &sig,
+		disp_VerifSigOfHashCallback),
+		DISP_RETVAL_NOT_INITIATED);
+
+	/* Not supported curve test */
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 	VTEST_CHECK_RESULT(disp_ecc_verify_signature((void *) 0, 0,
 		DISP_CURVE_NOT_SUPP, &pubKey, hash, &sig,
 		disp_VerifSigOfHashCallback),
@@ -546,16 +554,24 @@ void ecc_test_pubkey_decompression_negative(void)
 /**
  *
  * @brief Test of disp_ecc_decompressPublicKey with not supported curve
+ * and library not active
  *
  */
-void ecc_test_pubkey_decompression_not_supp(void)
+void ecc_test_pubkey_decompression_invalid(void)
 {
 	disp_PubKey_t pubKey;
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-
 	pubKey.x = test_dec_pubKey_x_nistp256;
 	pubKey.y = test_dec_pubKey_y_neg_nistp256;
+
+	/* Invalid state test */
+	VTEST_CHECK_RESULT(disp_ecc_decompressPublicKey((void *)0, 0,
+		DISP_CURVE_NOT_SUPP, &pubKey,
+		my_disp_DecompressPubKeyCallback),
+		DISP_RETVAL_NOT_INITIATED);
+
+	/* Not supported curve test */
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 	VTEST_CHECK_RESULT(disp_ecc_decompressPublicKey((void *)0, 0,
 		DISP_CURVE_NOT_SUPP, &pubKey,
 		my_disp_DecompressPubKeyCallback),
@@ -621,6 +637,26 @@ void ecc_test_hash_negative(void)
 		(const void *) sha512_hash_got, LENGTH_DOMAIN_PARAMS_512),
 		MEMCMP_IDENTICAL);
 	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Positive test of hash APIs
+ *
+ */
+void ecc_test_hash_invalid(void)
+{
+	uint8_t sha256_hash_got[LENGTH_DOMAIN_PARAMS_256];
+	uint8_t sha384_hash_got[LENGTH_DOMAIN_PARAMS_384];
+	uint8_t sha512_hash_got[LENGTH_DOMAIN_PARAMS_512];
+
+	/* Invalid state test */
+	VTEST_CHECK_RESULT(disp_SHA256((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sha256_hash_got), DISP_RETVAL_NOT_INITIATED);
+	VTEST_CHECK_RESULT(disp_SHA384((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sha384_hash_got), DISP_RETVAL_NOT_INITIATED);
+	VTEST_CHECK_RESULT(disp_SHA512((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sha512_hash_got), DISP_RETVAL_NOT_INITIATED);
 }
 
 /**
@@ -717,22 +753,31 @@ void ecc_test_pubkey_reconstruction_negative(void)
 
 /**
  *
- * @brief Test of disp_ecc_reconstructPublicKey with a not supported curve
+ * @brief Test of disp_ecc_reconstructPublicKey with a not supported curve and
+ * library not active
  *
  */
-void ecc_test_pubkey_reconstruction_not_supp(void)
+void ecc_test_pubkey_reconstruction_invalid(void)
 {
 	disp_Hash_t hash;
 	disp_Point_t rec_data;
 	disp_Point_t caPubKey;
-
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 
 	hash       = (uint8_t *) test_rec_hash_256;
 	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_nistp256;
 	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_nistp256;
 	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_x_nistp256;
 	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_nistp256;
+
+	/* Invalid state test */
+	VTEST_CHECK_RESULT(
+		disp_ecc_reconstructPublicKey((void *)0, 0,
+		DISP_CURVE_NISTP256, hash, &rec_data, &caPubKey,
+		my_disp_ReconPubKeyCallback),
+		DISP_RETVAL_NOT_INITIATED);
+
+	/* Not supported curve test */
+	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
 	VTEST_CHECK_RESULT(
 		disp_ecc_reconstructPublicKey((void *)0, 0,
 		DISP_CURVE_NOT_SUPP, hash, &rec_data, &caPubKey,
