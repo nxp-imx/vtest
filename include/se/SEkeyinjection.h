@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -51,7 +51,25 @@
 #define SE_KEY_INJECTION_TESTS \
 	VTEST_DEFINE_TEST(110101, &test_endKeyInjection, \
 		"Test v2xSe_endKeyInjection for expected behaviour")\
+	VTEST_DEFINE_TEST(110201, &test_getKek, \
+		"Test v2xSe_getKek for expected behaviour")\
+	VTEST_DEFINE_TEST(110301, &test_injectMaEccPrivateKey, \
+		"Test v2xSe_injectMaEccPrivateKey for expected behaviour")\
+	VTEST_DEFINE_TEST(110401, &test_injectRtEccPrivateKey_empty, \
+		"Test v2xSe_injectRtEccPrivateKey for keys in empty slots")\
+	VTEST_DEFINE_TEST(110402, &test_injectRtEccPrivateKey_overwrite, \
+		"Test v2xSe_injectRtEccPrivateKey for keys in full slots")\
+	VTEST_DEFINE_TEST(110501, &test_injectBaEccPrivateKey_empty, \
+		"Test v2xSe_injectBaEccPrivateKey for keys in empty slots")\
+	VTEST_DEFINE_TEST(110502, &test_injectBaEccPrivateKey_overwrite, \
+		"Test v2xSe_injectBaEccPrivateKey for keys in full slots")\
 
 void test_endKeyInjection(void);
+void test_getKek(void);
+void test_injectMaEccPrivateKey(void);
+void test_injectRtEccPrivateKey_empty(void);
+void test_injectRtEccPrivateKey_overwrite(void);
+void test_injectBaEccPrivateKey_empty(void);
+void test_injectBaEccPrivateKey_overwrite(void);
 
 #endif
