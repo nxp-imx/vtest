@@ -45,7 +45,7 @@
 #include "vtest.h"
 #include "SEmisc.h"
 #include "SEsignature.h"
-#include "ecc_dispatcher.h"
+#include "ecdsa.h"
 #include "vtest_async.h"
 
 static volatile int count_async = ASYNC_COUNT_RESET;
