@@ -6,5 +6,5 @@ License File:                BSD-3-Clause.txt
 Package Category:            Security
 Type of Content:             Source code
 Description and comments:    Test application for V2X ECDSA and SE API
-Release Location:            CAF (TBD)
+Release Location:            NXP.com
 Origin:                      NXP (BSD-3-Clause)
