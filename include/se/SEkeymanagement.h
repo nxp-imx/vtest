@@ -97,6 +97,6 @@ void test_rtKeyCreationSpeed(void);
 void test_baKeyCreationSpeed(void);
 
 /** Number of keys created during key creation test */
-#define KEY_SPEED_CREATE_NUM 12800
+#define KEY_SPEED_CREATE_NUM 2000
 
 #endif
