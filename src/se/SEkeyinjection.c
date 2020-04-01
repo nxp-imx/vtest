@@ -41,25 +41,103 @@
  *
  */
 
+#include <stdbool.h>
 #include <string.h>
 #include <v2xSe.h>
 #include "vtest.h"
 #include "SEmisc.h"
 #include "SEkeyinjection.h"
 
-static uint8_t encryptedKey1[] = {
-	// IV
-	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-	0x08, 0x09, 0x0A, 0x0B,
-	// CT
-	0x35, 0xf6, 0xd2, 0xa2, 0xda, 0x4c, 0x01, 0xb5,
-	0x3d, 0x5f, 0xd4, 0x8a, 0xba, 0x80, 0x07, 0xe1,
-	0x20, 0x9f, 0xa3, 0x8d, 0x78, 0x2e, 0xee, 0x9c,
-	0xc7, 0x5d, 0x1d, 0xcf, 0x94, 0xc5, 0xba, 0x97,
-	// Tag
-	0x75, 0xd7, 0x2a, 0x90, 0xc7, 0x77, 0xaa, 0x4d,
-	0x5f, 0x46, 0x3c, 0x09, 0x9e, 0xc3, 0x45, 0x22,
+#define NB_ELEM(array) (sizeof((array)) / sizeof((array)[0]))
+
+#define COMMON_KEK_SIZE		32
+#define ENCRYPTED_KEY_SIZE	60
+
+enum soc_commonKek_idx {
+	SOC_COMMON_KEK_QXP = 0,
+	SOC_COMMON_KEK_DXL,
+
+	SOC_COMMON_KEK_MAX,
+	SOC_COMMON_KEK_UNKOWN = SOC_COMMON_KEK_MAX
 };
+
+struct test_common_kek_patterns {
+	uint8_t expectedCommonKek[COMMON_KEK_SIZE];
+	uint8_t encryptedKey1[ENCRYPTED_KEY_SIZE];
+	uint8_t encryptedKey2[ENCRYPTED_KEY_SIZE];
+};
+
+static struct test_common_kek_patterns kek_patterns[SOC_COMMON_KEK_MAX] = {
+	{ /* i.MX8 QXP common kek */
+		.expectedCommonKek = {
+			0x10, 0x2b, 0xcb, 0xe5, 0x4d, 0xd7, 0xb2, 0x33,
+			0x94, 0x6a, 0xd9, 0xb0, 0xa8, 0x54, 0x27, 0xaf,
+			0xd5, 0x16, 0xf1, 0x8e, 0x6e, 0xa4, 0xf7, 0x4b,
+			0xb8, 0x35, 0x1c, 0x37, 0x26, 0x48, 0xc7, 0xfe
+		},
+		.encryptedKey1 = {
+			// IV
+			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+			0x08, 0x09, 0x0A, 0x0B,
+			// CT
+			0x35, 0xf6, 0xd2, 0xa2, 0xda, 0x4c, 0x01, 0xb5,
+			0x3d, 0x5f, 0xd4, 0x8a, 0xba, 0x80, 0x07, 0xe1,
+			0x20, 0x9f, 0xa3, 0x8d, 0x78, 0x2e, 0xee, 0x9c,
+			0xc7, 0x5d, 0x1d, 0xcf, 0x94, 0xc5, 0xba, 0x97,
+			// Tag
+			0x75, 0xd7, 0x2a, 0x90, 0xc7, 0x77, 0xaa, 0x4d,
+			0x5f, 0x46, 0x3c, 0x09, 0x9e, 0xc3, 0x45, 0x22,
+		},
+		.encryptedKey2 = {
+			// IV
+			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+			0x08, 0x09, 0x0A, 0x0B,
+			// CT
+			0x31, 0x80, 0x73, 0xf8, 0xc5, 0x75, 0x7d, 0xef,
+			0xde, 0x09, 0x23, 0x6a, 0xad, 0x23, 0x42, 0x36,
+			0x5d, 0x31, 0x2c, 0xce, 0xde, 0xc7, 0x68, 0x09,
+			0xf1, 0x4a, 0x5c, 0x9c, 0x5e, 0x28, 0x00, 0x63,
+			// Tag
+			0xf3, 0xa5, 0x75, 0x8d, 0xef, 0x16, 0x26, 0x2e,
+			0x4a, 0x52, 0xac, 0x96, 0x21, 0x08, 0x1e, 0x6c
+		}
+	},
+	{ /* i.MX8 DXL common kek */
+		.expectedCommonKek = {
+			0xda, 0xec, 0x80, 0xc0, 0x0b, 0xbb, 0x02, 0xba,
+			0xc8, 0x23, 0x1f, 0x72, 0x40, 0x54, 0x5c, 0x5e,
+			0xa4, 0xa8, 0x1d, 0xd9, 0x7d, 0x66, 0x68, 0xf0,
+			0x4e, 0x64, 0x41, 0xe1, 0xb1, 0x93, 0x72, 0x8f
+		},
+		.encryptedKey1 = {
+			// IV
+			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+			0x08, 0x09, 0x0A, 0x0B,
+			// CT
+			0x83, 0xf, 0x8, 0x37, 0xfb, 0x9, 0x81, 0xbd,
+			0x8a, 0xd9, 0xfb, 0x21, 0x3b, 0x5a, 0xd6, 0x8a,
+			0x70, 0x51, 0xf1, 0x63, 0xb1, 0xb1, 0xd4, 0xd6,
+			0x5a, 0x4c, 0xdf, 0x5d, 0x64, 0x9f, 0x5e, 0x42,
+			// Tag
+			0x15, 0xb3, 0xed, 0xe2, 0x98, 0xe9, 0xf3, 0x2e,
+			0xc4, 0xe4, 0x50, 0xb2, 0xfc, 0x17, 0x17, 0x52,
+		},
+		.encryptedKey2 = {
+			// IV
+			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+			0x08, 0x09, 0x0A, 0x0B,
+			// CT
+			0x87, 0x79, 0xa9, 0x6d, 0xe4, 0x30, 0xfd, 0xe7,
+			0x69, 0x8f, 0xc, 0xc1, 0x2c, 0xf9, 0x93, 0x5d,
+			0xd, 0xff, 0x7e, 0x20, 0x17, 0x58, 0x52, 0x43,
+			0x6c, 0x5b, 0x9e, 0xe, 0xae, 0x72, 0xe4, 0xb6,
+			// Tag
+			0xcc, 0x36, 0x8b, 0x64, 0x7f, 0x58, 0xb9, 0x70,
+			0xbf, 0xb6, 0xba, 0x1c, 0xa0, 0xf5, 0x27, 0x32
+		}
+	},
+};
+
 static TypePublicKey_t refPubKey1 = {
 	.x = {
 		0x06, 0xc4, 0x3f, 0x2d, 0x70, 0x32, 0x85, 0x6a,
@@ -78,19 +156,7 @@ static TypePublicKey_t refPubKey1 = {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	}
 };
-static uint8_t encryptedKey2[] = {
-	// IV
-	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-	0x08, 0x09, 0x0A, 0x0B,
-	// CT
-	0x31, 0x80, 0x73, 0xf8, 0xc5, 0x75, 0x7d, 0xef,
-	0xde, 0x09, 0x23, 0x6a, 0xad, 0x23, 0x42, 0x36,
-	0x5d, 0x31, 0x2c, 0xce, 0xde, 0xc7, 0x68, 0x09,
-	0xf1, 0x4a, 0x5c, 0x9c, 0x5e, 0x28, 0x00, 0x63,
-	// Tag
-	0xf3, 0xa5, 0x75, 0x8d, 0xef, 0x16, 0x26, 0x2e,
-	0x4a, 0x52, 0xac, 0x96, 0x21, 0x08, 0x1e, 0x6c
-};
+
 static TypePublicKey_t refPubKey2 = {
 	.x = {
 		0xc8, 0x91, 0xa4, 0x9a, 0xa3, 0x4f, 0xef, 0x2c,
@@ -169,6 +235,25 @@ void test_endKeyInjection(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
+static enum soc_commonKek_idx which_commonKek(uint8_t kek[], uint16_t kekSize)
+{
+	enum soc_commonKek_idx k;
+
+	if (kekSize != COMMON_KEK_SIZE)
+		return SOC_COMMON_KEK_UNKOWN;
+
+	for (k = 0; k < NB_ELEM(kek_patterns); k++)
+		if (!memcmp(kek_patterns[k].expectedCommonKek, kek, kekSize))
+			break;
+
+	return k;
+}
+
+static bool is_a_valid_commonKek(uint8_t kek[], uint16_t kekSize)
+{
+	return SOC_COMMON_KEK_UNKOWN != which_commonKek(kek, kekSize);
+}
+
 /**
  *
  * @brief Test v2xSe_getKek for expected behaviour
@@ -186,12 +271,6 @@ void test_getKek(void)
 	uint8_t uniqueKek[32];
 	uint16_t kekSize;
 	TypeSW_t statusCode;
-	uint8_t expectedCommonKek[32] = {
-		0x10, 0x2b, 0xcb, 0xe5, 0x4d, 0xd7, 0xb2, 0x33,
-		0x94, 0x6a, 0xd9, 0xb0, 0xa8, 0x54, 0x27, 0xaf,
-		0xd5, 0x16, 0xf1, 0x8e, 0x6e, 0xa4, 0xf7, 0x4b,
-		0xb8, 0x35, 0x1c, 0x37, 0x26, 0x48, 0xc7, 0xfe
-	};
 
 	/* Move to ACTIVATED state */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
@@ -203,8 +282,7 @@ void test_getKek(void)
 		sizeof(signedMessage), commonKek, &kekSize, &statusCode),
 							V2XSE_SUCCESS);
 	/* Verify key contents as expected */
-	VTEST_CHECK_RESULT(memcmp(expectedCommonKek, commonKek, kekSize),
-									0);
+	VTEST_CHECK_RESULT(is_a_valid_commonKek(commonKek, kekSize), true);
 
 /* Test retrieved unique KEK different from common KEK */
 	/* Get unique KEK */
@@ -213,11 +291,35 @@ void test_getKek(void)
 		sizeof(signedMessage)-1, uniqueKek, &kekSize, &statusCode),
 							V2XSE_SUCCESS);
 	/* Verify key contents does not match common KEK */
-	VTEST_CHECK_RESULT(!memcmp(uniqueKek, commonKek,
-					sizeof(expectedCommonKek)), 0);
+	VTEST_CHECK_RESULT(is_a_valid_commonKek(uniqueKek, kekSize), false);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+static enum soc_commonKek_idx get_soc_commonKek_idx(void)
+{
+	uint8_t signedMessage[32] = {13};
+	uint8_t commonKek[32];
+	uint16_t kekSize;
+	TypeSW_t statusCode;
+
+	/* Move to ACTIVATED state */
+	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
+
+/* Test retrieved common KEK matches expected value */
+	/* Get common KEK */
+	kekSize = sizeof(commonKek);
+	VTEST_CHECK_RESULT(v2xSe_getKek(KEK_TYPE_COMMON, signedMessage,
+		sizeof(signedMessage), commonKek, &kekSize, &statusCode),
+							V2XSE_SUCCESS);
+	/* Verify common KEK is valid */
+	VTEST_CHECK_RESULT(is_a_valid_commonKek(commonKek, kekSize), true);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+	return which_commonKek(commonKek, kekSize);
 }
 
 /**
@@ -234,6 +336,7 @@ void test_injectMaEccPrivateKey(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
+	enum soc_commonKek_idx k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -244,7 +347,9 @@ void test_injectMaEccPrivateKey(void)
 
 	/* Inject MA key */
 	VTEST_CHECK_RESULT(v2xSe_injectMaEccPrivateKey(V2XSE_CURVE_NISTP256,
-		&statusCode, &pubKey, encryptedKey1, sizeof(encryptedKey1),
+					&statusCode, &pubKey,
+					kek_patterns[k].encryptedKey1,
+					sizeof(kek_patterns[k].encryptedKey1),
 					KEK_TYPE_COMMON), V2XSE_SUCCESS);
 
 	/* Verify public key contents match expected values */
@@ -274,6 +379,7 @@ void test_injectRtEccPrivateKey_empty(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
+	enum soc_commonKek_idx k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -284,8 +390,10 @@ void test_injectRtEccPrivateKey_empty(void)
 
 	/* Inject RT key */
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(SLOT_ZERO,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey, encryptedKey1,
-			sizeof(encryptedKey1), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey1,
+		sizeof(kek_patterns[k].encryptedKey1),
+		KEK_TYPE_COMMON), V2XSE_SUCCESS);
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
@@ -321,6 +429,7 @@ void test_injectRtEccPrivateKey_overwrite(void)
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
+	enum soc_commonKek_idx k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -337,16 +446,20 @@ void test_injectRtEccPrivateKey_overwrite(void)
 
 	/* Inject key to overwrite - same type as injected */
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(NON_ZERO_SLOT,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey, encryptedKey1,
-		sizeof(encryptedKey1), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey1,
+		sizeof(kek_patterns[k].encryptedKey1),
+		KEK_TYPE_COMMON), V2XSE_SUCCESS);
 	/* Verify public key contents doesn't match ref value */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey, &refPubKey2,
 						sizeof(TypePublicKey_t)), 0);
 
 	/* Inject RT key */
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(NON_ZERO_SLOT,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey, encryptedKey2,
-		sizeof(encryptedKey2), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey2,
+		sizeof(kek_patterns[k].encryptedKey2),
+		KEK_TYPE_COMMON), V2XSE_SUCCESS);
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey2,
 						sizeof(TypePublicKey_t)), 0);
@@ -359,15 +472,19 @@ void test_injectRtEccPrivateKey_overwrite(void)
 
 	/* Inject key to overwrite - different type to injected */
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(MAX_RT_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey, encryptedKey2,
-		sizeof(encryptedKey2), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey2,
+		sizeof(kek_patterns[k].encryptedKey2),
+		KEK_TYPE_COMMON), V2XSE_SUCCESS);
 	/* Verify public key contents doesn't match ref value */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
 	/* Inject RT key */
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(MAX_RT_SLOT,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey, encryptedKey1,
-		sizeof(encryptedKey1), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey1,
+		sizeof(kek_patterns[k].encryptedKey1),
+		KEK_TYPE_COMMON), V2XSE_SUCCESS);
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
@@ -404,6 +521,7 @@ void test_injectBaEccPrivateKey_empty(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
+	enum soc_commonKek_idx k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -414,8 +532,10 @@ void test_injectBaEccPrivateKey_empty(void)
 
 	/* Inject BA key */
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(SLOT_ZERO,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey, encryptedKey1,
-		sizeof(encryptedKey1), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey1,
+		sizeof(kek_patterns[k].encryptedKey1),
+		KEK_TYPE_COMMON), V2XSE_SUCCESS);
 
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
@@ -452,6 +572,7 @@ void test_injectBaEccPrivateKey_overwrite(void)
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
+	enum soc_commonKek_idx k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -468,15 +589,19 @@ void test_injectBaEccPrivateKey_overwrite(void)
 
 	/* Inject key to overwrite - same type as injected */
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(NON_ZERO_SLOT,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey, encryptedKey1,
-		sizeof(encryptedKey1), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey1,
+		sizeof(kek_patterns[k].encryptedKey1),
+		 KEK_TYPE_COMMON), V2XSE_SUCCESS);
 	/* Verify public key contents doesn't match ref value */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey, &refPubKey2,
 						sizeof(TypePublicKey_t)), 0);
 	/* Inject BA key */
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(NON_ZERO_SLOT,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey, encryptedKey2,
-		sizeof(encryptedKey2), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey2,
+		sizeof(kek_patterns[k].encryptedKey2),
+		KEK_TYPE_COMMON), V2XSE_SUCCESS);
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey2,
 						sizeof(TypePublicKey_t)), 0);
@@ -489,15 +614,19 @@ void test_injectBaEccPrivateKey_overwrite(void)
 
 	/* Inject key to overwrite - different type to injected */
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(MAX_BA_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey, encryptedKey2,
-		sizeof(encryptedKey2), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey2,
+		sizeof(kek_patterns[k].encryptedKey2),
+		KEK_TYPE_COMMON), V2XSE_SUCCESS);
 	/* Verify public key contents doesn't match ref value */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
 	/* Inject BA key */
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(MAX_BA_SLOT,
-		V2XSE_CURVE_NISTP256, &statusCode, &pubKey, encryptedKey1,
-		sizeof(encryptedKey1), KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
+		kek_patterns[k].encryptedKey1,
+		sizeof(kek_patterns[k].encryptedKey1),
+		KEK_TYPE_COMMON), V2XSE_SUCCESS);
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
