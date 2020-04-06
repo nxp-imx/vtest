@@ -241,6 +241,8 @@ void test_getMaEccPublicKey(void)
 	/* Delete RT key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
 								V2XSE_SUCCESS);
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -567,6 +569,8 @@ void test_getRtEccPublicKey(void)
 						&statusCode), V2XSE_SUCCESS);
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
 						&statusCode), V2XSE_SUCCESS);
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
@@ -997,6 +1001,9 @@ void test_getBaEccPublicKey(void)
 						&statusCode), V2XSE_SUCCESS);
 	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(NON_ZERO_SLOT,
 						&statusCode), V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
 /**
