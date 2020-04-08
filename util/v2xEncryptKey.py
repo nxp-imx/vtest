@@ -50,6 +50,7 @@ class color:
    END = '\033[0m'
 
 
+## Prints the usage of this tool script
 def usage():
 
    print('v2xEncryptKey.py:')
@@ -69,6 +70,7 @@ def usage():
    print('')
 
 
+## Performs the encryption of a key
 def do_encrypt(encryptedKey, tag):
 
     print(color.BLUE + "/* CT Length: " + str(len(encryptedKey)) + " */" + color.END)
@@ -135,6 +137,12 @@ def do_encrypt(encryptedKey, tag):
             )
 
 
+## Main function
+#
+# This function checks that the right parameters are passed in,
+# sets the AES encryption context with a specific KEK and
+# launches the encryption of the test keys
+#
 def main(argv):
 
    arg_kek = ''              ''' mandatory: must be received as input '''
@@ -177,6 +185,7 @@ def main(argv):
 
    do_encrypt(encryptedKey2, tag2)
 
+## Entry point
 if __name__ == "__main__":
 
    main(sys.argv[1:])

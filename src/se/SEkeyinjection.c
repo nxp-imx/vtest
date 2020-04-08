@@ -42,17 +42,28 @@
  */
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 #include <v2xSe.h>
 #include "vtest.h"
 #include "SEmisc.h"
 #include "SEkeyinjection.h"
 
+/** Computes the number of elements that an array contains */
 #define NB_ELEM(array) (sizeof((array)) / sizeof((array)[0]))
 
+/** Length in bytes of the root kek. Must be 32 bytes for HSM */
 #define COMMON_KEK_SIZE		32
+
+/**
+ * Length in bytes of the input key area ; it is equal to the size of:
+ *  IV (12 bytes) + ciphertext + Tag (16 bytes).
+ */
 #define ENCRYPTED_KEY_SIZE	60
 
+/**
+ * Known KEK corresponding to the index of the ke_patterns[] array.
+ */
 enum soc_commonKek_idx {
 	SOC_COMMON_KEK_QXP = 0,
 	SOC_COMMON_KEK_DXL,
@@ -61,13 +72,40 @@ enum soc_commonKek_idx {
 	SOC_COMMON_KEK_UNKOWN = SOC_COMMON_KEK_MAX
 };
 
-struct test_common_kek_patterns {
+/**
+ * Structure describing test key patterns that can be injected in HSM.
+ *
+ * To securely inject a key in the HSM key store, the latter is encrypted with
+ * a Key Encryption Key (KEK). This KEK can either be common or chip unique.
+ * For simplicity of testing, the common KEK is used here. Note that this common
+ * KEK is different from a SoC family to another (e.g.: i.MX 8DXL vs. i.MX 8QXP).
+ *
+ * How to add a new common KEK and associated encrypted keys for a new SoC?
+ *
+ * 1. Common KEK are retrieved using the test_getKek() function (printed out when
+ * 'vtest 110902' fails).
+ * 2. This common KEK shall be populated in util/v2xEncryptKey.py to be added
+ * in the --kek parameter list.
+ * 3. Running the tool with this new KEK generates a couple of encrypted keys.
+ * 4. Both these encrypted keys as well as the common KEK shall then be added to
+ * the kek_patterns[] table to make 'vtest 11' (key injection tests) successful
+ * for this new SoC.
+ */
+typedef struct {
+	/** common KEK retrieved with the above method for a specific SoC */
 	uint8_t expectedCommonKek[COMMON_KEK_SIZE];
+	/** test key #1 encrypted with expectedCommonKek (refPubKey1 match) */
 	uint8_t encryptedKey1[ENCRYPTED_KEY_SIZE];
+	/** test key #2 encrypted with expectedCommonKek (refPubKey2 match) */
 	uint8_t encryptedKey2[ENCRYPTED_KEY_SIZE];
-};
+} testKeyInjection_t;
 
-static struct test_common_kek_patterns kek_patterns[SOC_COMMON_KEK_MAX] = {
+/**
+ * kek_patterns[] contains the KEK and the encrypted test keys for known SoCs.
+ * It is possible to add new patterns for new SoCs by following the method
+ * described in testKeyInjection_t description.
+ */
+static testKeyInjection_t kek_patterns[SOC_COMMON_KEK_MAX] = {
 	{ /* i.MX8 QXP common kek */
 		.expectedCommonKek = {
 			0x10, 0x2b, 0xcb, 0xe5, 0x4d, 0xd7, 0xb2, 0x33,
@@ -283,6 +321,18 @@ void test_getKek(void)
 							V2XSE_SUCCESS);
 	/* Verify key contents as expected */
 	VTEST_CHECK_RESULT(is_a_valid_commonKek(commonKek, kekSize), true);
+	/* Otherwise print it so it can be easily added for future SoC */
+	if (!is_a_valid_commonKek(commonKek, kekSize)) {
+		int i;
+		printf("ERROR: %s:%d Unknown common KEK (%d bytes):\n",
+			       __FILE__, __LINE__, kekSize);
+			for (i = 0 ; i < kekSize; i++)
+				printf("0x%02x%s", commonKek[i],
+						(i + 1) % 8 ? ", " : "\n");
+		printf("ERROR: If this test is run on a new SoC revision, please"
+			" check testKeyInjection_t comment to add a new KEK and" \
+			" encrypted keys in kek_patterns[].\n");
+	}
 
 /* Test retrieved unique KEK different from common KEK */
 	/* Get unique KEK */
