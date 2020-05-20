@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -143,5 +143,7 @@ typedef struct {
 	/** String describing the test */
 	char* testName;
 } testEntry_t;
+
+#define ECC_PATTERNS_BIG_ENDIAN
 
 #endif

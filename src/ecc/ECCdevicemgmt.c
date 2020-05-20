@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -49,35 +49,35 @@ static volatile int count_async = ASYNC_COUNT_RESET;
 
 /**
  *
- * @brief Positive test of disp_Activate, disp_Deactivate
+ * @brief Positive test of ecdsa_open, ecdsa_close
  *
  */
 void ecc_test_activate_deactivate(void)
 {
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
  *
- * @brief Test disp_Deactivate when not active
+ * @brief Test ecdsa_close when not active
  *
  */
 void ecc_test_deactivate_not_active(void)
 {
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NOT_INITIATED);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_INVALID_CALL);
 }
 
 /**
  *
- * @brief Test disp_Activate call if already active
+ * @brief Test ecdsa_open call if already active
  *
  */
 void ecc_test_activate_twice(void)
 {
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NOT_INITIATED);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_INVALID_CALL);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 

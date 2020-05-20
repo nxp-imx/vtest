@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -52,7 +52,7 @@ static volatile int count_async = ASYNC_COUNT_RESET;
 /** Result of memcmp when values match */
 #define MEMCMP_IDENTICAL      0
 /** Not supported curve */
-#define DISP_CURVE_NOT_SUPP   ((disp_CurveId_t)0xFF)
+#define ECDSA_CURVE_NOT_SUPP   ((ecdsa_curveid_t)0xFF)
 
 /**
  * @brief   Signature verification callback: positive test
@@ -63,12 +63,12 @@ static volatile int count_async = ASYNC_COUNT_RESET;
  *
  */
 
-void disp_VerifSigOfHashCallback(void *sequence_number,
-	disp_ReturnValue_t ret,
-	disp_VerificationResult_t verification_result)
+void ecdsa_VerifSigOfHashCallback(void *sequence_number,
+	int ret,
+	ecdsa_verification_result_t verification_result)
 {
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
-	VTEST_CHECK_RESULT(verification_result, DISP_VERIFRES_SUCCESS);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
 }
 
 /**
@@ -79,13 +79,13 @@ void disp_VerifSigOfHashCallback(void *sequence_number,
  * @param[out] verification_result   verification result
  *
  */
-void disp_VerifSigOfHashCallback_negative(void *sequence_number,
-	disp_ReturnValue_t ret,
-	disp_VerificationResult_t verification_result)
+void ecdsa_VerifSigOfHashCallback_negative(void *sequence_number,
+	int ret,
+	ecdsa_verification_result_t verification_result)
 {
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT(verification_result,
-		DISP_VERIFRES_ERROR_VERIFICATION);
+		ECDSA_VERIFICATION_ERROR);
 }
 
 /**
@@ -96,32 +96,32 @@ void disp_VerifSigOfHashCallback_negative(void *sequence_number,
  * @param[out] pubKey_decompressed   decompressed public key
  *
  */
-void my_disp_DecompressPubKeyCallback(void *callbackData,
-	disp_ReturnValue_t ret,
-	disp_PubKey_t *pubKey_decompressed)
+void my_ecdsa_DecompressPubKeyCallback(void *callbackData,
+	int ret,
+	ecdsa_pubkey_t *pubKey_decompressed)
 {
-	disp_CurveId_t curveID;
+	ecdsa_curveid_t curveID;
 
 	/* Callback data used to store curve id */
-	curveID = *(disp_CurveId_t *) callbackData;
+	curveID = *(ecdsa_curveid_t *) callbackData;
 
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
 
 	switch (curveID) {
 	/*
 	 * Compare decompressed and expected Y-coordinate
 	 */
-	case DISP_CURVE_NISTP256:
+	case ECDSA_CURVE_NISTP256:
 		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
 			(const void *) test_dec_pubKey_y_exp_nistp256,
 			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
 		break;
-	case DISP_CURVE_BP256R1:
+	case ECDSA_CURVE_BP256R1:
 		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
 			(const void *) test_dec_pubKey_y_exp_bp256r1,
 			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
 		break;
-	case DISP_CURVE_BP384R1:
+	case ECDSA_CURVE_BP384R1:
 		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
 			(const void *) test_dec_pubKey_y_exp_bp384r1,
 			LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
@@ -132,7 +132,7 @@ void my_disp_DecompressPubKeyCallback(void *callbackData,
 		 * If it is executed, it prints an error and the test fails.
 		 */
 		VTEST_LOG("Curve not supported");
-		VTEST_CHECK_RESULT(curveID, DISP_CURVE_NOT_SUPP);
+		VTEST_CHECK_RESULT(curveID, ECDSA_CURVE_NOT_SUPP);
 		break;
 	}
 }
@@ -145,35 +145,35 @@ void my_disp_DecompressPubKeyCallback(void *callbackData,
  * @param[out] pubKey_decompressed   decompressed public key
  *
  */
-void my_disp_DecompressPubKeyCallback_negative(void *callbackData,
-	disp_ReturnValue_t ret,
-	disp_PubKey_t *pubKey_decompressed)
+void my_ecdsa_DecompressPubKeyCallback_negative(void *callbackData,
+	int ret,
+	ecdsa_pubkey_t *pubKey_decompressed)
 {
-	disp_CurveId_t curveID;
+	ecdsa_curveid_t curveID;
 
 	/* Callback data used to store curve id */
-	curveID = *(disp_CurveId_t *) callbackData;
+	curveID = *(ecdsa_curveid_t *) callbackData;
 
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR,	count_async);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR,	count_async);
 
 	switch (curveID) {
 	/*
 	 * Compare decompressed and expected Y. They must be different.
 	 * This time if memcmp is not 0, the test PASS
 	 */
-	case DISP_CURVE_NISTP256:
+	case ECDSA_CURVE_NISTP256:
 		VTEST_CHECK_RESULT(
 			!memcmp((const void *) pubKey_decompressed->y,
 			(const void *) test_dec_pubKey_y_exp_nistp256,
 			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
 		break;
-	case DISP_CURVE_BP256R1:
+	case ECDSA_CURVE_BP256R1:
 		VTEST_CHECK_RESULT(
 			!memcmp((const void *) pubKey_decompressed->y,
 			(const void *) test_dec_pubKey_y_exp_bp256r1,
 			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
 		break;
-	case DISP_CURVE_BP384R1:
+	case ECDSA_CURVE_BP384R1:
 		VTEST_CHECK_RESULT(
 			!memcmp((const void *) pubKey_decompressed->y,
 			(const void *) test_dec_pubKey_y_exp_bp384r1,
@@ -185,7 +185,7 @@ void my_disp_DecompressPubKeyCallback_negative(void *callbackData,
 		 * If it is executed, it prints an error and the test fails.
 		 */
 		VTEST_LOG("Curve not supported");
-		VTEST_CHECK_RESULT(curveID, DISP_CURVE_NOT_SUPP);
+		VTEST_CHECK_RESULT(curveID, ECDSA_CURVE_NOT_SUPP);
 		break;
 	}
 }
@@ -198,19 +198,19 @@ void my_disp_DecompressPubKeyCallback_negative(void *callbackData,
  * @param[out] reconstructed_public_key   reconstructed public key
  *
  */
-static void my_disp_ReconPubKeyCallback(void *callbackData,
-	disp_ReturnValue_t ret, disp_PubKey_t *reconstructed_public_key)
+static void my_ecdsa_ReconPubKeyCallback(void *callbackData,
+	int ret, ecdsa_pubkey_t *reconstructed_public_key)
 {
-	disp_CurveId_t curveID;
+	ecdsa_curveid_t curveID;
 
 	/* Use callback data to store curve id */
-	curveID = *(disp_CurveId_t *) callbackData;
+	curveID = *(ecdsa_curveid_t *) callbackData;
 
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
 
 	switch (curveID) {
 
-	case DISP_CURVE_NISTP256:
+	case ECDSA_CURVE_NISTP256:
 		VTEST_CHECK_RESULT(memcmp(
 			(const void *) reconstructed_public_key->x,
 			(const void *) test_rec_pubKey_x_exp_nistp256,
@@ -221,7 +221,7 @@ static void my_disp_ReconPubKeyCallback(void *callbackData,
 			(const void *) test_rec_pubKey_y_exp_nistp256,
 			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
 		break;
-	case DISP_CURVE_BP256R1:
+	case ECDSA_CURVE_BP256R1:
 		VTEST_CHECK_RESULT(memcmp(
 			(const void *) reconstructed_public_key->x,
 			(const void *) test_rec_pubKey_x_exp_bp256r1,
@@ -238,7 +238,7 @@ static void my_disp_ReconPubKeyCallback(void *callbackData,
 		 * If it is executed, it prints an error and the test fails.
 		 */
 		VTEST_LOG("Curve not supported");
-		VTEST_CHECK_RESULT(curveID, DISP_CURVE_NOT_SUPP);
+		VTEST_CHECK_RESULT(curveID, ECDSA_CURVE_NOT_SUPP);
 		break;
 	}
 }
@@ -251,19 +251,19 @@ static void my_disp_ReconPubKeyCallback(void *callbackData,
  * @param[out] reconstructed_public_key   reconstructed public key
  *
  */
-static void my_disp_ReconPubKeyCallback_negative(void *callbackData,
-	disp_ReturnValue_t ret, disp_PubKey_t *reconstructed_public_key)
+static void my_ecdsa_ReconPubKeyCallback_negative(void *callbackData,
+	int ret, ecdsa_pubkey_t *reconstructed_public_key)
 {
-	disp_CurveId_t curveID;
+	ecdsa_curveid_t curveID;
 
 	/* Use callback data to store curve id */
-	curveID = *(disp_CurveId_t *) callbackData;
+	curveID = *(ecdsa_curveid_t *) callbackData;
 
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
 
 	switch (curveID) {
 
-	case DISP_CURVE_NISTP256:
+	case ECDSA_CURVE_NISTP256:
 		VTEST_CHECK_RESULT(!memcmp(
 			(const void *) reconstructed_public_key->x,
 			(const void *) test_rec_pubKey_x_exp_nistp256,
@@ -274,7 +274,7 @@ static void my_disp_ReconPubKeyCallback_negative(void *callbackData,
 			(const void *) test_rec_pubKey_y_exp_nistp256,
 			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
 		break;
-	case DISP_CURVE_BP256R1:
+	case ECDSA_CURVE_BP256R1:
 		VTEST_CHECK_RESULT(!memcmp(
 			(const void *) reconstructed_public_key->x,
 			(const void *) test_rec_pubKey_x_exp_bp256r1,
@@ -291,34 +291,34 @@ static void my_disp_ReconPubKeyCallback_negative(void *callbackData,
 		 * If it is executed, it prints an error and the test fails.
 		 */
 		VTEST_LOG("Curve not supported");
-		VTEST_CHECK_RESULT(curveID, DISP_CURVE_NOT_SUPP);
+		VTEST_CHECK_RESULT(curveID, ECDSA_CURVE_NOT_SUPP);
 		break;
 	}
 }
 
 /**
  *
- * @brief Positive test of disp_ecc_verify_signature
+ * @brief Positive test of ecdsa_verify_signature
  *
  */
 void ecc_test_signature_verification(void)
 {
-	disp_PubKey_t pubKey;
-	disp_Hash_t hash;
-	disp_Sig_t sig;
+	ecdsa_pubkey_t pubKey;
+	ecdsa_hash_t hash;
+	ecdsa_sig_t sig;
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Positive verification test NISTP256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
 	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
 	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
 	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
-	hash     = (disp_Hash_t) test_ver_hash_256;
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey, hash, &sig,
-		disp_VerifSigOfHashCallback), DISP_RETVAL_NO_ERROR,
-		count_async);
+	hash     = (ecdsa_hash_t) test_ver_hash_256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Positive verification test BRAINPOOL256R1 */
@@ -326,11 +326,11 @@ void ecc_test_signature_verification(void)
 	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp256r1;
 	sig.r    = (uint8_t *) test_ver_sign_r_bp256r1;
 	sig.s    = (uint8_t *) test_ver_sign_s_bp256r1;
-	hash     = (disp_Hash_t) test_ver_hash_256;
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_BP256R1, &pubKey, hash, &sig,
-		disp_VerifSigOfHashCallback), DISP_RETVAL_NO_ERROR,
-		count_async);
+	hash     = (ecdsa_hash_t) test_ver_hash_256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_BP256R1, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Positive verification test BRAINPOOL384R1 */
@@ -338,52 +338,52 @@ void ecc_test_signature_verification(void)
 	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp384r1;
 	sig.r    = (uint8_t *) test_ver_sign_r_bp384r1;
 	sig.s    = (uint8_t *) test_ver_sign_s_bp384r1;
-	hash     = (disp_Hash_t) test_ver_hash_384;
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_BP384R1, &pubKey, hash, &sig,
-		disp_VerifSigOfHashCallback), DISP_RETVAL_NO_ERROR,
-		count_async);
+	hash     = (ecdsa_hash_t) test_ver_hash_384;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_BP384R1, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
  *
- * @brief Positive test of disp_ecc_verify_signature_of_message
+ * @brief Positive test of ecdsa_verify_signature_of_message
  *
  */
 void ecc_test_signature_verification_message(void)
 {
-	disp_PubKey_t pubKey;
-	disp_Sig_t sig;
+	ecdsa_pubkey_t pubKey;
+	ecdsa_sig_t sig;
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
 	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
 	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
 	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_verify_signature_of_message((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey, (const void *) test_ver_msg,
-		HASH_MSG_SIZE, &sig, disp_VerifSigOfHashCallback),
-		DISP_RETVAL_NO_ERROR, count_async);
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_NISTP256, pubKey,
+			(const void *)test_ver_msg, HASH_MSG_SIZE, sig, 0,
+			ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
  *
- * @brief Negative test of disp_ecc_verify_signature
+ * @brief Negative test of ecdsa_verify_signature
  *
  */
 void ecc_test_signature_verification_negative(void)
 {
-	disp_PubKey_t pubKey;
-	disp_Hash_t hash;
-	disp_Sig_t sig;
+	ecdsa_pubkey_t pubKey;
+	ecdsa_hash_t hash;
+	ecdsa_sig_t sig;
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Negative verification test NISTP256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
@@ -391,11 +391,11 @@ void ecc_test_signature_verification_negative(void)
 	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
 	/* Using twice r: giving (r,r) instead of (r,s) */
 	sig.s    = (uint8_t *) test_ver_sign_r_nistp256;
-	hash     = (disp_Hash_t) test_ver_hash_256;
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey, hash, &sig,
-		disp_VerifSigOfHashCallback_negative), DISP_RETVAL_NO_ERROR,
-		count_async);
+	hash     = (ecdsa_hash_t) test_ver_hash_256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback_negative, (void *)0),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Negative verification test BRAINPOOL256R1 */
@@ -404,11 +404,11 @@ void ecc_test_signature_verification_negative(void)
 	sig.r    = (uint8_t *) test_ver_sign_r_bp256r1;
 	/* Using twice r: giving (r,r) instead of (r,s) */
 	sig.s    = (uint8_t *) test_ver_sign_r_bp256r1;
-	hash     = (disp_Hash_t) test_ver_hash_256;
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_BP256R1, &pubKey, hash, &sig,
-		disp_VerifSigOfHashCallback_negative), DISP_RETVAL_NO_ERROR,
-		count_async);
+	hash     = (ecdsa_hash_t) test_ver_hash_256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_BP256R1, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback_negative, (void *)0),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Negative verification test BRAINPOOL384R1 */
@@ -417,166 +417,166 @@ void ecc_test_signature_verification_negative(void)
 	sig.r    = (uint8_t *) test_ver_sign_r_bp384r1;
 	/* Using twice r: giving (r,r) instead of (r,s) */
 	sig.s    = (uint8_t *) test_ver_sign_r_bp384r1;
-	hash     = (disp_Hash_t) test_ver_hash_384;
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_BP384R1, &pubKey, hash, &sig,
-		disp_VerifSigOfHashCallback_negative), DISP_RETVAL_NO_ERROR,
-		count_async);
+	hash     = (ecdsa_hash_t) test_ver_hash_384;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_BP384R1, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback_negative, (void *)0),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
  *
- * @brief Test of disp_ecc_verify_signature with a curve not supported
+ * @brief Test of ecdsa_verify_signature with a curve not supported
  * and library not active
  *
  */
 void ecc_test_signature_verification_invalid(void)
 {
-	disp_PubKey_t pubKey;
-	disp_Hash_t hash;
-	disp_Sig_t sig;
+	ecdsa_pubkey_t pubKey;
+	ecdsa_hash_t hash;
+	ecdsa_sig_t sig;
 
 
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
 	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
 	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
 	sig.s    = (uint8_t *) test_ver_sign_s_nistp256;
-	hash     = (disp_Hash_t) test_ver_hash_256;
+	hash     = (ecdsa_hash_t) test_ver_hash_256;
 
 	/* Invalid state test */
-	VTEST_CHECK_RESULT(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey, hash, &sig,
-		disp_VerifSigOfHashCallback),
-		DISP_RETVAL_NOT_INITIATED);
+	VTEST_CHECK_RESULT(
+		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NOT_INITIALIZED);
 
 	/* Not supported curve test */
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	VTEST_CHECK_RESULT(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NOT_SUPP, &pubKey, hash, &sig,
-		disp_VerifSigOfHashCallback),
-		DISP_RETVAL_CRYPTO_FUNC_NOT_AVAIL);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(
+		ecdsa_verify_signature(ECDSA_CURVE_NOT_SUPP, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_EXECUTER_UNSUPPORTED_FUNCTION);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
  *
- * @brief Positive test of disp_ecc_decompressPublicKey
+ * @brief Positive test of ecdsa_decompress_public_key
  *
  */
 void ecc_test_pubkey_decompression(void)
 {
-	disp_PubKey_t pubKey;
-	disp_CurveId_t curveID;
+	ecdsa_pubkey_t pubKey;
+	ecdsa_curveid_t curveID;
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Positive key decompression test NISTP256 */
-	curveID = DISP_CURVE_NISTP256;
+	curveID = ECDSA_CURVE_NISTP256;
 	pubKey.x = test_dec_pubKey_x_nistp256;
 	pubKey.y = test_dec_pubKey_y_nistp256;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_decompressPublicKey((void *) &curveID, 0,
-		curveID, &pubKey, my_disp_DecompressPubKeyCallback),
-		DISP_RETVAL_NO_ERROR, count_async);
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Positive key decompression test BP256R1 */
-	curveID = DISP_CURVE_BP256R1;
+	curveID = ECDSA_CURVE_BP256R1;
 	pubKey.x = test_dec_pubKey_x_bp256r1;
 	pubKey.y = test_dec_pubKey_y_bp256r1;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_decompressPublicKey((void *) &curveID, 0,
-		curveID, &pubKey, my_disp_DecompressPubKeyCallback),
-		DISP_RETVAL_NO_ERROR, count_async);
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Positive key decompression test BP384R1 */
-	curveID = DISP_CURVE_BP384R1;
+	curveID = ECDSA_CURVE_BP384R1;
 	pubKey.x = test_dec_pubKey_x_bp384r1;
 	pubKey.y = test_dec_pubKey_y_bp384r1;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_decompressPublicKey((void *) &curveID, 0,
-		curveID, &pubKey, my_disp_DecompressPubKeyCallback),
-		DISP_RETVAL_NO_ERROR, count_async);
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
  *
- * @brief Negative test of disp_ecc_decompressPublicKey
+ * @brief Negative test of ecdsa_decompress_public_key
  *
  */
 void ecc_test_pubkey_decompression_negative(void)
 {
-	disp_PubKey_t pubKey;
-	disp_CurveId_t curveID;
+	ecdsa_pubkey_t pubKey;
+	ecdsa_curveid_t curveID;
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Negative key decompression test NISTP256 */
-	curveID = DISP_CURVE_NISTP256;
+	curveID = ECDSA_CURVE_NISTP256;
 	pubKey.x = test_dec_pubKey_x_nistp256;
 	pubKey.y = test_dec_pubKey_y_neg_nistp256;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_decompressPublicKey((void *) &curveID, 0,
-		curveID, &pubKey, my_disp_DecompressPubKeyCallback_negative),
-		DISP_RETVAL_NO_ERROR, count_async);
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback_negative, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Negative key decompression test BP256R1 */
-	curveID = DISP_CURVE_BP256R1;
+	curveID = ECDSA_CURVE_BP256R1;
 	pubKey.x = test_dec_pubKey_x_bp256r1;
 	pubKey.y = test_dec_pubKey_y_neg_bp256r1;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_decompressPublicKey((void *) &curveID, 0,
-		curveID, &pubKey, my_disp_DecompressPubKeyCallback_negative),
-		DISP_RETVAL_NO_ERROR, count_async);
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback_negative, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Negative key decompression test BP384R1 */
-	curveID = DISP_CURVE_BP384R1;
+	curveID = ECDSA_CURVE_BP384R1;
 	pubKey.x = test_dec_pubKey_x_bp384r1;
 	pubKey.y = test_dec_pubKey_y_neg_bp384r1;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_decompressPublicKey((void *) &curveID, 0,
-		curveID, &pubKey, my_disp_DecompressPubKeyCallback_negative),
-		DISP_RETVAL_NO_ERROR, count_async);
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback_negative, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
  *
- * @brief Test of disp_ecc_decompressPublicKey with not supported curve
+ * @brief Test of ecdsa_decompress_public_key with not supported curve
  * and library not active
  *
  */
 void ecc_test_pubkey_decompression_invalid(void)
 {
-	disp_PubKey_t pubKey;
+	ecdsa_pubkey_t pubKey;
 
 	pubKey.x = test_dec_pubKey_x_nistp256;
 	pubKey.y = test_dec_pubKey_y_neg_nistp256;
 
 	/* Invalid state test */
-	VTEST_CHECK_RESULT(disp_ecc_decompressPublicKey((void *)0, 0,
-		DISP_CURVE_NOT_SUPP, &pubKey,
-		my_disp_DecompressPubKeyCallback),
-		DISP_RETVAL_NOT_INITIATED);
+	VTEST_CHECK_RESULT(
+		ecdsa_decompress_public_key(ECDSA_CURVE_NOT_SUPP, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback, (void *)0),
+		ECDSA_NOT_INITIALIZED);
 
 	/* Not supported curve test */
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	VTEST_CHECK_RESULT(disp_ecc_decompressPublicKey((void *)0, 0,
-		DISP_CURVE_NOT_SUPP, &pubKey,
-		my_disp_DecompressPubKeyCallback),
-		DISP_RETVAL_CRYPTO_FUNC_NOT_AVAIL);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(
+		ecdsa_decompress_public_key(ECDSA_CURVE_NOT_SUPP, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback, (void *)0),
+		ECDSA_EXECUTER_UNSUPPORTED_FUNCTION);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
@@ -590,23 +590,23 @@ void ecc_test_hash(void)
 	uint8_t sha384_hash_got[LENGTH_DOMAIN_PARAMS_384];
 	uint8_t sha512_hash_got[LENGTH_DOMAIN_PARAMS_512];
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	disp_SHA256((const void *) test_hash_msg, HASH_MSG_SIZE,
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	ecdsa_sha256((const void *) test_hash_msg, HASH_MSG_SIZE,
 		sha256_hash_got);
 	VTEST_CHECK_RESULT(memcmp((const void *) test_hash_msg_exp_256,
 		(const void *) sha256_hash_got, LENGTH_DOMAIN_PARAMS_256),
 		MEMCMP_IDENTICAL);
-	disp_SHA384((const void *) test_hash_msg, HASH_MSG_SIZE,
+	ecdsa_sha384((const void *) test_hash_msg, HASH_MSG_SIZE,
 		sha384_hash_got);
 	VTEST_CHECK_RESULT(memcmp((const void *) test_hash_msg_exp_384,
 		(const void *) sha384_hash_got, LENGTH_DOMAIN_PARAMS_384),
 		MEMCMP_IDENTICAL);
-	disp_SHA512((const void *) test_hash_msg, HASH_MSG_SIZE,
+	ecdsa_sha512((const void *) test_hash_msg, HASH_MSG_SIZE,
 		sha512_hash_got);
 	VTEST_CHECK_RESULT(memcmp((const void *) test_hash_msg_exp_512,
 		(const void *) sha512_hash_got, LENGTH_DOMAIN_PARAMS_512),
 		MEMCMP_IDENTICAL);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
@@ -620,23 +620,23 @@ void ecc_test_hash_negative(void)
 	uint8_t sha384_hash_got[LENGTH_DOMAIN_PARAMS_384];
 	uint8_t sha512_hash_got[LENGTH_DOMAIN_PARAMS_512];
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	disp_SHA256((const void *) test_hash_msg_neg, HASH_MSG_SIZE,
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	ecdsa_sha256((const void *) test_hash_msg_neg, HASH_MSG_SIZE,
 		sha256_hash_got);
 	VTEST_CHECK_RESULT(!memcmp((const void *) test_hash_msg_exp_256,
 		(const void *) sha256_hash_got, LENGTH_DOMAIN_PARAMS_256),
 		MEMCMP_IDENTICAL);
-	disp_SHA384((const void *) test_hash_msg_neg, HASH_MSG_SIZE,
+	ecdsa_sha384((const void *) test_hash_msg_neg, HASH_MSG_SIZE,
 		sha384_hash_got);
 	VTEST_CHECK_RESULT(!memcmp((const void *) test_hash_msg_exp_384,
 		(const void *) sha384_hash_got, LENGTH_DOMAIN_PARAMS_384),
 		MEMCMP_IDENTICAL);
-	disp_SHA512((const void *) test_hash_msg_neg, HASH_MSG_SIZE,
+	ecdsa_sha512((const void *) test_hash_msg_neg, HASH_MSG_SIZE,
 		sha512_hash_got);
 	VTEST_CHECK_RESULT(!memcmp((const void *) test_hash_msg_exp_512,
 		(const void *) sha512_hash_got, LENGTH_DOMAIN_PARAMS_512),
 		MEMCMP_IDENTICAL);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
@@ -651,75 +651,75 @@ void ecc_test_hash_invalid(void)
 	uint8_t sha512_hash_got[LENGTH_DOMAIN_PARAMS_512];
 
 	/* Invalid state test */
-	VTEST_CHECK_RESULT(disp_SHA256((const void *) test_hash_msg,
-		HASH_MSG_SIZE, sha256_hash_got), DISP_RETVAL_NOT_INITIATED);
-	VTEST_CHECK_RESULT(disp_SHA384((const void *) test_hash_msg,
-		HASH_MSG_SIZE, sha384_hash_got), DISP_RETVAL_NOT_INITIATED);
-	VTEST_CHECK_RESULT(disp_SHA512((const void *) test_hash_msg,
-		HASH_MSG_SIZE, sha512_hash_got), DISP_RETVAL_NOT_INITIATED);
+	VTEST_CHECK_RESULT(ecdsa_sha256((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sha256_hash_got), ECDSA_NOT_INITIALIZED);
+	VTEST_CHECK_RESULT(ecdsa_sha384((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sha384_hash_got), ECDSA_NOT_INITIALIZED);
+	VTEST_CHECK_RESULT(ecdsa_sha512((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sha512_hash_got), ECDSA_NOT_INITIALIZED);
 }
 
 /**
  *
- * @brief Positive test of disp_ecc_reconstructPublicKey
+ * @brief Positive test of ecdsa_reconstruct_public_key
  *
  */
 void ecc_test_pubkey_reconstruction(void)
 {
-	disp_Hash_t hash;
-	disp_Point_t rec_data;
-	disp_Point_t caPubKey;
-	disp_CurveId_t curveID;
+	ecdsa_hash_t hash;
+	ecdsa_point_t rec_data;
+	ecdsa_point_t caPubKey;
+	ecdsa_curveid_t curveID;
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Positive reconstruction test NISTP256 */
-	curveID    = DISP_CURVE_NISTP256;
+	curveID    = ECDSA_CURVE_NISTP256;
 	hash       = (uint8_t *) test_rec_hash_256;
 	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_nistp256;
 	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_nistp256;
 	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_x_nistp256;
 	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_nistp256;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_reconstructPublicKey((void *) &curveID, 0,
-		curveID, hash, &rec_data, &caPubKey,
-		my_disp_ReconPubKeyCallback), DISP_RETVAL_NO_ERROR,
+		ecdsa_reconstruct_public_key(curveID, hash, rec_data,
+			caPubKey, 0, my_ecdsa_ReconPubKeyCallback,
+			(void *)&curveID), ECDSA_NO_ERROR,
 		count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Positive reconstruction test BP256R1 */
-	curveID    = DISP_CURVE_BP256R1;
+	curveID    = ECDSA_CURVE_BP256R1;
 	hash       = (uint8_t *) test_rec_hash_256;
 	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_bp256r1;
 	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_bp256r1;
 	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_x_bp256r1;
 	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_bp256r1;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_reconstructPublicKey((void *) &curveID, 0,
-		curveID, hash, &rec_data, &caPubKey,
-		my_disp_ReconPubKeyCallback), DISP_RETVAL_NO_ERROR,
+		ecdsa_reconstruct_public_key(curveID, hash, rec_data,
+			caPubKey, 0, my_ecdsa_ReconPubKeyCallback,
+			(void *)&curveID), ECDSA_NO_ERROR,
 		count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
  *
- * @brief Negative test of disp_ecc_reconstructPublicKey
+ * @brief Negative test of ecdsa_reconstruct_public_key
  *
  */
 void ecc_test_pubkey_reconstruction_negative(void)
 {
-	disp_Hash_t hash;
-	disp_Point_t rec_data;
-	disp_Point_t caPubKey;
-	disp_CurveId_t curveID;
+	ecdsa_hash_t hash;
+	ecdsa_point_t rec_data;
+	ecdsa_point_t caPubKey;
+	ecdsa_curveid_t curveID;
 
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Negative reconstruction test NISTP256 */
-	curveID    = DISP_CURVE_NISTP256;
+	curveID    = ECDSA_CURVE_NISTP256;
 	hash       = (uint8_t *) test_rec_hash_256;
 	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_nistp256;
 	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_nistp256;
@@ -727,14 +727,14 @@ void ecc_test_pubkey_reconstruction_negative(void)
 	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_y_nistp256;
 	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_nistp256;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_reconstructPublicKey((void *) &curveID, 0,
-		curveID, hash, &rec_data, &caPubKey,
-		my_disp_ReconPubKeyCallback_negative), DISP_RETVAL_NO_ERROR,
+		ecdsa_reconstruct_public_key(curveID, hash, rec_data,
+			caPubKey, 0, my_ecdsa_ReconPubKeyCallback_negative,
+			(void *)&curveID), ECDSA_NO_ERROR,
 		count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Negative reconstruction test BP256R1 */
-	curveID    = DISP_CURVE_BP256R1;
+	curveID    = ECDSA_CURVE_BP256R1;
 	hash       = (uint8_t *) test_rec_hash_256;
 	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_bp256r1;
 	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_bp256r1;
@@ -742,26 +742,26 @@ void ecc_test_pubkey_reconstruction_negative(void)
 	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_y_bp256r1;
 	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_bp256r1;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		disp_ecc_reconstructPublicKey((void *) &curveID, 0,
-		curveID, hash, &rec_data, &caPubKey,
-		my_disp_ReconPubKeyCallback_negative), DISP_RETVAL_NO_ERROR,
+		ecdsa_reconstruct_public_key(curveID, hash, rec_data,
+			caPubKey, 0, my_ecdsa_ReconPubKeyCallback_negative,
+			(void *)&curveID), ECDSA_NO_ERROR,
 		count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
 /**
  *
- * @brief Test of disp_ecc_reconstructPublicKey with a not supported curve and
+ * @brief Test of ecdsa_reconstruct_public_key with a not supported curve and
  * library not active
  *
  */
 void ecc_test_pubkey_reconstruction_invalid(void)
 {
-	disp_Hash_t hash;
-	disp_Point_t rec_data;
-	disp_Point_t caPubKey;
+	ecdsa_hash_t hash;
+	ecdsa_point_t rec_data;
+	ecdsa_point_t caPubKey;
 
 	hash       = (uint8_t *) test_rec_hash_256;
 	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_nistp256;
@@ -771,18 +771,18 @@ void ecc_test_pubkey_reconstruction_invalid(void)
 
 	/* Invalid state test */
 	VTEST_CHECK_RESULT(
-		disp_ecc_reconstructPublicKey((void *)0, 0,
-		DISP_CURVE_NISTP256, hash, &rec_data, &caPubKey,
-		my_disp_ReconPubKeyCallback),
-		DISP_RETVAL_NOT_INITIATED);
+		ecdsa_reconstruct_public_key(ECDSA_CURVE_NISTP256, hash,
+			rec_data, caPubKey, 0, my_ecdsa_ReconPubKeyCallback,
+			(void *)0),
+		ECDSA_NOT_INITIALIZED);
 
 	/* Not supported curve test */
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(
-		disp_ecc_reconstructPublicKey((void *)0, 0,
-		DISP_CURVE_NOT_SUPP, hash, &rec_data, &caPubKey,
-		my_disp_ReconPubKeyCallback),
-		DISP_RETVAL_CRYPTO_FUNC_NOT_AVAIL);
+		ecdsa_reconstruct_public_key(ECDSA_CURVE_NOT_SUPP, hash,
+			rec_data, caPubKey, 0, my_ecdsa_ReconPubKeyCallback,
+			(void *)0),
+		ECDSA_EXECUTER_UNSUPPORTED_FUNCTION);
 
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }

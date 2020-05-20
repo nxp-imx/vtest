@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -112,8 +112,8 @@ void test_sigGenLatencyUnloaded(void);
 /** Set up data pointers for next signature verification loop */
 #define SETUP_ECDSA_SIG_VERIF_PTRS(loop)				\
 do {									\
-	verif_pubKey.x = pubKeyArray[(loop - 1) % NUM_KEYS_PERF_TESTS].x;\
-	verif_pubKey.y = pubKeyArray[(loop - 1) % NUM_KEYS_PERF_TESTS].y;\
+	verif_pubkey.x = pubKeyArray[(loop - 1) % NUM_KEYS_PERF_TESTS].x;\
+	verif_pubkey.y = pubKeyArray[(loop - 1) % NUM_KEYS_PERF_TESTS].y;\
 	verif_hash = hashArray[loop - 1].data;				\
 	verif_sig.r = sigArray[loop - 1].r;				\
 	verif_sig.s = sigArray[loop - 1].s;				\

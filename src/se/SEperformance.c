@@ -61,47 +61,84 @@ static TypePublicKey_t *pubKeyArray;
 static TypeHash_t *hashArray;
 static TypeSignature_t *sigArray;
 
-static disp_PubKey_t verif_pubKey;
-static disp_Hash_t verif_hash;
-static disp_Sig_t verif_sig;
+static ecdsa_pubkey_t verif_pubkey;
+static ecdsa_hash_t verif_hash;
+static ecdsa_sig_t verif_sig;
 
 /** Hash for canned signature, big enough for 384 bits, 256 uses less */
 static TypeHash_t cannedHash = {{
+#ifdef ECC_PATTERNS_BIG_ENDIAN
+	0x1f, 0x1e, 0x1d, 0x1c, 0x1b, 0x1a, 0x19, 0x18,
+	0x17, 0x16, 0x15, 0x14, 0x13, 0x12, 0x11, 0x10,
+	0x0f, 0x0e, 0x0d, 0x0c, 0x0b, 0x0a, 0x09, 0x08,
+	0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00,
+	0x2f, 0x2e, 0x2d, 0x2c, 0x2b, 0x2a, 0x29, 0x28,
+	0x27, 0x26, 0x25, 0x24, 0x23, 0x22, 0x21, 0x20
+#else
 	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
 	0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
 	0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
 	0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
 	0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
 	0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F
+#endif
 	}
 };
 
 static uint8_t cannedPubkeyNIST256_X[V2XSE_256_EC_PUB_KEY_XY_SIZE] = {
+#ifdef ECC_PATTERNS_BIG_ENDIAN
+	0x57, 0xb3, 0xc4, 0xec, 0xcf, 0x2e, 0x62, 0x11,
+	0x13, 0xb3, 0x84, 0xcd, 0x9e, 0x42, 0xaf, 0x40,
+	0x20, 0xb7, 0xdc, 0xfb, 0x89, 0xeb, 0xd3, 0xec,
+	0x87, 0xf2, 0xd8, 0xb5, 0x75, 0x78, 0x51, 0x89
+#else
 	0x89, 0x51, 0x78, 0x75, 0xb5, 0xd8, 0xf2, 0x87,
 	0xec, 0xd3, 0xeb, 0x89, 0xfb, 0xdc, 0xb7, 0x20,
 	0x40, 0xaf, 0x42, 0x9e, 0xcd, 0x84, 0xb3, 0x13,
 	0x11, 0x62, 0x2e, 0xcf, 0xec, 0xc4, 0xb3, 0x57
+#endif
 };
 
 static uint8_t cannedPubkeyNIST256_Y[V2XSE_256_EC_PUB_KEY_XY_SIZE] = {
+#ifdef ECC_PATTERNS_BIG_ENDIAN
+	0x3e, 0xf6, 0x74, 0x06, 0x6d, 0x06, 0x67, 0xb3,
+	0x48, 0x7b, 0xff, 0x46, 0xe5, 0x04, 0xe9, 0x4d,
+	0xb6, 0x6b, 0x6d, 0x81, 0xfb, 0xf2, 0x41, 0xbf,
+	0x9c, 0xb3, 0xdd, 0x3d, 0xba, 0x0d, 0xf7, 0x69
+#else
 	0x69, 0xf7, 0x0d, 0xba, 0x3d, 0xdd, 0xb3, 0x9c,
 	0xbf, 0x41, 0xf2, 0xfb, 0x81, 0x6d, 0x6b, 0xb6,
 	0x4d, 0xe9, 0x04, 0xe5, 0x46, 0xff, 0x7b, 0x48,
 	0xb3, 0x67, 0x06, 0x6d, 0x06, 0x74, 0xf6, 0x3e
+#endif
 };
 
 static uint8_t cannedSigNIST256_R[V2XSE_256_EC_R_SIGN] = {
+#ifdef ECC_PATTERNS_BIG_ENDIAN
+	0x6a, 0xe2, 0x7b, 0x70, 0x55, 0x9f, 0x61, 0x4d,
+	0xf7, 0x8a, 0xf1, 0x48, 0xef, 0x1f, 0xe7, 0x55,
+	0xe5, 0x8d, 0x24, 0x5f, 0xb3, 0xdf, 0x04, 0xb5,
+	0x73, 0xdd, 0x84, 0xf6, 0xeb, 0xc4, 0x38, 0x7b
+#else
 	0x7b, 0x38, 0xc4, 0xeb, 0xf6, 0x84, 0xdd, 0x73,
 	0xb5, 0x04, 0xdf, 0xb3, 0x5f, 0x24, 0x8d, 0xe5,
 	0x55, 0xe7, 0x1f, 0xef, 0x48, 0xf1, 0x8a, 0xf7,
 	0x4d, 0x61, 0x9f, 0x55, 0x70, 0x7b, 0xe2, 0x6a
+#endif
 };
 
 static uint8_t cannedSigNIST256_S[V2XSE_256_EC_S_SIGN] = {
+#ifdef ECC_PATTERNS_BIG_ENDIAN
+	0x76, 0x54, 0x05, 0x4d, 0x00, 0xda, 0xa0, 0xce,
+	0x99, 0xbd, 0x1d, 0x30, 0x82, 0x29, 0x5d, 0x1b,
+	0x63, 0xc5, 0x85, 0x7d, 0x2e, 0x85, 0x76, 0x9d,
+	0x50, 0x7c, 0xde, 0x6e, 0xda, 0x68, 0x73, 0x99
+#else
 	0x99, 0x73, 0x68, 0xda, 0x6e, 0xde, 0x7c, 0x50,
 	0x9d, 0x76, 0x85, 0x2e, 0x7d, 0x85, 0xc5, 0x63,
 	0x1b, 0x5d, 0x29, 0x82, 0x30, 0x1d, 0xbd, 0x99,
 	0xce, 0xa0, 0xda, 0x00, 0x4d, 0x05, 0x54, 0x76
+#endif
 };
 
 
@@ -218,6 +255,7 @@ static TypeSignature_t *createSigArray(uint32_t numSig, TypeHash_t *hashArray,
 	return sigArray;
 }
 
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 /**
  * @brief   Reverse the endianness of an array of hash values
  *
@@ -286,6 +324,7 @@ static void reverseSigEndianness(TypeSignature_t *sigArray, uint32_t numSig,
 		memcpy(sigArray[i].s, swapped.s, dataSize);
 	}
 }
+#endif
 
 /**
  * @brief   Allocate data for  tests
@@ -349,12 +388,14 @@ static uint32_t populateTestData(uint32_t testType)
 	if (!sigArray)
 		goto fail_sig;
 
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Reverse endianness for ECDSA sig verification */
 	reversePubKeyEndianness(pubKeyArray, NUM_KEYS_PERF_TESTS,
 						V2XSE_256_EC_PUB_KEY_XY_SIZE);
 	reverseHashEndianness(hashArray, numElements,
 						V2XSE_256_EC_HASH_SIZE);
 	reverseSigEndianness(sigArray, numElements, V2XSE_256_EC_R_SIGN);
+#endif
 	goto exit;
 
 fail_sig:
@@ -395,20 +436,21 @@ static void freeTestData(uint32_t testType)
  *
  */
 static void signatureVerificationCallback_rate(void *sequence_number,
-	disp_ReturnValue_t ret,
-	disp_VerificationResult_t verification_result)
+	int ret,
+	ecdsa_verification_result_t verification_result)
 {
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
-	VTEST_CHECK_RESULT(verification_result, DISP_VERIFRES_SUCCESS);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
 	if (--loopCount > 0) {
 		/* Setup ECDSA pointers for next loop */
 		SETUP_ECDSA_SIG_VERIF_PTRS(loopCount);
 		/* Launch next loop */
 		VTEST_CHECK_RESULT_ASYNC_INC(
-			disp_ecc_verify_signature((void *) 0, 0,
-			DISP_CURVE_NISTP256, &verif_pubKey, verif_hash,
-			&verif_sig, signatureVerificationCallback_rate),
-			DISP_RETVAL_NO_ERROR, count_async);
+			ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
+				verif_hash, verif_sig, 0,
+				signatureVerificationCallback_rate,
+				(void *)0),
+			ECDSA_NO_ERROR, count_async);
 	} else {
 		/* Log end time */
 		if (clock_gettime(CLOCK_BOOTTIME, &endTime) == -1) {
@@ -427,8 +469,8 @@ static void signatureVerificationCallback_rate(void *sequence_number,
  *
  */
 static void signatureVerificationCallback_latency(void *sequence_number,
-	disp_ReturnValue_t ret,
-	disp_VerificationResult_t verification_result)
+	int ret,
+	ecdsa_verification_result_t verification_result)
 {
 	long nsLatency;
 
@@ -437,8 +479,8 @@ static void signatureVerificationCallback_latency(void *sequence_number,
 		return;
 	}
 
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
-	VTEST_CHECK_RESULT(verification_result, DISP_VERIFRES_SUCCESS);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
 
 	/* Calculate latency */
 	CALCULATE_TIME_DIFF_NS(startTime, endTime, nsLatency);
@@ -459,10 +501,10 @@ static void signatureVerificationCallback_latency(void *sequence_number,
 			return;
 		}
 		VTEST_CHECK_RESULT_ASYNC_INC(
-			disp_ecc_verify_signature((void *) 0, 0,
-			DISP_CURVE_NISTP256, &verif_pubKey, verif_hash,
-			&verif_sig, signatureVerificationCallback_latency),
-			DISP_RETVAL_NO_ERROR, count_async);
+			ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
+				verif_hash, verif_sig, 0,
+				signatureVerificationCallback_latency, (void *)0),
+			ECDSA_NO_ERROR, count_async);
 	}
 }
 
@@ -475,18 +517,19 @@ static void signatureVerificationCallback_latency(void *sequence_number,
  *
  */
 static void signatureVerificationCallback_background(void *sequence_number,
-	disp_ReturnValue_t ret,
-	disp_VerificationResult_t verification_result)
+	int ret,
+	ecdsa_verification_result_t verification_result)
 {
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
-	VTEST_CHECK_RESULT(verification_result, DISP_VERIFRES_SUCCESS);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
 	if (--loopCount > 0) {
 		/* Launch next loop */
 		VTEST_CHECK_RESULT_ASYNC_INC(
-			disp_ecc_verify_signature((void *) 0, 0,
-			DISP_CURVE_NISTP256, &verif_pubKey, verif_hash,
-			&verif_sig, signatureVerificationCallback_background),
-			DISP_RETVAL_NO_ERROR, count_async);
+			ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
+				verif_hash, verif_sig, 0,
+				signatureVerificationCallback_background,
+				(void *)0),
+			ECDSA_NO_ERROR, count_async);
 	}
 }
 
@@ -507,7 +550,7 @@ void test_sigVerifRate(void)
 		return;
 
 	/* Set up system for signature verification */
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 	loopCount = SIG_RATE_VERIF_NUM;
 
 	/* Setup ECDSA variables to point to first data to verify */
@@ -522,13 +565,14 @@ void test_sigVerifRate(void)
 	}
 
 	/* Start verification loops */
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NISTP256, &verif_pubKey, verif_hash, &verif_sig,
-		signatureVerificationCallback_rate), DISP_RETVAL_NO_ERROR,
-		count_async);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
+			verif_hash, verif_sig, 0,
+			signatureVerificationCallback_rate, (void *)0),
+		ECDSA_NO_ERROR, count_async);
 	/* Wait for end of loop */
 	VTEST_CHECK_RESULT_ASYNC_LOOP(count_async, loopCount);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 
 	/* If test finished as expected */
 	if (!loopCount) {
@@ -643,7 +687,7 @@ void test_sigVerifLatency(uint32_t testType)
 	}
 
 	/* Set up system for signature verification */
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 	loopCount = SIG_LATENCY_VERIF_NUM;
 
 	/* Setup ECDSA variables to point to first data to verify */
@@ -659,10 +703,11 @@ void test_sigVerifLatency(uint32_t testType)
 	}
 
 	/* Start verification loops */
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NISTP256, &verif_pubKey, verif_hash, &verif_sig,
-		signatureVerificationCallback_latency), DISP_RETVAL_NO_ERROR,
-		count_async);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
+			verif_hash, verif_sig, 0,
+			signatureVerificationCallback_latency, (void *)0),
+		ECDSA_NO_ERROR, count_async);
 
 	if (testType == LOADED_TEST) {
 	/*
@@ -685,7 +730,7 @@ void test_sigVerifLatency(uint32_t testType)
 
 stopVerifLatencyTest:
 	/* Finished verifications */
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 
 	/* Free allocated data */
 	freeTestData(TEST_TYPE_SIG_VERIF_LATENCY);
@@ -771,7 +816,7 @@ void test_sigGenLatency(uint32_t testType)
 
 	if (testType == LOADED_TEST) {
 		/* Set up for parallel signature verification */
-		VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
+		VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 		/*
 		 * Assume sig verif is not 10 times faster than sig gen,
 		 * so loop count below will keep the verifs running during
@@ -784,18 +829,18 @@ void test_sigGenLatency(uint32_t testType)
 		 * Performance of sig verif operations not measured so don't
 		 * care about possible cache effects of always using same data.
 		 */
-		verif_hash = (disp_Hash_t)cannedHash.data;
-		verif_pubKey.x = cannedPubkeyNIST256_X;
-		verif_pubKey.y = cannedPubkeyNIST256_Y;
+		verif_hash = (ecdsa_hash_t)cannedHash.data;
+		verif_pubkey.x = cannedPubkeyNIST256_X;
+		verif_pubkey.y = cannedPubkeyNIST256_Y;
 		verif_sig.r = cannedSigNIST256_R;
 		verif_sig.s = cannedSigNIST256_S;
 
 		/* Start parallel signature verification */
-		VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature(
-			(void *) 0, 0, DISP_CURVE_NISTP256, &verif_pubKey,
-			verif_hash, &verif_sig,
-			signatureVerificationCallback_background),
-			DISP_RETVAL_NO_ERROR, count_async);
+		VTEST_CHECK_RESULT_ASYNC_INC(
+			ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
+				verif_hash, verif_sig, 0,
+				signatureVerificationCallback_background, (void *)0),
+			ECDSA_NO_ERROR, count_async);
 	}
 
 	/* Init max & min before first measurement */
@@ -845,7 +890,7 @@ stopGenLatencyTest:
 		loopCount = 0;
 		/* Clean up - loops should be finished soon */
 		VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
-		VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+		VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 	}
 
 	/* Free allocated data */

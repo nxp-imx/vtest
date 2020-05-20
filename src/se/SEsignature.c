@@ -40,7 +40,7 @@
  * @brief Tests for SE Signature (requirements R7.*)
  *
  */
-
+#include <string.h>
 #include <v2xSe.h>
 #include "vtest.h"
 #include "SEmisc.h"
@@ -72,13 +72,14 @@ TypeHash_t testHash = {
  */
 
 static void signatureVerificationCallback(void *sequence_number,
-	disp_ReturnValue_t ret,
-	disp_VerificationResult_t verification_result)
+	int ret,
+	ecdsa_verification_result_t verification_result)
 {
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, DISP_RETVAL_NO_ERROR, count_async);
-	VTEST_CHECK_RESULT(verification_result, DISP_VERIFRES_SUCCESS);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
 }
 
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 /**
  * @brief   Convert endianness for data array
  *
@@ -96,6 +97,7 @@ static void convertEndianness(uint8_t *src_array, uint8_t *dst_array,
 	for (i = 0; i < length; i++)
 		dst_array[i] = src_array[length - 1 - i];
 }
+#endif
 
 /**
  *
@@ -123,9 +125,9 @@ void test_createBaSign(void)
 	TypePublicKey_t pubKey;
 	TypeSignature_t signature;
 	TypeInformation_t seInfo;
-	disp_PubKey_t pubKey_ecdsa;
-	disp_Sig_t sig_ecdsa;
-	uint8_t ecsda_hash[V2XSE_384_EC_HASH_SIZE];
+	ecdsa_pubkey_t pubKey_ecdsa;
+	ecdsa_sig_t sig_ecdsa;
+	uint8_t ecdsa_hash[V2XSE_384_EC_HASH_SIZE];
 	uint8_t ecdsa_x[V2XSE_384_EC_PUB_KEY_XY_SIZE];
 	uint8_t ecdsa_y[V2XSE_384_EC_PUB_KEY_XY_SIZE];
 	uint8_t ecdsa_r[V2XSE_384_EC_R_SIGN];
@@ -137,8 +139,12 @@ void test_createBaSign(void)
 	sig_ecdsa.r    = ecdsa_r;
 	sig_ecdsa.s    = ecdsa_s;
 
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert hash data for ECSDA verification - 256 bit curves */
-	convertEndianness(testHash.data, ecsda_hash, V2XSE_256_EC_HASH_SIZE);
+	convertEndianness(testHash.data, ecdsa_hash, V2XSE_256_EC_HASH_SIZE);
+#else
+	memcpy(ecdsa_hash, testHash.data, V2XSE_256_EC_HASH_SIZE);
+#endif
 
 /* Test Valid signature can be generated for EU applet */
 /* Test Valid signature for curve V2XSE_CURVE_NISTP256 can be generated */
@@ -153,25 +159,42 @@ void test_createBaSign(void)
 	/* Create BA key in slot 0 */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert public key for ECSDA verification */
 	convertEndianness(pubKey.x, ecdsa_x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
 	convertEndianness(pubKey.y, ecdsa_y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#else
+	memcpy(ecdsa_x, pubKey.x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	memcpy(ecdsa_y, pubKey.y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#endif
+
 	/* Create signature */
 	VTEST_CHECK_RESULT(v2xSe_createBaSign(SLOT_ZERO,
 		V2XSE_256_EC_HASH_SIZE, &testHash, &statusCode, &signature),
 								V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert signature for ECDSA verification */
 	convertEndianness(signature.r, ecdsa_r, V2XSE_256_EC_R_SIGN);
 	convertEndianness(signature.s, ecdsa_s, V2XSE_256_EC_S_SIGN);
+#else
+	memcpy(ecdsa_r, signature.r, V2XSE_256_EC_R_SIGN);
+	memcpy(ecdsa_s, signature.s, V2XSE_256_EC_S_SIGN);
+#endif
 
 	/* Use ECDSA to verify signature */
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey_ecdsa, ecsda_hash, &sig_ecdsa,
-		signatureVerificationCallback), DISP_RETVAL_NO_ERROR,
-		count_async);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey_ecdsa,
+			ecdsa_hash, sig_ecdsa, 0,
+			signatureVerificationCallback, (void *)0),
+//		disp_ecdsa_verify_signature((void *) 0, 0,
+//		ECDSA_CURVE_NISTP256, &pubKey_ecdsa, ecdsa_hash, &sig_ecdsa,
+//		signatureVerificationCallback),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
 						&statusCode), V2XSE_SUCCESS);
@@ -269,9 +292,9 @@ void test_createMaSign(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeSignature_t signature;
-	disp_PubKey_t pubKey_ecdsa;
-	disp_Sig_t sig_ecdsa;
-	uint8_t ecsda_hash[V2XSE_384_EC_HASH_SIZE];
+	ecdsa_pubkey_t pubKey_ecdsa;
+	ecdsa_sig_t sig_ecdsa;
+	uint8_t ecdsa_hash[V2XSE_384_EC_HASH_SIZE];
 	uint8_t ecdsa_x[V2XSE_384_EC_PUB_KEY_XY_SIZE];
 	uint8_t ecdsa_y[V2XSE_384_EC_PUB_KEY_XY_SIZE];
 	uint8_t ecdsa_r[V2XSE_384_EC_R_SIGN];
@@ -283,8 +306,12 @@ void test_createMaSign(void)
 	sig_ecdsa.r    = ecdsa_r;
 	sig_ecdsa.s    = ecdsa_s;
 
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert hash data for ECSDA verification - 256 bit curves */
-	convertEndianness(testHash.data, ecsda_hash, V2XSE_256_EC_HASH_SIZE);
+	convertEndianness(testHash.data, ecdsa_hash, V2XSE_256_EC_HASH_SIZE);
+#else
+	memcpy(ecdsa_hash, testHash.data, V2XSE_256_EC_HASH_SIZE);
+#endif
 
 /* Test Valid signature can be generated for EU applet */
 /* Test Valid signature for curve V2XSE_CURVE_NISTP256 can be generated */
@@ -297,24 +324,41 @@ void test_createMaSign(void)
 	/* Generate MA key of known curveId */
 	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_NISTP256,
 					&statusCode, &pubKey), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert public key for ECSDA verification */
 	convertEndianness(pubKey.x, ecdsa_x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
 	convertEndianness(pubKey.y, ecdsa_y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#else
+	memcpy(ecdsa_x, pubKey.x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	memcpy(ecdsa_y, pubKey.y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#endif
+
 	/* Create signature */
 	VTEST_CHECK_RESULT(v2xSe_createMaSign(V2XSE_256_EC_HASH_SIZE,
 			&testHash, &statusCode,	&signature), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert signature for ECDSA verification */
 	convertEndianness(signature.r, ecdsa_r, V2XSE_256_EC_R_SIGN);
 	convertEndianness(signature.s, ecdsa_s, V2XSE_256_EC_S_SIGN);
+#else
+	memcpy(ecdsa_r, signature.r, V2XSE_256_EC_R_SIGN);
+	memcpy(ecdsa_s, signature.s, V2XSE_256_EC_S_SIGN);
+#endif
 
 	/* Use ECDSA to verify signature */
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey_ecdsa, ecsda_hash, &sig_ecdsa,
-		signatureVerificationCallback), DISP_RETVAL_NO_ERROR,
-		count_async);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey_ecdsa,
+			ecdsa_hash, sig_ecdsa, 0,
+			signatureVerificationCallback, (void *)0),
+//		disp_ecdsa_verify_signature((void *) 0, 0,
+//		ECDSA_CURVE_NISTP256, &pubKey_ecdsa, ecdsa_hash, &sig_ecdsa,
+//		signatureVerificationCallback),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 
 /* Test Valid signature can be generated for US applet */
 /* Test Valid signature for curve V2XSE_CURVE_BP256R1 can be generated */
@@ -417,9 +461,9 @@ void test_createRtSignLowLatency(void)
 	TypeSignature_t signature;
 	TypeLowlatencyIndicator_t fastIndicator;
 	TypeInformation_t seInfo;
-	disp_PubKey_t pubKey_ecdsa;
-	disp_Sig_t sig_ecdsa;
-	uint8_t ecsda_hash[V2XSE_384_EC_HASH_SIZE];
+	ecdsa_pubkey_t pubKey_ecdsa;
+	ecdsa_sig_t sig_ecdsa;
+	uint8_t ecdsa_hash[V2XSE_384_EC_HASH_SIZE];
 	uint8_t ecdsa_x[V2XSE_384_EC_PUB_KEY_XY_SIZE];
 	uint8_t ecdsa_y[V2XSE_384_EC_PUB_KEY_XY_SIZE];
 	uint8_t ecdsa_r[V2XSE_384_EC_R_SIGN];
@@ -431,8 +475,12 @@ void test_createRtSignLowLatency(void)
 	sig_ecdsa.r    = ecdsa_r;
 	sig_ecdsa.s    = ecdsa_s;
 
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert hash data for ECSDA verification - 256 bit curves */
-	convertEndianness(testHash.data, ecsda_hash, V2XSE_256_EC_HASH_SIZE);
+	convertEndianness(testHash.data, ecdsa_hash, V2XSE_256_EC_HASH_SIZE);
+#else
+	memcpy(ecdsa_hash, testHash.data, V2XSE_256_EC_HASH_SIZE);
+#endif
 
 /* Test Valid signature can be generated for EU applet */
 /* Test Valid signature for curve V2XSE_CURVE_NISTP256 can be generated */
@@ -447,9 +495,16 @@ void test_createRtSignLowLatency(void)
 	/* Create Rt key in slot 0 */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert public key for ECSDA verification */
 	convertEndianness(pubKey.x, ecdsa_x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
 	convertEndianness(pubKey.y, ecdsa_y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#else
+	memcpy(ecdsa_x, pubKey.x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	memcpy(ecdsa_y, pubKey.y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#endif
+
 	/* Activate key for low latency signature */
 	VTEST_CHECK_RESULT(v2xSe_activateRtKeyForSigning(SLOT_ZERO,
 						&statusCode), V2XSE_SUCCESS);
@@ -457,18 +512,28 @@ void test_createRtSignLowLatency(void)
 	VTEST_CHECK_RESULT(v2xSe_createRtSignLowLatency(&testHash, &statusCode,
 				&signature, &fastIndicator), V2XSE_SUCCESS);
 	VTEST_CHECK_RESULT(fastIndicator, 0);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert signature for ECDSA verification */
 	convertEndianness(signature.r, ecdsa_r, V2XSE_256_EC_R_SIGN);
 	convertEndianness(signature.s, ecdsa_s, V2XSE_256_EC_S_SIGN);
+#else
+	memcpy(ecdsa_r, signature.r, V2XSE_256_EC_R_SIGN);
+	memcpy(ecdsa_s, signature.s, V2XSE_256_EC_S_SIGN);
+#endif
 
 	/* Use ECDSA to verify signature */
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey_ecdsa, ecsda_hash, &sig_ecdsa,
-		signatureVerificationCallback), DISP_RETVAL_NO_ERROR,
-		count_async);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey_ecdsa,
+			ecdsa_hash, sig_ecdsa, 0,
+			signatureVerificationCallback, (void *)0),
+//		disp_ecdsa_verify_signature((void *) 0, 0,
+//		ECDSA_CURVE_NISTP256, &pubKey_ecdsa, ecdsa_hash, &sig_ecdsa,
+//		signatureVerificationCallback),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO,
 						&statusCode), V2XSE_SUCCESS);
@@ -537,9 +602,9 @@ void test_createRtSign(void)
 	TypePublicKey_t pubKey;
 	TypeSignature_t signature;
 	TypeInformation_t seInfo;
-	disp_PubKey_t pubKey_ecdsa;
-	disp_Sig_t sig_ecdsa;
-	uint8_t ecsda_hash[V2XSE_384_EC_HASH_SIZE];
+	ecdsa_pubkey_t pubKey_ecdsa;
+	ecdsa_sig_t sig_ecdsa;
+	uint8_t ecdsa_hash[V2XSE_384_EC_HASH_SIZE];
 	uint8_t ecdsa_x[V2XSE_384_EC_PUB_KEY_XY_SIZE];
 	uint8_t ecdsa_y[V2XSE_384_EC_PUB_KEY_XY_SIZE];
 	uint8_t ecdsa_r[V2XSE_384_EC_R_SIGN];
@@ -551,8 +616,12 @@ void test_createRtSign(void)
 	sig_ecdsa.r    = ecdsa_r;
 	sig_ecdsa.s    = ecdsa_s;
 
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert hash data for ECSDA verification - 256 bit curves */
-	convertEndianness(testHash.data, ecsda_hash, V2XSE_256_EC_HASH_SIZE);
+	convertEndianness(testHash.data, ecdsa_hash, V2XSE_256_EC_HASH_SIZE);
+#else
+	memcpy(ecdsa_hash, testHash.data, V2XSE_256_EC_HASH_SIZE);
+#endif
 
 /* Test Valid signature can be generated for EU applet */
 /* Test Valid signature for curve V2XSE_CURVE_NISTP256 can be generated */
@@ -567,24 +636,41 @@ void test_createRtSign(void)
 	/* Create Rt key in slot 0 */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert public key for ECSDA verification */
 	convertEndianness(pubKey.x, ecdsa_x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
 	convertEndianness(pubKey.y, ecdsa_y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#else
+	memcpy(ecdsa_x, pubKey.x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	memcpy(ecdsa_y, pubKey.y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#endif
+
 	/* Create signature */
 	VTEST_CHECK_RESULT(v2xSe_createRtSign(SLOT_ZERO, &testHash,
 				&statusCode, &signature), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
 	/* Convert signature for ECDSA verification */
 	convertEndianness(signature.r, ecdsa_r, V2XSE_256_EC_R_SIGN);
 	convertEndianness(signature.s, ecdsa_s, V2XSE_256_EC_S_SIGN);
+#else
+	memcpy(ecdsa_r, signature.r, V2XSE_256_EC_R_SIGN);
+	memcpy(ecdsa_s, signature.s, V2XSE_256_EC_S_SIGN);
+#endif
 
 	/* Use ECDSA to verify signature */
-	VTEST_CHECK_RESULT(disp_Activate(), DISP_RETVAL_NO_ERROR);
-	VTEST_CHECK_RESULT_ASYNC_INC(disp_ecc_verify_signature((void *) 0, 0,
-		DISP_CURVE_NISTP256, &pubKey_ecdsa, ecsda_hash, &sig_ecdsa,
-		signatureVerificationCallback), DISP_RETVAL_NO_ERROR,
-		count_async);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey_ecdsa,
+			ecdsa_hash, sig_ecdsa, 0,
+			signatureVerificationCallback, (void *)0),
+//		disp_ecdsa_verify_signature((void *) 0, 0,
+//		ECDSA_CURVE_NISTP256, &pubKey_ecdsa, ecdsa_hash, &sig_ecdsa,
+//		signatureVerificationCallback),
+		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
-	VTEST_CHECK_RESULT(disp_Deactivate(), DISP_RETVAL_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO,
 						&statusCode), V2XSE_SUCCESS);

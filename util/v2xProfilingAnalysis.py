@@ -137,23 +137,16 @@ seFunctionNameDictionary = {
 }
 
 ecdsaFunctionNameDictionary = {
-	int(0x0101) : "disp_Activate",
-	int(0x0102) : "disp_Deactivate",
-	int(0x0103) : "disp_GetDispatcherVersion",
-	int(0x0104) : "disp_GetDispatcherLocalRevision",
-	int(0x0105) : "disp_GetLlcRevision",
-	int(0x0106) : "disp_setMaxCpuTime",
-	int(0x0107) : "disp_setMaxCpuTimeAsync",
-	int(0x0108) : "disp_ping",
-	int(0x0109) : "disp_ecc_verify_signature",
-	int(0x010A) : "disp_ecc_verify_signature_key",
-	int(0x010B) : "disp_ecc_verify_signature_of_message",
-	int(0x010C) : "disp_ecc_verify_signature_key_of_message",
-	int(0x010D) : "disp_ecc_decompressPublicKey",
-	int(0x010E) : "disp_ecc_reconstructPublicKey",
-	int(0x010F) : "disp_SHA256",
-	int(0x0110) : "disp_SHA384",
-	int(0x0111) : "disp_SHA512",
+	int(0x0101) : "ecdsa_open",
+	int(0x0102) : "ecdsa_close",
+	int(0x0103) : "ecdsa_get_version",
+	int(0x0104) : "ecdsa_verify_signature",
+	int(0x0105) : "ecdsa_verify_signature_of_message",
+	int(0x0106) : "ecdsa_decompress_public_key",
+	int(0x0107) : "ecdsa_reconstruct_public_key",
+	int(0x0108) : "ecdsa_sha256",
+	int(0x0109) : "ecdsa_sha384",
+	int(0x010a) : "ecdsa_sha512",
 }
 
 hsmFunctionNameDictionary = {
