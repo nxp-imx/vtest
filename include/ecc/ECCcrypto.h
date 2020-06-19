@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -76,6 +76,12 @@
 		"Test hash functions failure")                                \
 	VTEST_DEFINE_TEST(40103, &ecc_test_hash_invalid,                      \
 		"Test hash functions when invalid state")                     \
+	VTEST_DEFINE_TEST(40401, &ecc_test_sm3,                               \
+		"Test SM3 hash functions")                                    \
+	VTEST_DEFINE_TEST(40402, &ecc_test_sm3_negative,                      \
+		"Test SM3 hash functions failure")                            \
+	VTEST_DEFINE_TEST(40403, &ecc_test_sm3_invalid,                       \
+		"Test SM3 hash functions when invalid state")                 \
 
 void ecc_test_signature_verification(void);
 void ecc_test_signature_verification_negative(void);
@@ -90,5 +96,8 @@ void ecc_test_pubkey_reconstruction_invalid(void);
 void ecc_test_hash(void);
 void ecc_test_hash_negative(void);
 void ecc_test_hash_invalid(void);
+void ecc_test_sm3(void);
+void ecc_test_sm3_negative(void);
+void ecc_test_sm3_invalid(void);
 
 #endif /* ECC_CRYPTO_H */

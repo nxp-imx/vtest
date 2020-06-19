@@ -786,3 +786,54 @@ void ecc_test_pubkey_reconstruction_invalid(void)
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
+
+/**
+ *
+ * @brief Positive test of SM3 hash APIs
+ *
+ */
+void ecc_test_sm3(void)
+{
+	uint8_t sm3_256_got[LENGTH_DOMAIN_PARAMS_256];
+
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_sm3_256((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sm3_256_got), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(memcmp((const void *) test_sm3_256_exp,
+		(const void *) sm3_256_got, LENGTH_DOMAIN_PARAMS_256),
+		MEMCMP_IDENTICAL);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Negative test of SM3 hash APIs
+ *
+ */
+void ecc_test_sm3_negative(void)
+{
+	uint8_t sm3_256_got[LENGTH_DOMAIN_PARAMS_256];
+
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_sm3_256((const void *) test_hash_msg_neg,
+		HASH_MSG_SIZE, sm3_256_got), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(!memcmp((const void *) test_sm3_256_exp,
+		(const void *) sm3_256_got, LENGTH_DOMAIN_PARAMS_256),
+		MEMCMP_IDENTICAL);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Positive test of SM3 hash APIs
+ *
+ */
+void ecc_test_sm3_invalid(void)
+{
+	uint8_t sm3_256_got[LENGTH_DOMAIN_PARAMS_256];
+
+	/* Invalid state test */
+	VTEST_CHECK_RESULT(ecdsa_sm3_256((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sm3_256_got), ECDSA_NOT_INITIALIZED);
+}
+
