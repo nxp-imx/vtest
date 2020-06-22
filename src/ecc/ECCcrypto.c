@@ -499,7 +499,7 @@ void ecc_test_sm2_signature_verification(void)
 	ecdsa_hash_t hash;
 	ecdsa_sig_t sig;
 
-	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 
 	/* Positive verification test SM2 256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_sm2;
@@ -526,7 +526,7 @@ void ecc_test_sm2_signature_verification_message(void)
 	ecdsa_pubkey_t pubKey;
 	ecdsa_sig_t sig;
 
-	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 
 	/* Positive verification test SM2 256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_sm2;
@@ -554,7 +554,7 @@ void ecc_test_sm2_signature_verification_negative(void)
 	ecdsa_hash_t hash;
 	ecdsa_sig_t sig;
 
-	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 
 	/* Negative verification test SM2 256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_sm2;
@@ -907,7 +907,7 @@ void ecc_test_sm3(void)
 {
 	uint8_t sm3_256_got[LENGTH_DOMAIN_PARAMS_256];
 
-	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(ecdsa_sm3_256((const void *) test_hash_msg,
 		HASH_MSG_SIZE, sm3_256_got), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(memcmp((const void *) test_sm3_256_exp,
@@ -925,7 +925,7 @@ void ecc_test_sm3_negative(void)
 {
 	uint8_t sm3_256_got[LENGTH_DOMAIN_PARAMS_256];
 
-	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(ecdsa_sm3_256((const void *) test_hash_msg_neg,
 		HASH_MSG_SIZE, sm3_256_got), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(!memcmp((const void *) test_sm3_256_exp,
