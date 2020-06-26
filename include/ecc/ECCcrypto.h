@@ -56,8 +56,14 @@
 		"Test signature verification failure")                        \
 	VTEST_DEFINE_TEST(30103, &ecc_test_signature_verification_invalid,    \
 		"Test signature verification with invalid params/state")      \
+	VTEST_DEFINE_TEST(30104, &ecc_test_sm2_signature_verification,        \
+		"Test SM2 signature verification")                            \
+	VTEST_DEFINE_TEST(30105, &ecc_test_sm2_signature_verification_negative,\
+		"Test SM2 signature verification failure")                    \
 	VTEST_DEFINE_TEST(30301, &ecc_test_signature_verification_message,    \
 		"Test signature verification of a message")                   \
+	VTEST_DEFINE_TEST(30302, &ecc_test_sm2_signature_verification_message,\
+		"Test SM2 signature verification of a message")               \
 	VTEST_DEFINE_TEST(30501, &ecc_test_pubkey_decompression,              \
 		"Test public key decompression")                              \
 	VTEST_DEFINE_TEST(30502, &ecc_test_pubkey_decompression_negative,     \
@@ -87,6 +93,9 @@ void ecc_test_signature_verification(void);
 void ecc_test_signature_verification_negative(void);
 void ecc_test_signature_verification_message(void);
 void ecc_test_signature_verification_invalid(void);
+void ecc_test_sm2_signature_verification(void);
+void ecc_test_sm2_signature_verification_negative(void);
+void ecc_test_sm2_signature_verification_message(void);
 void ecc_test_pubkey_decompression(void);
 void ecc_test_pubkey_decompression_negative(void);
 void ecc_test_pubkey_decompression_invalid(void);

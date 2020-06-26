@@ -490,6 +490,90 @@ void ecc_test_signature_verification_invalid(void)
 
 /**
  *
+ * @brief Positive test of ecdsa_verify_signature (SM2 algo)
+ *
+ */
+void ecc_test_sm2_signature_verification(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_hash_t hash;
+	ecdsa_sig_t sig;
+
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+
+	/* Positive verification test SM2 256 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_sm2;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_sm2;
+	sig.r    = (uint8_t *) test_ver_sign_r_sm2;
+	sig.s    = (uint8_t *) test_ver_sign_s_sm2;
+	hash     = (ecdsa_hash_t) test_ver_hash_sm2;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_SM2_256_SM3, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Positive test of ecdsa_verify_signature_of_message (SM2 algo)
+ *
+ */
+void ecc_test_sm2_signature_verification_message(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_sig_t sig;
+
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+
+	/* Positive verification test SM2 256 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_sm2;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_sm2;
+	sig.r    = (uint8_t *) test_ver_sign_r_sm2;
+	sig.s    = (uint8_t *) test_ver_sign_s_sm2;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_SM2_256_SM3, pubKey,
+			(const void *)test_ver_msg, HASH_MSG_SIZE, sig, 0,
+			ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Negative test of ecdsa_verify_signature (SM2 algo)
+ *
+ */
+void ecc_test_sm2_signature_verification_negative(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_hash_t hash;
+	ecdsa_sig_t sig;
+
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+
+	/* Negative verification test SM2 256 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_sm2;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_sm2;
+	sig.r    = (uint8_t *) test_ver_sign_r_sm2;
+	/* Using twice r: giving (r,r) instead of (r,s) */
+	sig.s    = (uint8_t *) test_ver_sign_r_sm2;
+	hash     = (ecdsa_hash_t) test_ver_hash_sm2;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_SM2_256_SM3, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback_negative, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+/**
+ *
  * @brief Positive test of ecdsa_decompress_public_key
  *
  */
