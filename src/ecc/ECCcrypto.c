@@ -359,6 +359,8 @@ void ecc_test_signature_verification_message(void)
 	ecdsa_sig_t sig;
 
 	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+
+	/* Positive verification test NISTP256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
 	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
 	sig.r    = (uint8_t *) test_ver_sign_r_nistp256;
@@ -369,6 +371,31 @@ void ecc_test_signature_verification_message(void)
 			ecdsa_VerifSigOfHashCallback, (void *)0),
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL256R1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp256r1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp256r1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp256r1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp256r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_BP256R1, pubKey,
+			(const void *)test_ver_msg, HASH_MSG_SIZE, sig, 0,
+			ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL384R1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp384r1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp384r1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp384r1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp384r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_BP384R1, pubKey,
+			(const void *)test_ver_msg, HASH_MSG_SIZE, sig, 0,
+			ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
