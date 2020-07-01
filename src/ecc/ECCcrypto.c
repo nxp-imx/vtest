@@ -508,7 +508,7 @@ void ecc_test_sm2_signature_verification(void)
 	sig.s    = (uint8_t *) test_ver_sign_s_sm2;
 	hash     = (ecdsa_hash_t) test_ver_hash_sm2;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		ecdsa_verify_signature(ECDSA_CURVE_SM2_256_SM3, pubKey, hash,
+		ecdsa_verify_signature(ECDSA_CURVE_SM2P256, pubKey, hash,
 			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
@@ -534,7 +534,7 @@ void ecc_test_sm2_signature_verification_message(void)
 	sig.r    = (uint8_t *) test_ver_sign_r_sm2;
 	sig.s    = (uint8_t *) test_ver_sign_s_sm2;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		ecdsa_verify_signature_of_message(ECDSA_CURVE_SM2_256_SM3, pubKey,
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_SM2P256, pubKey,
 			(const void *)test_ver_msg, HASH_MSG_SIZE, sig, 0,
 			ecdsa_VerifSigOfHashCallback, (void *)0),
 		ECDSA_NO_ERROR, count_async);
@@ -564,7 +564,7 @@ void ecc_test_sm2_signature_verification_negative(void)
 	sig.s    = (uint8_t *) test_ver_sign_r_sm2;
 	hash     = (ecdsa_hash_t) test_ver_hash_sm2;
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		ecdsa_verify_signature(ECDSA_CURVE_SM2_256_SM3, pubKey, hash,
+		ecdsa_verify_signature(ECDSA_CURVE_SM2P256, pubKey, hash,
 			sig, 0, ecdsa_VerifSigOfHashCallback_negative, (void *)0),
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
@@ -905,13 +905,13 @@ void ecc_test_pubkey_reconstruction_invalid(void)
  */
 void ecc_test_sm3(void)
 {
-	uint8_t sm3_256_got[LENGTH_DOMAIN_PARAMS_256];
+	uint8_t sm3_got[LENGTH_DOMAIN_PARAMS_256];
 
 	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
-	VTEST_CHECK_RESULT(ecdsa_sm3_256((const void *) test_hash_msg,
-		HASH_MSG_SIZE, sm3_256_got), ECDSA_NO_ERROR);
-	VTEST_CHECK_RESULT(memcmp((const void *) test_sm3_256_exp,
-		(const void *) sm3_256_got, LENGTH_DOMAIN_PARAMS_256),
+	VTEST_CHECK_RESULT(ecdsa_sm3((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sm3_got), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(memcmp((const void *) test_sm3_exp,
+		(const void *) sm3_got, LENGTH_DOMAIN_PARAMS_256),
 		MEMCMP_IDENTICAL);
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
@@ -923,13 +923,13 @@ void ecc_test_sm3(void)
  */
 void ecc_test_sm3_negative(void)
 {
-	uint8_t sm3_256_got[LENGTH_DOMAIN_PARAMS_256];
+	uint8_t sm3_got[LENGTH_DOMAIN_PARAMS_256];
 
 	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
-	VTEST_CHECK_RESULT(ecdsa_sm3_256((const void *) test_hash_msg_neg,
-		HASH_MSG_SIZE, sm3_256_got), ECDSA_NO_ERROR);
-	VTEST_CHECK_RESULT(!memcmp((const void *) test_sm3_256_exp,
-		(const void *) sm3_256_got, LENGTH_DOMAIN_PARAMS_256),
+	VTEST_CHECK_RESULT(ecdsa_sm3((const void *) test_hash_msg_neg,
+		HASH_MSG_SIZE, sm3_got), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(!memcmp((const void *) test_sm3_exp,
+		(const void *) sm3_got, LENGTH_DOMAIN_PARAMS_256),
 		MEMCMP_IDENTICAL);
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
@@ -941,10 +941,10 @@ void ecc_test_sm3_negative(void)
  */
 void ecc_test_sm3_invalid(void)
 {
-	uint8_t sm3_256_got[LENGTH_DOMAIN_PARAMS_256];
+	uint8_t sm3_got[LENGTH_DOMAIN_PARAMS_256];
 
 	/* Invalid state test */
-	VTEST_CHECK_RESULT(ecdsa_sm3_256((const void *) test_hash_msg,
-		HASH_MSG_SIZE, sm3_256_got), ECDSA_NOT_INITIALIZED);
+	VTEST_CHECK_RESULT(ecdsa_sm3((const void *) test_hash_msg,
+		HASH_MSG_SIZE, sm3_got), ECDSA_NOT_INITIALIZED);
 }
 
