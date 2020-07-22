@@ -68,8 +68,16 @@ int seClean(void)
 		printf("Error removing US state\n");
 		error_seen = 1;
 	}
+	if (removeNvmVariable(CN_PHASE_FILENAME)) {
+		printf("Error removing CN state\n");
+		error_seen = 1;
+	}
 	if (system("rm -f /etc/seco_hsm/*")) {
 		printf("Error removing seco blob files\n");
+		error_seen = 1;
+	}
+	if (system("rm -f /etc/v2x_hsm/*")) {
+		printf("Error removing v2x blob files\n");
 		error_seen = 1;
 	}
 	sync();

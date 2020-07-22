@@ -46,8 +46,10 @@
 
 /** Path to EU applet phase variable in file system */
 #define EU_PHASE_FILENAME "/etc/v2x_hsm_adaptation/EU/v2xsePhase"
-/** Path to UU applet phase variable in file system */
+/** Path to US applet phase variable in file system */
 #define US_PHASE_FILENAME "/etc/v2x_hsm_adaptation/US/v2xsePhase"
+/** Path to CN applet phase variable in file system */
+#define CN_PHASE_FILENAME "/etc/v2x_hsm_adaptation/CN/v2xsePhase"
 
 /** Random known byte for various tests */
 #define TEST_BYTE	0x13
