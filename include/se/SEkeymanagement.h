@@ -51,6 +51,8 @@
 #define SE_KEY_MANAGEMENT_TESTS \
 	VTEST_DEFINE_TEST(60101, &test_generateMaEccKeyPair, \
 		"Test v2xSe_generateMaEccKeyPair for expected behaviour")\
+	VTEST_DEFINE_TEST(60104, &test_generateMaEccKeyPair_sm2, \
+		"Test SMx v2xSe_generateMaEccKeyPair for expected behaviour")\
 	VTEST_DEFINE_TEST(60201, &test_getMaEccPublicKey, \
 		"Test v2xSe_getMaEccPublicKey for expected behaviour")\
 	VTEST_DEFINE_TEST(60301, &test_generateRtEccKeyPair_empty, \
@@ -81,6 +83,7 @@
 		"Test v2xSe_activateRtKeyForSigning for normal operation")\
 
 void test_generateMaEccKeyPair(void);
+void test_generateMaEccKeyPair_sm2(void);
 void test_getMaEccPublicKey(void);
 void test_generateRtEccKeyPair_empty(void);
 void test_generateRtEccKeyPair_overwrite(void);

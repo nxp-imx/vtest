@@ -186,6 +186,49 @@ void test_generateMaEccKeyPair(void)
 
 /**
  *
+ * @brief Test SMx v2xSe_generateMaEccKeyPair for expected behaviour
+ *
+ * This function tests v2xSe_generateMaEccKeyPair for expected behaviour (based
+ * on SMx algorithms)
+ * The following behaviours are tested:
+ *  - MA key can be generated and retrieved for Chinese applet
+ *  - MA key for curve V2XSE_CURVE_SM2_256 can be generated and retrieved
+ *
+ */
+void test_generateMaEccKeyPair_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey_create;
+	TypePublicKey_t pubKey_retrieve;
+	TypeCurveId_t curveId;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+/* Test MA key can be generated and retrieved for CN applet */
+/* Test MA key for curve V2XSE_CURVE_SM2_256 can be generated and retrieved */
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode, Chinese applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+	/* Create MA key */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_SM2_256,
+				&statusCode, &pubKey_create), V2XSE_SUCCESS);
+	/* Retrieve MA public key */
+	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
+					&pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents & curveId are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
+	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_SM2_256);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
  * @brief Test v2xSe_getMaEccPublicKey for expected behaviour
  *
  * This function tests v2xSe_generateMaEccKeyPair for expected behaviour
