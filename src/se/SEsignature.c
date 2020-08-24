@@ -189,9 +189,6 @@ void test_createBaSign(void)
 		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey_ecdsa,
 			ecdsa_hash, sig_ecdsa, 0,
 			signatureVerificationCallback, (void *)0),
-//		disp_ecdsa_verify_signature((void *) 0, 0,
-//		ECDSA_CURVE_NISTP256, &pubKey_ecdsa, ecdsa_hash, &sig_ecdsa,
-//		signatureVerificationCallback),
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -353,9 +350,6 @@ void test_createMaSign(void)
 		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey_ecdsa,
 			ecdsa_hash, sig_ecdsa, 0,
 			signatureVerificationCallback, (void *)0),
-//		disp_ecdsa_verify_signature((void *) 0, 0,
-//		ECDSA_CURVE_NISTP256, &pubKey_ecdsa, ecdsa_hash, &sig_ecdsa,
-//		signatureVerificationCallback),
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -528,9 +522,6 @@ void test_createRtSignLowLatency(void)
 		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey_ecdsa,
 			ecdsa_hash, sig_ecdsa, 0,
 			signatureVerificationCallback, (void *)0),
-//		disp_ecdsa_verify_signature((void *) 0, 0,
-//		ECDSA_CURVE_NISTP256, &pubKey_ecdsa, ecdsa_hash, &sig_ecdsa,
-//		signatureVerificationCallback),
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -665,9 +656,6 @@ void test_createRtSign(void)
 		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, pubKey_ecdsa,
 			ecdsa_hash, sig_ecdsa, 0,
 			signatureVerificationCallback, (void *)0),
-//		disp_ecdsa_verify_signature((void *) 0, 0,
-//		ECDSA_CURVE_NISTP256, &pubKey_ecdsa, ecdsa_hash, &sig_ecdsa,
-//		signatureVerificationCallback),
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
