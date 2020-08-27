@@ -696,3 +696,285 @@ void test_createRtSign(void)
 /* Flag CONF if signature verification not implemented yet */
 	VTEST_FLAG_CONF();
 }
+
+/**
+ *
+ * @brief Test v2xSe_createMaSign with SM2 key for expected behaviour
+ *
+ * This function tests v2xSe_createMaSign for expected behaviour
+ * The following behaviours are tested:
+ *  - Valid signature can be generated for CN applet
+ *  - Valid signature for curve V2XSE_CURVE_SM2_256 can be generated
+ *  - Valid signature can be generated using key in slot 0
+ *  - Valid signature can be generated using key in non-zero slot
+ *  - Valid signature can be generated using key in max slot
+ *
+ */
+void test_createMaSign_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	TypeSignature_t signature;
+	ecdsa_pubkey_t pubKey_ecdsa;
+	ecdsa_sig_t sig_ecdsa;
+	uint8_t ecdsa_hash[V2XSE_384_EC_HASH_SIZE];
+	uint8_t ecdsa_x[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+	uint8_t ecdsa_y[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+	uint8_t ecdsa_r[V2XSE_384_EC_R_SIGN];
+	uint8_t ecdsa_s[V2XSE_384_EC_S_SIGN];
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Set up pub key and signature structures for ECDSA verification */
+	pubKey_ecdsa.x = ecdsa_x;
+	pubKey_ecdsa.y = ecdsa_y;
+	sig_ecdsa.r    = ecdsa_r;
+	sig_ecdsa.s    = ecdsa_s;
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert hash data for ECSDA verification - 256 bit curves */
+	convertEndianness(testHash.data, ecdsa_hash, V2XSE_256_EC_HASH_SIZE);
+#else
+	memcpy(ecdsa_hash, testHash.data, V2XSE_256_EC_HASH_SIZE);
+#endif
+
+/* Test Valid signature can be generated for CN applet */
+/* Test Valid signature for curve V2XSE_CURVE_SM2_256 can be generated */
+/* Test Valid signature can be generated using key in slot 0 */
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+	/* Generate MA key */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_SM2_256,
+				&statusCode, &pubKey), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert public key for ECSDA verification */
+	convertEndianness(pubKey.x, ecdsa_x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	convertEndianness(pubKey.y, ecdsa_y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#else
+	memcpy(ecdsa_x, pubKey.x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	memcpy(ecdsa_y, pubKey.y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#endif
+
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createMaSign(V2XSE_256_EC_HASH_SIZE,
+			&testHash, &statusCode, &signature), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert signature for ECDSA verification */
+	convertEndianness(signature.r, ecdsa_r, V2XSE_256_EC_R_SIGN);
+	convertEndianness(signature.s, ecdsa_s, V2XSE_256_EC_S_SIGN);
+#else
+	memcpy(ecdsa_r, signature.r, V2XSE_256_EC_R_SIGN);
+	memcpy(ecdsa_s, signature.s, V2XSE_256_EC_S_SIGN);
+#endif
+
+	/* Use ECDSA to verify signature */
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_SM2P256, pubKey_ecdsa,
+			ecdsa_hash, sig_ecdsa, 0,
+			signatureVerificationCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test v2xSe_createBaSign with SM2 key for expected behaviour
+ *
+ * This function tests v2xSe_createBaSign for expected behaviour
+ * The following behaviours are tested:
+ *  - Valid signature can be generated for CN applet
+ *  - Valid signature for curve V2XSE_CURVE_SM2_256 can be generated
+ *  - Valid signature can be generated using key in slot 0
+ *  - Valid signature can be generated using key in non-zero slot
+ *  - Valid signature can be generated using key in max slot
+ *
+ */
+void test_createBaSign_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	TypeSignature_t signature;
+	TypeInformation_t seInfo;
+	ecdsa_pubkey_t pubKey_ecdsa;
+	ecdsa_sig_t sig_ecdsa;
+	uint8_t ecdsa_hash[V2XSE_384_EC_HASH_SIZE];
+	uint8_t ecdsa_x[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+	uint8_t ecdsa_y[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+	uint8_t ecdsa_r[V2XSE_384_EC_R_SIGN];
+	uint8_t ecdsa_s[V2XSE_384_EC_S_SIGN];
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Set up pub key and signature structures for ECDSA verification */
+	pubKey_ecdsa.x = ecdsa_x;
+	pubKey_ecdsa.y = ecdsa_y;
+	sig_ecdsa.r    = ecdsa_r;
+	sig_ecdsa.s    = ecdsa_s;
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert hash data for ECSDA verification - 256 bit curves */
+	convertEndianness(testHash.data, ecdsa_hash, V2XSE_256_EC_HASH_SIZE);
+#else
+	memcpy(ecdsa_hash, testHash.data, V2XSE_256_EC_HASH_SIZE);
+#endif
+
+/* Test Valid signature can be generated for CN applet */
+/* Test Valid signature for curve V2XSE_CURVE_SM2_256 can be generated */
+/* Test Valid signature can be generated using key in slot 0 */
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+	/* Get SE info, to know max data slot available */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+	/* Check that test constant is in correct range */
+	VTEST_CHECK_RESULT(seInfo.maxBaKeysAllowed <= NON_ZERO_SLOT, 0);
+	/* Create Ba key in slot 0 */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert public key for ECSDA verification */
+	convertEndianness(pubKey.x, ecdsa_x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	convertEndianness(pubKey.y, ecdsa_y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#else
+	memcpy(ecdsa_x, pubKey.x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	memcpy(ecdsa_y, pubKey.y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#endif
+
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createBaSign(SLOT_ZERO, V2XSE_256_EC_HASH_SIZE,
+				&testHash, &statusCode, &signature),
+			V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert signature for ECDSA verification */
+	convertEndianness(signature.r, ecdsa_r, V2XSE_256_EC_R_SIGN);
+	convertEndianness(signature.s, ecdsa_s, V2XSE_256_EC_S_SIGN);
+#else
+	memcpy(ecdsa_r, signature.r, V2XSE_256_EC_R_SIGN);
+	memcpy(ecdsa_s, signature.s, V2XSE_256_EC_S_SIGN);
+#endif
+
+	/* Use ECDSA to verify signature */
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_SM2P256, pubKey_ecdsa,
+			ecdsa_hash, sig_ecdsa, 0,
+			signatureVerificationCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+
+/**
+ *
+ * @brief Test v2xSe_createRtSign with SM2 key for expected behaviour
+ *
+ * This function tests v2xSe_createRtSign for expected behaviour
+ * The following behaviours are tested:
+ *  - Valid signature can be generated for CN applet
+ *  - Valid signature for curve V2XSE_CURVE_SM2_256 can be generated
+ *  - Valid signature can be generated using key in slot 0
+ *  - Valid signature can be generated using key in non-zero slot
+ *  - Valid signature can be generated using key in max slot
+ *
+ */
+void test_createRtSign_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	TypeSignature_t signature;
+	TypeInformation_t seInfo;
+	ecdsa_pubkey_t pubKey_ecdsa;
+	ecdsa_sig_t sig_ecdsa;
+	uint8_t ecdsa_hash[V2XSE_384_EC_HASH_SIZE];
+	uint8_t ecdsa_x[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+	uint8_t ecdsa_y[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+	uint8_t ecdsa_r[V2XSE_384_EC_R_SIGN];
+	uint8_t ecdsa_s[V2XSE_384_EC_S_SIGN];
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Set up pub key and signature structures for ECDSA verification */
+	pubKey_ecdsa.x = ecdsa_x;
+	pubKey_ecdsa.y = ecdsa_y;
+	sig_ecdsa.r    = ecdsa_r;
+	sig_ecdsa.s    = ecdsa_s;
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert hash data for ECSDA verification - 256 bit curves */
+	convertEndianness(testHash.data, ecdsa_hash, V2XSE_256_EC_HASH_SIZE);
+#else
+	memcpy(ecdsa_hash, testHash.data, V2XSE_256_EC_HASH_SIZE);
+#endif
+
+/* Test Valid signature can be generated for CN applet */
+/* Test Valid signature for curve V2XSE_CURVE_SM2_256 can be generated */
+/* Test Valid signature can be generated using key in slot 0 */
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+	/* Get SE info, to know max data slot available */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+	/* Check that test constant is in correct range */
+	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
+	/* Create Rt key in slot 0 */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert public key for ECSDA verification */
+	convertEndianness(pubKey.x, ecdsa_x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	convertEndianness(pubKey.y, ecdsa_y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#else
+	memcpy(ecdsa_x, pubKey.x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	memcpy(ecdsa_y, pubKey.y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#endif
+
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createRtSign(SLOT_ZERO, &testHash,
+				&statusCode, &signature), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert signature for ECDSA verification */
+	convertEndianness(signature.r, ecdsa_r, V2XSE_256_EC_R_SIGN);
+	convertEndianness(signature.s, ecdsa_s, V2XSE_256_EC_S_SIGN);
+#else
+	memcpy(ecdsa_r, signature.r, V2XSE_256_EC_R_SIGN);
+	memcpy(ecdsa_s, signature.s, V2XSE_256_EC_S_SIGN);
+#endif
+
+	/* Use ECDSA to verify signature */
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_SM2P256, pubKey_ecdsa,
+			ecdsa_hash, sig_ecdsa, 0,
+			signatureVerificationCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}

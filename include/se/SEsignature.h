@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -51,16 +51,25 @@
 #define SE_SIGNATURE_TESTS \
 	VTEST_DEFINE_TEST(70101, &test_createBaSign, \
 		"Test v2xSe_createBaSign for expected behaviour")\
+	VTEST_DEFINE_TEST(70104, &test_createBaSign_sm2, \
+		"Test v2xSe_createBaSign with SM2 key for expected behaviour")\
 	VTEST_DEFINE_TEST(70201, &test_createMaSign, \
 		"Test v2xSe_createMaSign for expected behaviour")\
+	VTEST_DEFINE_TEST(70204, &test_createMaSign_sm2, \
+		"Test v2xSe_createMaSign with SM2 key for expected behaviour")\
 	VTEST_DEFINE_TEST(70301, &test_createRtSignLowLatency, \
 		"Test v2xSe_createRtSignLowLatency for expected behaviour")\
 	VTEST_DEFINE_TEST(70401, &test_createRtSign, \
 		"Test v2xSe_createRtSign for expected behaviour")\
+	VTEST_DEFINE_TEST(70404, &test_createRtSign_sm2, \
+		"Test v2xSe_createRtSign with SM2 key for expected behaviour")\
 
 void test_createBaSign(void);
 void test_createMaSign(void);
 void test_createRtSign(void);
 void test_createRtSignLowLatency(void);
+void test_createBaSign_sm2(void);
+void test_createMaSign_sm2(void);
+void test_createRtSign_sm2(void);
 
 #endif
