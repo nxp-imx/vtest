@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -41,7 +41,17 @@
  *
  */
 
+#include <stdio.h>
 #include "seco_nvm.h"
+
+/**
+ *
+ * @brief seco-libs function to determine if V2X HW is present
+ *
+ * @return 1 if V2X HW is present, 0 otherwise
+ *
+ */
+uint32_t seco_os_abs_has_v2x_hw(void);
 
 /** Status variable required by seco_nvm_manager call */
 static uint32_t nvm_status;
@@ -57,12 +67,22 @@ static uint32_t nvm_status;
  * @param argc the number of command line arguments, including program name
  * @param argv an array giving the command line arguments
  *
- * @return helper function should never exit, but returns 0 if it does
+ * @return helper function should never exit, but returns 1 if it does
  *
  */
 
 int main(int argc, char *argv[])
 {
-	seco_nvm_manager(NVM_FLAGS_HSM, &nvm_status);
-	return 0;
+	if (seco_os_abs_has_v2x_hw()) {
+		printf("calling seco_nvm_manager for V2X\n");
+		seco_nvm_manager(NVM_FLAGS_V2X | NVM_FLAGS_HSM, &nvm_status);
+	} else {
+		printf("calling seco_nvm_manager for SECO\n");
+		seco_nvm_manager(NVM_FLAGS_HSM, &nvm_status);
+	}
+
+	printf("seco_nvm_manager() completed. nvm_status = 0x%x\n", nvm_status);
+
+	/* return an error as the daemon is never supposed to end */
+	return 1;
 }
