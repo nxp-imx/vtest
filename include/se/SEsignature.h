@@ -63,6 +63,8 @@
 		"Test v2xSe_createRtSign for expected behaviour")\
 	VTEST_DEFINE_TEST(70404, &test_createRtSign_sm2, \
 		"Test v2xSe_createRtSign with SM2 key for expected behaviour")\
+	VTEST_DEFINE_TEST(70501, &test_v2xSe_sm2_get_z, \
+		"Test v2xSe_sm2_get_z for expected behaviour")
 
 void test_createBaSign(void);
 void test_createMaSign(void);
@@ -71,5 +73,6 @@ void test_createRtSignLowLatency(void);
 void test_createBaSign_sm2(void);
 void test_createMaSign_sm2(void);
 void test_createRtSign_sm2(void);
+void test_v2xSe_sm2_get_z(void);
 
 #endif
