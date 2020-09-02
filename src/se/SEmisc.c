@@ -152,31 +152,6 @@ int setupActivatedState(appletSelection_t appId)
 
 /**
  *
- * @brief Utility function to place system in ACTIVATED state with sec level 5
- *
- * @param appId applet(s) to be selected during activation
- *
- * @return VTEST_PASS or VTEST_FAIL
- *
- */
-int setupActivatedStateSecurityLevel5(appletSelection_t appId)
-{
-	TypeSW_t statusCode;
-
-	/* Move to INIT state first as known starting point */
-	if (v2xSe_reset() != V2XSE_SUCCESS)
-		return VTEST_FAIL;
-
-	/* Move to ACTIVATED state */
-	if (v2xSe_activateWithSecurityLevel(appId, e_channelSecLevel_5,
-						&statusCode) != V2XSE_SUCCESS)
-		return VTEST_FAIL;
-
-	return VTEST_PASS;
-}
-
-/**
- *
  * @brief Utility function to place system in ACTIVATED state, normal phase
  *
  * @param appId applet(s) to be selected during activation
@@ -189,8 +164,8 @@ int setupActivatedNormalState(appletSelection_t appId)
 	TypeSW_t statusCode;
 	uint8_t phase;
 
-	/* Need security level 5 to query current phase */
-	if (setupActivatedStateSecurityLevel5(appId) != V2XSE_SUCCESS)
+	/* Need activated state to query current phase */
+	if (setupActivatedState(appId) != V2XSE_SUCCESS)
 		return VTEST_FAIL;
 
 	/* Get phase */

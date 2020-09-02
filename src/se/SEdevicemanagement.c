@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  */
 
 /*
@@ -113,7 +113,6 @@ void test_connect_negative(void)
  * This function tests v2xSe_activate for expected behaviour
  * The following conditions are tested:
  *  - v2xSe_activate moves from INIT to ACTIVATED state
- *  - v2xSe_activate sets security level to default (1)
  *  - v2xSe_activate works for US applet
  *  - v2xSe_activate works for EU applet
  *  - v2xSe_activate works for US & GS applet
@@ -121,12 +120,10 @@ void test_connect_negative(void)
  */
 void test_activate(void)
 {
-	uint8_t phase;
 	uint8_t dummyData = 0;
 	TypeSW_t statusCode;
 
 /* Test v2xSe_activate moves from INIT to ACTIVATED state */
-/* Test v2xSe_activate sets security level to default (5) */
 /* Test v2xSe_activate works for US applet */
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -134,9 +131,6 @@ void test_activate(void)
 	VTEST_CHECK_RESULT(v2xSe_activate(e_US, &statusCode), VTEST_PASS);
 	/* Verify really in ACTIVATED state (based on error code) */
 	VTEST_CHECK_RESULT(v2xSe_connect(), V2XSE_FAILURE_ACTIVATED);
-	/* Verify security level is <5 (getSePhase only works for 5) */
-	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
-								V2XSE_FAILURE);
 	/* Verify GS applet not activated */
 	VTEST_CHECK_RESULT(v2xSe_storeData(SLOT_ZERO, sizeof(dummyData),
 				&dummyData, &statusCode), V2XSE_FAILURE);
@@ -224,81 +218,59 @@ void test_activate_negative(void)
  *
  * @brief Test v2xSe_activateWithSecurityLevel for expected behaviour
  *
- * This function tests v2xSe_activateWithSecurityLevel for expected behaviour
- * The following conditions are tested:
- *  - v2xSe_activateWithSecurityLevel moves from INIT to ACTIVATED state
- *  - v2xSe_activateWithSecurityLevel can set security level to 5
- *  - v2xSe_activateWithSecurityLevel can set security level to another value
- *  - v2xSe_activateWithSecurityLevel works for US applet
- *  - v2xSe_activateWithSecurityLevel works for EU applet
- *  - v2xSe_activateWithSecurityLevel works for US & GS applet
- *  - v2xSe_activateWithSecurityLevel works for EU & GS applet
+ * This function makes sure that v2xSe_activateWithSecurityLevel is not
+ * supported for the HSM adptation layer. An error must be returned each time.
+ *
+ * In order to verify the state transitions, let's recall the state transitions:
+ * INIT -> CONNECTED: allowed
+ * INIT -> ACTIVATED: allowed
+ * CONNECTED -> ACTIVATED: *not* allowed
+ * ACTIVATED -> CONNECTED: *not* allowed
  *
  */
 void test_activateWithSecurityLevel(void)
 {
 	uint8_t phase;
-	uint8_t dummyData = 0;
 	TypeSW_t statusCode;
 
-/* Test v2xSe_activateWithSecurityLevel moves from INIT to ACTIVATED state */
-/* Test v2xSe_activateWithSecurityLevel can set security level to 5 */
-/* Test v2xSe_activateWithSecurityLevel works for US applet */
+/* Test v2xSe_activateWithSecurityLevel does not move from INIT to ACTIVATED state */
+/* Test v2xSe_activateWithSecurityLevel cannot set security level to 5 */
+/* Test v2xSe_activateWithSecurityLevel does not work for US applet */
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
-	/* Verify success when calling v2xSe_activateWithSecurityLevel */
+	/* Verify failure when calling v2xSe_activateWithSecurityLevel */
 	VTEST_CHECK_RESULT(v2xSe_activateWithSecurityLevel(e_US,
-				e_channelSecLevel_5, &statusCode), VTEST_PASS);
-	/* Verify really in ACTIVATED state (based on error code) */
-	VTEST_CHECK_RESULT(v2xSe_connect(), V2XSE_FAILURE_ACTIVATED);
-	/* Verify security level is 5 (getSePhase only works then) */
-	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
-								V2XSE_SUCCESS);
-	/* Verify GS applet not activated */
-	VTEST_CHECK_RESULT(v2xSe_storeData(SLOT_ZERO, sizeof(dummyData),
-				&dummyData, &statusCode), V2XSE_FAILURE);
-	VTEST_CHECK_RESULT(statusCode, V2XSE_INS_NOT_SUPPORTED);
+			e_channelSecLevel_5, &statusCode), V2XSE_FAILURE);
+	/* Verify not in ACTIVATED state (based on state transition error code) */
+	VTEST_CHECK_RESULT(v2xSe_connect(), VTEST_PASS);
 
-/* Test v2xSe_activateWithSecurityLevel works for EU applet */
-/* Test v2xSe_activateWithSecurityLevel can set security level less than 5 */
+/* Test v2xSe_activateWithSecurityLevel does not work for EU applet */
+/* Test v2xSe_activateWithSecurityLevel cannot set security level less than 5 */
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
-	/* Verify success when calling v2xSe_activateWithSecurityLevel */
+	/* Verify failure when calling v2xSe_activateWithSecurityLevel */
 	VTEST_CHECK_RESULT(v2xSe_activateWithSecurityLevel(e_EU,
-				e_channelSecLevel_4, &statusCode), VTEST_PASS);
-	/* Verify really in ACTIVATED state (based on error code) */
-	VTEST_CHECK_RESULT(v2xSe_connect(), V2XSE_FAILURE_ACTIVATED);
-	/* Verify security level < 5 (getSePhase only works for 5) */
-	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
-								V2XSE_FAILURE);
-	/* Verify GS applet not activated */
-	VTEST_CHECK_RESULT(v2xSe_storeData(SLOT_ZERO, sizeof(dummyData),
-				&dummyData, &statusCode), V2XSE_FAILURE);
-	VTEST_CHECK_RESULT(statusCode, V2XSE_INS_NOT_SUPPORTED);
+			e_channelSecLevel_4, &statusCode), V2XSE_FAILURE);
+	/* Verify not in ACTIVATED state (based on state transition error code) */
+	VTEST_CHECK_RESULT(v2xSe_connect(), VTEST_PASS);
 
-/* Test v2xSe_activateWithSecurityLevel works for US & GS applet */
+/* Test v2xSe_activateWithSecurityLevel does not work for US & GS applet */
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
-	/* Verify success when calling v2xSe_activateWithSecurityLevel */
+	/* Verify failure when calling v2xSe_activateWithSecurityLevel */
 	VTEST_CHECK_RESULT(v2xSe_activateWithSecurityLevel(e_US_AND_GS,
-				e_channelSecLevel_3, &statusCode), VTEST_PASS);
-	/* Verify really in ACTIVATED state (based on error code) */
-	VTEST_CHECK_RESULT(v2xSe_connect(), V2XSE_FAILURE_ACTIVATED);
-	/* Verify GS applet activated */
-	VTEST_CHECK_RESULT(v2xSe_storeData(SLOT_ZERO, sizeof(dummyData),
-				&dummyData, &statusCode), V2XSE_SUCCESS);
+			e_channelSecLevel_3, &statusCode), V2XSE_FAILURE);
+	/* Verify not in ACTIVATED state (based on state transition error code) */
+	VTEST_CHECK_RESULT(v2xSe_connect(), VTEST_PASS);
 
-/* Test v2xSe_activateWithSecurityLevel works for EU & GS applets */
+/* Test v2xSe_activateWithSecurityLevel does not work for EU & GS applets */
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
-	/* Verify success when calling v2xSe_activateWithSecurityLevel */
+	/* Verify failure when calling v2xSe_activateWithSecurityLevel */
 	VTEST_CHECK_RESULT(v2xSe_activateWithSecurityLevel(e_EU_AND_GS,
-				e_channelSecLevel_2, &statusCode), VTEST_PASS);
-	/* Verify really in ACTIVATED state (based on error code) */
-	VTEST_CHECK_RESULT(v2xSe_connect(), V2XSE_FAILURE_ACTIVATED);
-	/* Verify GS applet activated */
-	VTEST_CHECK_RESULT(v2xSe_storeData(SLOT_ZERO, sizeof(dummyData),
-				&dummyData, &statusCode), V2XSE_SUCCESS);
+			e_channelSecLevel_2, &statusCode), V2XSE_FAILURE);
+	/* Verify not in ACTIVATED state (based on state transition error code) */
+	VTEST_CHECK_RESULT(v2xSe_connect(), VTEST_PASS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -308,13 +280,8 @@ void test_activateWithSecurityLevel(void)
  *
  * @brief Test v2xSe_activateWithSecurityLevel with bad parameters or state
  *
- * This function tests v2xSe_activateWithSecurityLevel with bad parameters or
- * incorrect state.
- * For the moment this test indicates CONF when tests pass, as not all
- * cases are tested yet - to be changed to PASS when test fully implemented.
- * The following conditions are tested:
- *  - verify failure when called in CONNECTED state
- *  - verify failure when called in ACTIVATED state
+ * This function makes sure that v2xSe_activateWithSecurityLevel is not
+ * supported for the HSM adptation layer. An error must be returned each time.
  *
  */
 void test_activateWithSecurityLevel_negative(void)
@@ -327,7 +294,7 @@ void test_activateWithSecurityLevel_negative(void)
 	/* Verify failure in CONNECTED state */
 	VTEST_CHECK_RESULT(v2xSe_activateWithSecurityLevel(e_EU_AND_GS,
 			e_channelSecLevel_5, &statusCode),
-						V2XSE_FAILURE_CONNECTED);
+						V2XSE_FAILURE);
 
 /* Test failure when called in ACTIVATED state */
 	/* Move to ACTIVATED state */
@@ -335,13 +302,10 @@ void test_activateWithSecurityLevel_negative(void)
 	/* Verify failure in ACTIVATED state */
 	VTEST_CHECK_RESULT(v2xSe_activateWithSecurityLevel(e_EU_AND_GS,
 			e_channelSecLevel_5, &statusCode),
-						V2XSE_FAILURE_ACTIVATED);
+						V2XSE_FAILURE);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
-
-/* Flag CONF as not all required tests implemented yet */
-	VTEST_FLAG_CONF();
 }
 
 /**
@@ -1008,8 +972,6 @@ void test_getSePhase_normal(void)
 /* Test expected value returned in normal operating phase for EU applet */
 	/* Move to ACTIVATED state, normal operating mode, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
-	/* Now move to security level 5 to be able to read phase */
-	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_EU), VTEST_PASS);
 	/* Verify SE phase reading */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
@@ -1019,8 +981,6 @@ void test_getSePhase_normal(void)
 /* Test expected value returned in normal operating phase for US applet */
 	/* Move to ACTIVATED state, normal operating mode, US applet */
 	VTEST_CHECK_RESULT(setupActivatedNormalState(e_US), VTEST_PASS);
-	/* Now move to security level 5 to be able to read phase */
-	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_US), VTEST_PASS);
 	/* Verify SE phase reading */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
