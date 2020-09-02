@@ -230,7 +230,6 @@ void test_activate_negative(void)
  */
 void test_activateWithSecurityLevel(void)
 {
-	uint8_t phase;
 	TypeSW_t statusCode;
 
 /* Test v2xSe_activateWithSecurityLevel does not move from INIT to ACTIVATED state */
@@ -913,45 +912,13 @@ void test_getRemainingNvm(void)
  *
  * @brief Test v2xSe_getSePhase in key injection phase
  *
- * This function tests v2xSe_getSePhase in key injection phase
- * The following behaviours are tested:
- *  - expected value returned in key injection phase for EU applet
- *  - expected value returned in key injection phase for US applet
- *
+ * This function indicates CONF since the key injection phase does not exist
+ * for the HSM adaptation layer implementation.
  */
 void test_getSePhase_keyinject(void)
 {
-	TypeSW_t statusCode;
-	uint8_t phase;
-
-/* Test expected value returned in key injection phase for EU applet */
-	/* Move to INIT state */
-	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
-	/* Remove NVM phase variable to force return to key injection phase */
-	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
-	/* Move to ACTIVATED state with EU applet & security level 5 */
-	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_EU), VTEST_PASS);
-	/* Verify SE phase reading */
-	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
-								V2XSE_SUCCESS);
-	/* Verify value read */
-	VTEST_CHECK_RESULT(phase, V2XSE_KEY_INJECTION_PHASE);
-
-/* Test expected value returned in key injection phase for US applet */
-	/* Move to INIT state */
-	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
-	/* Remove NVM phase variable to force return to key injection phase */
-	VTEST_CHECK_RESULT(removeNvmVariable(US_PHASE_FILENAME), VTEST_PASS);
-	/* Move to ACTIVATED state with US applet & security level 5 */
-	VTEST_CHECK_RESULT(setupActivatedStateSecurityLevel5(e_US), VTEST_PASS);
-	/* Verify SE phase reading */
-	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
-								V2XSE_SUCCESS);
-	/* Verify value read */
-	VTEST_CHECK_RESULT(phase, V2XSE_KEY_INJECTION_PHASE);
-
-/* Go back to init to leave system in known state after test */
-	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Flag CONF as key injection phase cannot be reached */
+	VTEST_FLAG_CONF();
 }
 
 /**

@@ -291,8 +291,8 @@ static TypePublicKey_t refPubKey2 = {
  *
  * This function tests v2xSe_endKeyInjection for expected behaviour
  * The following behaviours are tested:
- *  - key injection correctly ended for EU applet
- *  - key injection correctly ended for US applet
+ *  - key injection fails for EU applet (deprecated API for HSM implementation)
+ *  - key injection fails for US applet (deprecated API for HSM implementation)
  *
  */
 void test_endKeyInjection(void)
@@ -311,10 +311,10 @@ void test_endKeyInjection(void)
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
 	/* Verify value read */
-	VTEST_CHECK_RESULT(phase, V2XSE_KEY_INJECTION_PHASE);
-	/* End key injection */
-	VTEST_CHECK_RESULT(v2xSe_endKeyInjection(&statusCode), V2XSE_SUCCESS);
-	/* Verify SE phase is now in */
+	VTEST_CHECK_RESULT(phase, V2XSE_NORMAL_OPERATING_PHASE);
+	/* End key injection must fail */
+	VTEST_CHECK_RESULT(v2xSe_endKeyInjection(&statusCode), V2XSE_FAILURE);
+	/* Verify SE phase is still in normal operating */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
 	/* Verify value read */
@@ -331,10 +331,10 @@ void test_endKeyInjection(void)
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
 	/* Verify value read */
-	VTEST_CHECK_RESULT(phase, V2XSE_KEY_INJECTION_PHASE);
-	/* End key injection */
-	VTEST_CHECK_RESULT(v2xSe_endKeyInjection(&statusCode), V2XSE_SUCCESS);
-	/* Verify SE phase is now in */
+	VTEST_CHECK_RESULT(phase, V2XSE_NORMAL_OPERATING_PHASE);
+	/* End key injection must fail */
+	VTEST_CHECK_RESULT(v2xSe_endKeyInjection(&statusCode), V2XSE_FAILURE);
+	/* Verify SE phase is still in normal operating */
 	VTEST_CHECK_RESULT(v2xSe_getSePhase(&phase, &statusCode),
 								V2XSE_SUCCESS);
 	/* Verify value read */
@@ -525,8 +525,6 @@ void test_injectRtEccPrivateKey_empty(void)
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
-	/* Exit key injection to allow key deletion */
-	VTEST_CHECK_RESULT(v2xSe_endKeyInjection(&statusCode), V2XSE_SUCCESS);
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
 								V2XSE_SUCCESS);
@@ -616,8 +614,6 @@ void test_injectRtEccPrivateKey_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
 
-	/* Exit key injection to allow key deletion */
-	VTEST_CHECK_RESULT(v2xSe_endKeyInjection(&statusCode), V2XSE_SUCCESS);
 	/* Delete keys after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
 						&statusCode), V2XSE_SUCCESS);
@@ -667,8 +663,6 @@ void test_injectBaEccPrivateKey_empty(void)
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
-	/* Exit key injection to allow key deletion */
-	VTEST_CHECK_RESULT(v2xSe_endKeyInjection(&statusCode), V2XSE_SUCCESS);
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
 								V2XSE_SUCCESS);
@@ -758,8 +752,6 @@ void test_injectBaEccPrivateKey_overwrite(void)
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
 
-	/* Exit key injection to allow key deletion */
-	VTEST_CHECK_RESULT(v2xSe_endKeyInjection(&statusCode), V2XSE_SUCCESS);
 	/* Delete keys after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(NON_ZERO_SLOT,
 						&statusCode), V2XSE_SUCCESS);

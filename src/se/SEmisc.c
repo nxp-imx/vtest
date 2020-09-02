@@ -164,7 +164,6 @@ int setupActivatedNormalState(appletSelection_t appId)
 	TypeSW_t statusCode;
 	uint8_t phase;
 
-	/* Need activated state to query current phase */
 	if (setupActivatedState(appId) != V2XSE_SUCCESS)
 		return VTEST_FAIL;
 
@@ -174,11 +173,6 @@ int setupActivatedNormalState(appletSelection_t appId)
 
 	/* Move to normal operation phase if not already there */
 	if (phase != V2XSE_NORMAL_OPERATING_PHASE)
-		if(v2xSe_endKeyInjection(&statusCode) != V2XSE_SUCCESS)
-			return VTEST_FAIL;
-
-	/* Set up normal low security level activation */
-	if (setupActivatedState(appId) != V2XSE_SUCCESS)
 		return VTEST_FAIL;
 
 	return VTEST_PASS;
