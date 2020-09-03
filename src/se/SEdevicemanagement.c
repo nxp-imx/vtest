@@ -537,7 +537,7 @@ void test_getSeInfo(void)
 	/* Retrieve EU applet SE info */
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
-	VTEST_LOG("EU applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d",
+	VTEST_LOG("EU applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
 					seInfo.maxRtKeysAllowed,
 					seInfo.maxBaKeysAllowed,
 					seInfo.numPreparedVal,
@@ -546,7 +546,8 @@ void test_getSeInfo(void)
 					seInfo.rollBackProtection,
 					seInfo.rtKeyDerivation,
 					seInfo.eciesSupport,
-					seInfo.maxDataSlots);
+					seInfo.maxDataSlots,
+					seInfo.cipherSupport);
 	/* Verify format (expected non-zero values are non-zero) */
 	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
 				!seInfo.maxBaKeysAllowed ||
@@ -556,7 +557,8 @@ void test_getSeInfo(void)
 				!seInfo.rollBackProtection ||
 				seInfo.rtKeyDerivation ||
 				!seInfo.eciesSupport ||
-				seInfo.maxDataSlots),
+				seInfo.maxDataSlots ||
+				seInfo.cipherSupport),
 					0);
 
 /* Test info format for US applet */
@@ -565,7 +567,7 @@ void test_getSeInfo(void)
 	/* Retrieve US applet SE info */
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
-	VTEST_LOG("US applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d",
+	VTEST_LOG("US applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
 					seInfo.maxRtKeysAllowed,
 					seInfo.maxBaKeysAllowed,
 					seInfo.numPreparedVal,
@@ -574,7 +576,8 @@ void test_getSeInfo(void)
 					seInfo.rollBackProtection,
 					seInfo.rtKeyDerivation,
 					seInfo.eciesSupport,
-					seInfo.maxDataSlots);
+					seInfo.maxDataSlots,
+					seInfo.cipherSupport);
 	/* Verify format (expected non-zero values are non-zero) */
 	/* Verify format (expected non-zero values are non-zero) */
 	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
@@ -582,7 +585,8 @@ void test_getSeInfo(void)
 				seInfo.numPreparedVal ||
 				!seInfo.rtKeyDerivation ||
 				!seInfo.eciesSupport ||
-				seInfo.maxDataSlots),
+				seInfo.maxDataSlots ||
+				seInfo.cipherSupport),
 					0);
 
 /* Test info format for EU applet */
@@ -591,7 +595,7 @@ void test_getSeInfo(void)
 	/* Retrieve EU applet SE info */
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
-	VTEST_LOG("EU applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d",
+	VTEST_LOG("EU applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
 					seInfo.maxRtKeysAllowed,
 					seInfo.maxBaKeysAllowed,
 					seInfo.numPreparedVal,
@@ -600,7 +604,8 @@ void test_getSeInfo(void)
 					seInfo.rollBackProtection,
 					seInfo.rtKeyDerivation,
 					seInfo.eciesSupport,
-					seInfo.maxDataSlots);
+					seInfo.maxDataSlots,
+					seInfo.cipherSupport);
 	/* Verify format (expected non-zero values are non-zero) */
 	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
 				!seInfo.maxBaKeysAllowed ||
@@ -610,7 +615,8 @@ void test_getSeInfo(void)
 				!seInfo.rollBackProtection ||
 				seInfo.rtKeyDerivation ||
 				!seInfo.eciesSupport ||
-				!seInfo.maxDataSlots),
+				!seInfo.maxDataSlots ||
+				seInfo.cipherSupport),
 					0);
 
 /* Test info format for US applet */
@@ -619,7 +625,7 @@ void test_getSeInfo(void)
 	/* Retrieve US applet SE info */
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
-	VTEST_LOG("US applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d",
+	VTEST_LOG("US applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
 					seInfo.maxRtKeysAllowed,
 					seInfo.maxBaKeysAllowed,
 					seInfo.numPreparedVal,
@@ -628,7 +634,8 @@ void test_getSeInfo(void)
 					seInfo.rollBackProtection,
 					seInfo.rtKeyDerivation,
 					seInfo.eciesSupport,
-					seInfo.maxDataSlots);
+					seInfo.maxDataSlots,
+					seInfo.cipherSupport);
 	/* Verify format (expected non-zero values are non-zero) */
 	/* Verify format (expected non-zero values are non-zero) */
 	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
@@ -639,7 +646,8 @@ void test_getSeInfo(void)
 				!seInfo.rollBackProtection ||
 				!seInfo.rtKeyDerivation ||
 				!seInfo.eciesSupport ||
-				!seInfo.maxDataSlots),
+				!seInfo.maxDataSlots ||
+				seInfo.cipherSupport),
 					0);
 
 /* Go back to init to leave system in known state after test */

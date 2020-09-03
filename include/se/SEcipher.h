@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019-2020 NXP
+ * Copyright 2020 NXP
  */
 
 /*
@@ -35,54 +35,26 @@
 
 /**
  *
- * @file testlist.c
+ * @file SEcipher.h
  *
- * @brief Defines list of all tests that can be run
+ * @brief Header files for tests for SE CIPHER (requirements R17.*)
  *
  */
 
-#include "vtest.h"
-#include "ECCcrypto.h"
-#include "ECCdevicemgmt.h"
-#include "SEdevicemanagement.h"
-#include "SEkeymanagement.h"
-#include "SEsignature.h"
-#include "SEecies.h"
-#include "SEdatastorage.h"
-#include "SEutility.h"
-#include "SEkeyinjection.h"
-#include "SEperformance.h"
-#include "SEcipher.h"
+#ifndef SECIPHER_H
+#define SECIPHER_H
 
 /**
- * @brief Array containing entries for all avialable tests
- *
- * This array containts an entry for each available test.
- * Tests should be placed in the following array in order of test
- * number
+ * List of tests from to be run from SEcipher.c
+ * Tests should be listed in order of incrementing test number
  */
-testEntry_t allTests[] = {
-	ECC_DEVICEMGMT_TESTS
-	ECC_CRYPTO_TESTS
-	SE_DEVICE_MANAGEMENT_TESTS
-	SE_KEY_MANAGEMENT_TESTS
-	SE_SIGNATURE_TESTS
-	SE_ECIES_TESTS
-	SE_DATA_STORAGE_TESTS
-	SE_UTILITY_TESTS
-	SE_KEY_INJECTION_TESTS
-	SE_PERFORMANCE_TESTS
-	SE_CIPHER_TESTS
-};
+#define SE_CIPHER_TESTS \
+	VTEST_DEFINE_TEST(170101, &test_encryptUsingRtCipher, \
+		"Test v2xSe_encryptUsingRtCipher for expected behaviour")\
+	VTEST_DEFINE_TEST(170201, &test_decryptUsingRtCipher, \
+		"Test v2xSe_decryptUsingRtCipher for expected behaviour")\
 
-/**
- *
- * @brief Utility function get total number of available tests
- *
- * @return total number of available tests
- *
- */
-int getNumTests(void)
-{
-	return sizeof(allTests)/sizeof(testEntry_t);
-}
+void test_encryptUsingRtCipher(void);
+void test_decryptUsingRtCipher(void);
+
+#endif
