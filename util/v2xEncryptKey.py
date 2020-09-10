@@ -37,6 +37,18 @@ import os
 import sys, getopt
 from Crypto.Cipher import AES
 
+# encryptedKey3: BP256R1
+#    priv:
+#        96:90:0c:bd:f7:c1:ec:f0:cd:82:6d:1b:6c:ae:13:
+#        3a:d5:f2:68:17:a4:37:1d:cc:84:4e:d0:42:16:82:
+#        af:76
+#    pub:
+#        04:6c:83:ca:72:28:22:2b:ee:82:ea:87:ac:43:31:
+#        e3:65:f9:90:93:54:4b:6b:5a:50:6d:69:13:af:41:
+#        1f:f2:ce:52:62:9a:3d:01:2a:ad:18:48:64:8f:8f:
+#        53:ad:c7:2a:1b:e3:f5:85:b8:0f:b7:41:36:78:2d:
+#        15:ac:1b:41:f2
+
 class color:
    PURPLE = '\033[95m'
    CYAN = '\033[96m'
@@ -179,17 +191,24 @@ def main(argv):
    iv = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B'
 
    print(color.UNDERLINE)
-   print("encryptedKey1:" + color.END + " (with " + arg_kek + " KEK)")
+   print("encryptedKey1 (NISTP-256):" + color.END + " (with " + arg_kek + " KEK)")
    encryptInstance = AES.new(kek, AES.MODE_GCM, nonce=iv, mac_len=16)
    encryptedKey1, tag1 = encryptInstance.encrypt_and_digest(b'\x5d\xc4\x91\xfa\x8b\xd7\xbe\x62\xaa\x83\xa4\x2e\xf1\x1d\x80\xd8\x47\x2c\x5d\xe1\xbb\x76\x72\xef\x5d\x54\x10\xb2\x17\xd5\x8f\x78')
    do_encrypt(encryptedKey1, tag1)
 
    print(color.UNDERLINE)
-   print("encryptedKey2:" + color.END + " (with " + arg_kek + " KEK)")
+   print("encryptedKey2 (NISTP-256):" + color.END + " (with " + arg_kek + " KEK)")
    encryptInstance = AES.new(kek, AES.MODE_GCM, nonce=iv, mac_len=16)
    encryptedKey2, tag2 = encryptInstance.encrypt_and_digest(b'\x59\xb2\x30\xa0\x94\xee\xc2\x38\x49\xd5\x53\xce\xe6\xbe\xc5\x0f\x3a\x82\xd2\xa2\x1d\x9f\xf4\x7a\x6b\x43\x51\xe1\xdd\x38\x35\x8c')
 
    do_encrypt(encryptedKey2, tag2)
+
+   print(color.UNDERLINE)
+   print("encryptedKey3 (BP256R1):" + color.END + " (with " + arg_kek + " KEK)")
+   encryptInstance = AES.new(kek, AES.MODE_GCM, nonce=iv, mac_len=16)
+   encryptedKey3, tag3 = encryptInstance.encrypt_and_digest(b'\x96\x90\x0c\xbd\xf7\xc1\xec\xf0\xcd\x82\x6d\x1b\x6c\xae\x13\x3a\xd5\xf2\x68\x17\xa4\x37\x1d\xcc\x84\x4e\xd0\x42\x16\x82\xaf\x76')
+
+   do_encrypt(encryptedKey3, tag3)
 
 ## Entry point
 if __name__ == "__main__":
