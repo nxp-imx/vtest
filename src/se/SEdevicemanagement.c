@@ -656,6 +656,87 @@ void test_getSeInfo(void)
 
 /**
  *
+ * @brief Test v2xSe_getSeInfo for expected behaviour, for the CN applet
+ *
+ * This function tests v2xSe_getSeInfo for expected behaviour
+ * The following behaviours are tested:
+ *  - info returned in correct format for CN applet
+ *  - info returned in correct format for CN and GS applet
+ *
+ */
+void test_getSeInfo_CN(void)
+{
+	TypeSW_t statusCode;
+	TypeInformation_t seInfo;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+/* Test info format for CN applet */
+	/* Move to ACTIVATED state with CN applet */
+	VTEST_CHECK_RESULT(setupActivatedState(e_CN), VTEST_PASS);
+	/* Retrieve CN applet SE info */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+	VTEST_LOG("CN applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+					seInfo.maxRtKeysAllowed,
+					seInfo.maxBaKeysAllowed,
+					seInfo.numPreparedVal,
+					seInfo.fipsModeIndicator,
+					seInfo.proofOfPossession,
+					seInfo.rollBackProtection,
+					seInfo.rtKeyDerivation,
+					seInfo.eciesSupport,
+					seInfo.maxDataSlots,
+					seInfo.cipherSupport);
+	/* Verify format (expected non-zero values are non-zero) */
+	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
+				!seInfo.maxBaKeysAllowed ||
+				seInfo.numPreparedVal ||
+				seInfo.fipsModeIndicator ||
+				seInfo.proofOfPossession ||
+				!seInfo.rollBackProtection ||
+				seInfo.rtKeyDerivation ||
+				seInfo.eciesSupport ||
+				seInfo.maxDataSlots ||
+				!seInfo.cipherSupport),
+					0);
+
+/* Test info format for CN applet */
+	/* Move to ACTIVATED state with CN and GS applet */
+	VTEST_CHECK_RESULT(setupActivatedState(e_CN_AND_GS), VTEST_PASS);
+	/* Retrieve CN applet SE info */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+	VTEST_LOG("CN applet SE Info: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+					seInfo.maxRtKeysAllowed,
+					seInfo.maxBaKeysAllowed,
+					seInfo.numPreparedVal,
+					seInfo.fipsModeIndicator,
+					seInfo.proofOfPossession,
+					seInfo.rollBackProtection,
+					seInfo.rtKeyDerivation,
+					seInfo.eciesSupport,
+					seInfo.maxDataSlots,
+					seInfo.cipherSupport);
+	/* Verify format (expected non-zero values are non-zero) */
+	VTEST_CHECK_RESULT((!seInfo.maxRtKeysAllowed ||
+				!seInfo.maxBaKeysAllowed ||
+				seInfo.numPreparedVal ||
+				seInfo.fipsModeIndicator ||
+				seInfo.proofOfPossession ||
+				!seInfo.rollBackProtection ||
+				seInfo.rtKeyDerivation ||
+				seInfo.eciesSupport ||
+				!seInfo.maxDataSlots ||
+				!seInfo.cipherSupport),
+					0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
  * @brief Test v2xSe_getCryptoLibVersion for expected behaviour
  *
  * This function tests v2xSe_getCryptoLibVersion for expected behaviour

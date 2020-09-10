@@ -82,6 +82,8 @@
 		"Test v2xSe_getAppletVersion for expected behaviour")\
 	VTEST_DEFINE_TEST(50801, &test_getSeInfo, \
 		"Test v2xSe_getSeInfo for expected behaviour")\
+	VTEST_DEFINE_TEST(50803, &test_getSeInfo_CN, \
+		"Test v2xSe_getSeInfo for expected behaviour for the CN applet")\
 	VTEST_DEFINE_TEST(50901, &test_getCryptoLibVersion, \
 		"Test v2xSe_getCryptoLibVersion for expected behaviour")\
 	VTEST_DEFINE_TEST(51001, &test_getPlatformInfo, \
@@ -117,6 +119,7 @@ void test_disconnect(void);
 void test_disconnect_negative(void);
 void test_getAppletVersion(void);
 void test_getSeInfo(void);
+void test_getSeInfo_CN(void);
 void test_getCryptoLibVersion(void);
 void test_getPlatformInfo(void);
 void test_getPlatformConfig(void);
