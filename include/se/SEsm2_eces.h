@@ -1,6 +1,5 @@
-
 /*
- * Copyright 2019-2020 NXP
+ * Copyright 2020 NXP
  */
 
 /*
@@ -35,56 +34,26 @@
 
 /**
  *
- * @file testlist.c
+ * @file SEsm2_eces.h
  *
- * @brief Defines list of all tests that can be run
+ * @brief Header files for tests for SE ECIES (requirements R18.*)
  *
  */
 
-#include "vtest.h"
-#include "ECCcrypto.h"
-#include "ECCdevicemgmt.h"
-#include "SEdevicemanagement.h"
-#include "SEkeymanagement.h"
-#include "SEsignature.h"
-#include "SEecies.h"
-#include "SEdatastorage.h"
-#include "SEutility.h"
-#include "SEkeyinjection.h"
-#include "SEperformance.h"
-#include "SEcipher.h"
-#include "SEsm2_eces.h"
+#ifndef SE_SM2_ECES_H
+#define SE_SM2_ECES_H
 
 /**
- * @brief Array containing entries for all avialable tests
- *
- * This array containts an entry for each available test.
- * Tests should be placed in the following array in order of test
- * number
+ * List of tests from to be run from SEecies.c
+ * Tests should be listed in order of incrementing test number
  */
-testEntry_t allTests[] = {
-	ECC_DEVICEMGMT_TESTS
-	ECC_CRYPTO_TESTS
-	SE_DEVICE_MANAGEMENT_TESTS
-	SE_KEY_MANAGEMENT_TESTS
-	SE_SIGNATURE_TESTS
-	SE_ECIES_TESTS
-	SE_DATA_STORAGE_TESTS
-	SE_UTILITY_TESTS
-	SE_KEY_INJECTION_TESTS
-	SE_PERFORMANCE_TESTS
-	SE_CIPHER_TESTS
-	SE_SM2_ECES_TESTS
-};
+#define SE_SM2_ECES_TESTS \
+	VTEST_DEFINE_TEST(180101, &test_encryptUsingSm2Eces, \
+		"Test v2xSe_encryptUsingSm2Eces for expected behaviour")\
 
-/**
- *
- * @brief Utility function get total number of available tests
- *
- * @return total number of available tests
- *
- */
-int getNumTests(void)
-{
-	return sizeof(allTests)/sizeof(testEntry_t);
-}
+void test_encryptUsingSm2Eces(void);
+void test_decryptUsingSm2RtEces(void);
+void test_decryptUsingSm2MaEces(void);
+void test_decryptUsingSm2BaEces(void);
+
+#endif

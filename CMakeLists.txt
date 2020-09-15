@@ -32,6 +32,7 @@ add_executable (vtest
 	src/se/SEkeymanagement.c
 	src/se/SEsignature.c
 	src/se/SEecies.c
+	src/se/SEsm2_eces.c
 	src/se/SEdatastorage.c
 	src/se/SEutility.c
 	src/se/SEkeyinjection.c
