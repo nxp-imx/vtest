@@ -50,10 +50,16 @@
 #define SE_SM2_ECES_TESTS \
 	VTEST_DEFINE_TEST(180101, &test_encryptUsingSm2Eces, \
 		"Test v2xSe_encryptUsingSm2Eces for expected behaviour")\
+	VTEST_DEFINE_TEST(180201, &test_decryptUsingRtSm2Eces, \
+		"Test v2xSe_decryptUsingRtSm2Eces for expected behaviour")\
+	VTEST_DEFINE_TEST(180301, &test_decryptUsingMaSm2Eces, \
+		"Test v2xSe_decryptUsingMaSm2Eces for expected behaviour")\
+	VTEST_DEFINE_TEST(180401, &test_decryptUsingBaSm2Eces, \
+		"Test v2xSe_decryptUsingBaSm2Eces for expected behaviour")
 
 void test_encryptUsingSm2Eces(void);
-void test_decryptUsingSm2RtEces(void);
-void test_decryptUsingSm2MaEces(void);
-void test_decryptUsingSm2BaEces(void);
+void test_decryptUsingRtSm2Eces(void);
+void test_decryptUsingMaSm2Eces(void);
+void test_decryptUsingBaSm2Eces(void);
 
 #endif

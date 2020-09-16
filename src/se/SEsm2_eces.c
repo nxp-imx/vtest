@@ -40,6 +40,7 @@
  *
  */
 
+#include <string.h>
 #include <v2xSe.h>
 #include "vtest.h"
 #include "SEmisc.h"
@@ -106,6 +107,194 @@ void test_encryptUsingSm2Eces(void)
 	/* Perform encryption */
 	VTEST_CHECK_RESULT(v2xSe_encryptUsingSm2Eces(&enc_sm2_ecesData,
 		&statusCode, &size, encryptedData), V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test v2xSe_decryptUsingRtSm2Eces for expected behaviour
+ *
+ * This function tests v2xSe_decryptUsingRtSm2Eces for expected behaviour
+ * The following behaviours are tested:
+ *  - generate SM2 key pair
+ *  - perform ECES encryption with public key
+ *  - perform ECES decryption with private key
+ *  - success if decrypted message matches input message
+ *
+ */
+void test_decryptUsingRtSm2Eces(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t sm2_eces_pub_key;
+	TypeEncryptSm2Eces_t enc_sm2_ecesData;
+	TypeLen_t size;
+	uint8_t encryptedData[SM2_ECES_MSG_SIZE + SM2_PKE_OVERHEAD + 4]
+		= { 0 };
+	TypeDecryptSm2Eces_t dec_sm2_ecesData;
+	TypePlainText_t decryptedData;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+
+	/* Generate an RT key to use */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+			V2XSE_CURVE_SM2_256, &statusCode, &sm2_eces_pub_key),
+		V2XSE_SUCCESS);
+
+	/* Encrypt data with this key */
+	enc_sm2_ecesData.pEccPublicKey = &sm2_eces_pub_key;
+	enc_sm2_ecesData.curveId = V2XSE_CURVE_SM2_256;
+	enc_sm2_ecesData.pMsgData = &sm2_eces_msg;
+	enc_sm2_ecesData.msgLen = SM2_ECES_MSG_SIZE;
+	/* Perform encryption */
+	VTEST_CHECK_RESULT(v2xSe_encryptUsingSm2Eces(&enc_sm2_ecesData,
+		&statusCode, &size, encryptedData), V2XSE_SUCCESS);
+
+	/* Setup SM2 ECES decrypt parameters */
+	dec_sm2_ecesData.encryptedDataSize = size;
+	dec_sm2_ecesData.encryptedData = encryptedData;
+	/* Perform decryption */
+	v2xSe_decryptUsingRtSm2Eces(SLOT_ZERO, &dec_sm2_ecesData,
+		&statusCode, &size, &decryptedData);
+
+	/* Verify message is correctly decrypted */
+	VTEST_CHECK_RESULT(size, SM2_ECES_MSG_SIZE);
+	VTEST_CHECK_RESULT(memcmp(sm2_eces_msg.data, decryptedData.data, size),
+			0);
+
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+			V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+
+/**
+ *
+ * @brief Test v2xSe_decryptUsingMaSm2Eces for expected behaviour
+ *
+ * This function tests v2xSe_decryptUsingMaSm2Eces for expected behaviour
+ * The following behaviours are tested:
+ *  - generate SM2 key pair
+ *  - perform ECES encryption with public key
+ *  - perform ECES decryption with private key
+ *  - success if decrypted message matches input message
+ *
+ */
+void test_decryptUsingMaSm2Eces(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t sm2_eces_pub_key;
+	TypeEncryptSm2Eces_t enc_sm2_ecesData;
+	TypeLen_t size;
+	uint8_t encryptedData[SM2_ECES_MSG_SIZE + SM2_PKE_OVERHEAD + 4]
+		= { 0 };
+	TypeDecryptSm2Eces_t dec_sm2_ecesData;
+	TypePlainText_t decryptedData;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+
+	/* Generate MA key of known curveId */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_SM2_256,
+			&statusCode, &sm2_eces_pub_key),
+		V2XSE_SUCCESS);
+
+	/* Encrypt data with this key */
+	enc_sm2_ecesData.pEccPublicKey = &sm2_eces_pub_key;
+	enc_sm2_ecesData.curveId = V2XSE_CURVE_SM2_256;
+	enc_sm2_ecesData.pMsgData = &sm2_eces_msg;
+	enc_sm2_ecesData.msgLen = SM2_ECES_MSG_SIZE;
+	/* Perform encryption */
+	VTEST_CHECK_RESULT(v2xSe_encryptUsingSm2Eces(&enc_sm2_ecesData,
+		&statusCode, &size, encryptedData), V2XSE_SUCCESS);
+
+	/* Setup SM2 ECES decrypt parameters */
+	dec_sm2_ecesData.encryptedDataSize = size;
+	dec_sm2_ecesData.encryptedData = encryptedData;
+	/* Perform decryption */
+	v2xSe_decryptUsingMaSm2Eces(&dec_sm2_ecesData,
+		&statusCode, &size, &decryptedData);
+
+	/* Verify message is correctly decrypted */
+	VTEST_CHECK_RESULT(size, SM2_ECES_MSG_SIZE);
+	VTEST_CHECK_RESULT(memcmp(sm2_eces_msg.data, decryptedData.data, size),
+			0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+
+/**
+ *
+ * @brief Test v2xSe_decryptUsingBaSm2Eces for expected behaviour
+ *
+ * This function tests v2xSe_decryptUsingBaSm2Eces for expected behaviour
+ * The following behaviours are tested:
+ *  - generate SM2 key pair
+ *  - perform ECES encryption with public key
+ *  - perform ECES decryption with private key
+ *  - success if decrypted message matches input message
+ *
+ */
+void test_decryptUsingBaSm2Eces(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t sm2_eces_pub_key;
+	TypeEncryptSm2Eces_t enc_sm2_ecesData;
+	TypeLen_t size;
+	uint8_t encryptedData[SM2_ECES_MSG_SIZE + SM2_PKE_OVERHEAD + 4]
+		= { 0 };
+	TypeDecryptSm2Eces_t dec_sm2_ecesData;
+	TypePlainText_t decryptedData;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+
+	/* Generate an BA key to use */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+			V2XSE_CURVE_SM2_256, &statusCode, &sm2_eces_pub_key),
+		V2XSE_SUCCESS);
+
+	/* Encrypt data with this key */
+	enc_sm2_ecesData.pEccPublicKey = &sm2_eces_pub_key;
+	enc_sm2_ecesData.curveId = V2XSE_CURVE_SM2_256;
+	enc_sm2_ecesData.pMsgData = &sm2_eces_msg;
+	enc_sm2_ecesData.msgLen = SM2_ECES_MSG_SIZE;
+	/* Perform encryption */
+	VTEST_CHECK_RESULT(v2xSe_encryptUsingSm2Eces(&enc_sm2_ecesData,
+		&statusCode, &size, encryptedData), V2XSE_SUCCESS);
+
+	/* Setup SM2 ECES decrypt parameters */
+	dec_sm2_ecesData.encryptedDataSize = size;
+	dec_sm2_ecesData.encryptedData = encryptedData;
+	/* Perform decryption */
+	v2xSe_decryptUsingBaSm2Eces(SLOT_ZERO, &dec_sm2_ecesData,
+		&statusCode, &size, &decryptedData);
+
+	/* Verify message is correctly decrypted */
+	VTEST_CHECK_RESULT(size, SM2_ECES_MSG_SIZE);
+	VTEST_CHECK_RESULT(memcmp(sm2_eces_msg.data, decryptedData.data, size),
+			0);
+
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+			V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
