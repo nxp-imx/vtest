@@ -126,6 +126,11 @@ void my_ecdsa_DecompressPubKeyCallback(void *callbackData,
 			(const void *) test_dec_pubKey_y_exp_bp384r1,
 			LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
 		break;
+	case ECDSA_CURVE_SM2P256:
+		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_sm2,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
 	default:
 		/*
 		 * This should be never executed.
@@ -178,6 +183,12 @@ void my_ecdsa_DecompressPubKeyCallback_negative(void *callbackData,
 			!memcmp((const void *) pubKey_decompressed->y,
 			(const void *) test_dec_pubKey_y_exp_bp384r1,
 			LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
+		break;
+	case ECDSA_CURVE_SM2P256:
+		VTEST_CHECK_RESULT(
+			!memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_sm2,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
 		break;
 	default:
 		/*
@@ -619,6 +630,31 @@ void ecc_test_pubkey_decompression(void)
 
 /**
  *
+ * @brief Positive test of ecdsa_decompress_public_key with SM2 key
+ *
+ */
+void ecc_test_pubkey_decompression_sm2(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_curveid_t curveID;
+
+	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+
+	/* Positive key decompression test SM2 */
+	curveID = ECDSA_CURVE_SM2P256;
+	pubKey.x = test_dec_pubKey_x_sm2;
+	pubKey.y = test_dec_pubKey_y_sm2;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+/**
+ *
  * @brief Negative test of ecdsa_decompress_public_key
  *
  */
@@ -653,6 +689,31 @@ void ecc_test_pubkey_decompression_negative(void)
 	curveID = ECDSA_CURVE_BP384R1;
 	pubKey.x = test_dec_pubKey_x_bp384r1;
 	pubKey.y = test_dec_pubKey_y_neg_bp384r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback_negative, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Negative test of ecdsa_decompress_public_key with SM2 key
+ *
+ */
+void ecc_test_pubkey_decompression_sm2_negative(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_curveid_t curveID;
+
+	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+
+	/* Negative key decompression test SM2 */
+	curveID = ECDSA_CURVE_SM2P256;
+	pubKey.x = test_dec_pubKey_x_sm2;
+	pubKey.y = test_dec_pubKey_y_neg_sm2;
 	VTEST_CHECK_RESULT_ASYNC_INC(
 		ecdsa_decompress_public_key(curveID, pubKey, 0,
 			my_ecdsa_DecompressPubKeyCallback_negative, (void *)&curveID),

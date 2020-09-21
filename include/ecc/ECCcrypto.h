@@ -70,6 +70,10 @@
 		"Test public key decompression failure")                      \
 	VTEST_DEFINE_TEST(30503, &ecc_test_pubkey_decompression_invalid,      \
 		"Test public key decompression with invalid params/state")    \
+	VTEST_DEFINE_TEST(30504, &ecc_test_pubkey_decompression_sm2,          \
+		"Test public key decompression with SM2 key")                 \
+	VTEST_DEFINE_TEST(30505, &ecc_test_pubkey_decompression_sm2_negative, \
+		"Test public key decompression failure with SM2 key")         \
 	VTEST_DEFINE_TEST(30601, &ecc_test_pubkey_reconstruction,             \
 		"Test public key reconstruction")                             \
 	VTEST_DEFINE_TEST(30602, &ecc_test_pubkey_reconstruction_negative,    \
@@ -97,7 +101,9 @@ void ecc_test_sm2_signature_verification(void);
 void ecc_test_sm2_signature_verification_negative(void);
 void ecc_test_sm2_signature_verification_message(void);
 void ecc_test_pubkey_decompression(void);
+void ecc_test_pubkey_decompression_sm2(void);
 void ecc_test_pubkey_decompression_negative(void);
+void ecc_test_pubkey_decompression_sm2_negative(void);
 void ecc_test_pubkey_decompression_invalid(void);
 void ecc_test_pubkey_reconstruction(void);
 void ecc_test_pubkey_reconstruction_negative(void);
