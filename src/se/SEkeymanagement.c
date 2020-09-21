@@ -290,6 +290,69 @@ void test_getMaEccPublicKey(void)
 
 /**
  *
+ * @brief Test v2xSe_getMaEccPublicKey for expected behaviour with SM2 key
+ *
+ * This function tests v2xSe_generateMaEccKeyPair for expected behaviour
+ * The following behaviours are tested:
+ *  - MA public key retrieved is different from RT and BA pubkeys
+ * NOTE: key retrieval of all types tested in test_generateMaEccKeyPair
+ *
+ */
+void test_getMaEccPublicKey_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey_MA;
+	TypePublicKey_t pubKey_discard;
+	TypePublicKey_t pubKey_different;
+	TypeCurveId_t curveId;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+/* MA public key retrieved is different from RT and BA pubkeys */
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+	/* Create MA key */
+	VTEST_CHECK_RESULT(v2xSe_generateMaEccKeyPair(V2XSE_CURVE_SM2_256,
+				&statusCode, &pubKey_discard), V2XSE_SUCCESS);
+	/* Retrieve MA public key */
+	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
+						&pubKey_MA), V2XSE_SUCCESS);
+	/* Generate RT key */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey_discard),
+								V2XSE_SUCCESS);
+	/* Retrieve Rt public key */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
+				&curveId, &pubKey_different), V2XSE_SUCCESS);
+	/* Verify key contents are different to MA key */
+	VTEST_CHECK_RESULT(!memcmp(&pubKey_MA, &pubKey_different,
+						sizeof(TypePublicKey_t)), 0);
+	/* Create Ba key */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey_discard),
+								V2XSE_SUCCESS);
+	/* Retrieve Ba public key */
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
+				&curveId, &pubKey_different), V2XSE_SUCCESS);
+	/* Verify key contents are different to MA key */
+	VTEST_CHECK_RESULT(!memcmp(&pubKey_MA, &pubKey_different,
+						sizeof(TypePublicKey_t)), 0);
+	/* Delete BA key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+	/* Delete RT key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
  * @brief Test v2xSe_generateRtEccKeyPair for keys in empty slots
  *
  * This function tests v2xSe_generateRtEccKeyPair for keys in empty slots
@@ -674,6 +737,63 @@ void test_getRtEccPublicKey(void)
 	/* Generate RT key 2 */
 	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_Rt2),
+								V2XSE_SUCCESS);
+	/* Retrieve Rt1 public key */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_Rt1, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
+	/* Retrieve Rt2 public key */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(NON_ZERO_SLOT, &statusCode,
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_Rt2, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
+	/* Verify keys are different - already compared to Rt1/Rt2 */
+	VTEST_CHECK_RESULT(!memcmp(&pubKey_Rt1, &pubKey_Rt2,
+						sizeof(TypePublicKey_t)), 0);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test v2xSe_getRtEccPublicKey for expected behaviour
+ *
+ * This function tests v2xSe_generateRtEccKeyPair for expected behaviour
+ * The following behaviours are tested:
+ *  - Pubkey retrieved from different slots match created keys
+ *  - Pubkey retrieved from different slots are different
+ * NOTE: key retrieval of all types tested in test_generateRtEccKeyPair
+ *
+ */
+void test_getRtEccPublicKey_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey_Rt1;
+	TypePublicKey_t pubKey_Rt2;
+	TypePublicKey_t pubKey_retrieve;
+	TypeCurveId_t curveId;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+/* Test Pubkey retrieved from different slots match created keys */
+/* Pubkey retrieved from different slots are different */
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+	/* Generate RT key 1 */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey_Rt1),
+								V2XSE_SUCCESS);
+	/* Generate RT key 2 */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(NON_ZERO_SLOT,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey_Rt2),
 								V2XSE_SUCCESS);
 	/* Retrieve Rt1 public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
@@ -1190,6 +1310,64 @@ void test_getBaEccPublicKey(void)
 	/* Generate BA key 2 */
 	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey_Ba2),
+								V2XSE_SUCCESS);
+	/* Retrieve Ba1 public key */
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_Ba1, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
+	/* Retrieve Ba2 public key */
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(NON_ZERO_SLOT, &statusCode,
+				&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+	/* Verify key contents are correct */
+	VTEST_CHECK_RESULT(memcmp(&pubKey_Ba2, &pubKey_retrieve,
+						sizeof(TypePublicKey_t)), 0);
+	/* Verify keys are different */
+	VTEST_CHECK_RESULT(!memcmp(&pubKey_Ba1, &pubKey_Ba2,
+						sizeof(TypePublicKey_t)), 0);
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
+						&statusCode), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test v2xSe_getBaEccPublicKey for expected behaviour with SM2 key
+ *
+ * This function tests v2xSe_generateBaEccKeyPair for expected behaviour
+ * The following behaviours are tested:
+ *  - Pubkey retrieved from different slots match created keys
+ *  - Pubkey retrieved from different slots are different
+ * NOTE: key retrieval of all types tested in test_generateBaEccKeyPair
+ *
+ */
+void test_getBaEccPublicKey_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey_Ba1;
+	TypePublicKey_t pubKey_Ba2;
+	TypePublicKey_t pubKey_retrieve;
+	TypeCurveId_t curveId;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+/* Test Pubkey retrieved from different slots match created keys */
+/* Pubkey retrieved from different slots are different */
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+	/* Generate BA key 1 */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey_Ba1),
+								V2XSE_SUCCESS);
+	/* Generate BA key 2 */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(NON_ZERO_SLOT,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey_Ba2),
 								V2XSE_SUCCESS);
 	/* Retrieve Ba1 public key */
 	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
