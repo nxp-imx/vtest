@@ -61,6 +61,8 @@
 		"Test v2xSe_generateRtEccKeyPair for keys in full slots")\
 	VTEST_DEFINE_TEST(60304, &test_rtKeyCreationSpeed, \
 		"Test speed of run time key creation")\
+	VTEST_DEFINE_TEST(60305, &test_generateRtEccKeyPair_empty_sm2, \
+		"Test v2xSe_generateRtEccKeyPair for SM2 keys in empty slots")\
 	VTEST_DEFINE_TEST(60401, &test_deleteRtEccPrivateKey, \
 		"Test v2xSe_deleteRtEccPrivateKey for existing keys")\
 	VTEST_DEFINE_TEST(60501, &test_getRtEccPublicKey, \
@@ -71,6 +73,8 @@
 		"Test v2xSe_generateBaEccKeyPair for keys in full slots")\
 	VTEST_DEFINE_TEST(60604, &test_baKeyCreationSpeed, \
 		"Test speed of base key creation")\
+	VTEST_DEFINE_TEST(60605, &test_generateBaEccKeyPair_empty_sm2, \
+		"Test v2xSe_generateBaEccKeyPair for SM2 keys in empty slots")\
 	VTEST_DEFINE_TEST(60701, &test_deleteBaEccPrivateKey, \
 		"Test v2xSe_deleteBaEccPrivateKey for existing keys")\
 	VTEST_DEFINE_TEST(60801, &test_getBaEccPublicKey, \
@@ -86,10 +90,12 @@ void test_generateMaEccKeyPair(void);
 void test_generateMaEccKeyPair_sm2(void);
 void test_getMaEccPublicKey(void);
 void test_generateRtEccKeyPair_empty(void);
+void test_generateRtEccKeyPair_empty_sm2(void);
 void test_generateRtEccKeyPair_overwrite(void);
 void test_deleteRtEccPrivateKey(void);
 void test_getRtEccPublicKey(void);
 void test_generateBaEccKeyPair_empty(void);
+void test_generateBaEccKeyPair_empty_sm2(void);
 void test_generateBaEccKeyPair_overwrite(void);
 void test_deleteBaEccPrivateKey(void);
 void test_getBaEccPublicKey(void);
