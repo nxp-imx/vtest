@@ -51,6 +51,11 @@
 #include "ecdsa.h"
 #include "vtest_async.h"
 
+#ifndef MIN
+/** Compute the minimum value of two numbers */
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
+#endif
+
 static volatile int count_async = ASYNC_COUNT_RESET;
 static volatile int loopCount;
 
@@ -58,10 +63,13 @@ static struct timespec startTime, endTime;
 static long nsMinLatency, nsMaxLatency;
 
 static TypePublicKey_t *pubKeyArray;
+static TypePlainTextMsg_t *msgArray;
 static TypeHash_t *hashArray;
 static TypeSignature_t *sigArray;
 
 static ecdsa_pubkey_t verif_pubkey;
+static uint8_t *verif_msg;
+static size_t verif_msgLen;
 static ecdsa_hash_t verif_hash;
 static ecdsa_sig_t verif_sig;
 
@@ -141,16 +149,47 @@ static uint8_t cannedSigNIST256_S[V2XSE_256_EC_S_SIGN] = {
 #endif
 };
 
+/**
+ * @brief   Create an array of msg values for signature verification
+ *
+ * @param numMsg number of messages to generate
+ *
+ * @return pointer to msg array, or NULL on failure
+ *
+ */
+static TypePlainTextMsg_t *createMsgArray(uint32_t numMsg)
+{
+	uint32_t i;
+	TypeSW_t hsmStatusCode;
+	TypePlainTextMsg_t *msgArray;
+
+	/* Generate random messages to hash */
+	msgArray = calloc(numMsg, sizeof(TypePlainTextMsg_t));
+	if (!msgArray)
+		return NULL;
+
+	for (i = 0; i < numMsg; i++) {
+		if (v2xSe_getRandomNumber(MIN(V2XSE_MAX_RND_NUM_SIZE,
+				sizeof(TypePlainTextMsg_t)), &hsmStatusCode,
+				(TypeRandomNumber_t *)msgArray[i].data)) {
+			free(msgArray);
+			msgArray = NULL;
+			return NULL;
+		}
+	}
+	return msgArray;
+}
 
 /**
  * @brief   Create an array of hash values for signature generation
  *
  * @param numHash number of hashes to generate
+ * @param msgArray array of msg values to hash (optional)
  *
  * @return pointer to hash array, or NULL on failure
  *
  */
-static TypeHash_t *createHashArray(uint32_t numHash)
+static TypeHash_t *createHashArray(uint32_t numHash, TypePlainTextMsg_t *msgArray)
 {
 	uint32_t i;
 	TypeSW_t hsmStatusCode;
@@ -160,13 +199,38 @@ static TypeHash_t *createHashArray(uint32_t numHash)
 	if (!hashArray)
 		return NULL;
 
-	for (i = 0; i < numHash; i++) {
-		if (v2xSe_getRandomNumber(sizeof(TypeHash_t), &hsmStatusCode,
-				(TypeRandomNumber_t *)hashArray[i].data)) {
-			free(hashArray);
+	if (!msgArray) {
+		/* Generate random hashes to sign */
+		for (i = 0; i < numHash; i++) {
+			if (v2xSe_getRandomNumber(sizeof(TypeHash_t), &hsmStatusCode,
+					(TypeRandomNumber_t *)hashArray[i].data)) {
+				free(hashArray);
+				return NULL;
+			}
+		}
+	} else {
+		/* Compute hash value from message */
+
+		/* Set up system for hash computation */
+		if (ecdsa_open_SMx()) {
+			VTEST_FLAG_CONF();
+			return NULL;
+		}
+		for (i = 0; i < numHash; i++) {
+			if (ecdsa_sha256((const void *)msgArray[i].data,
+					sizeof(msgArray[i].data),
+					(ecdsa_hash_t)hashArray[i].data)) {
+				ecdsa_close();
+				free(hashArray);
+				return NULL;
+			}
+		}
+		if (ecdsa_close()) {
+			VTEST_FLAG_CONF();
 			return NULL;
 		}
 	}
+
 	return hashArray;
 }
 
@@ -349,7 +413,7 @@ static uint32_t populateTestData(uint32_t testType)
 	/* Generate keys to sign with - all tests need this */
 	pubKeyArray = createPubKeyArray(NUM_KEYS_PERF_TESTS,
 							V2XSE_CURVE_NISTP256);
-	VTEST_CHECK_RESULT((pubKeyArray == 0), 0);
+	VTEST_CHECK_RESULT((!pubKeyArray), 0);
 	if (!pubKeyArray)
 		goto fail;
 
@@ -368,12 +432,21 @@ static uint32_t populateTestData(uint32_t testType)
 		numElements = SIG_LATENCY_GEN_NUM;
 		break;
 	default:
-		goto fail_hash;
+		goto fail_num;
 	}
 
-	/* Generate random hashes to sign */
-	hashArray = createHashArray(numElements);
-	VTEST_CHECK_RESULT((hashArray == 0), 0);
+	/* Generate messages to verify */
+	if ((testType == TEST_TYPE_SIG_VERIF_RATE) ||
+			(testType == TEST_TYPE_SIG_VERIF_LATENCY)) {
+		msgArray = createMsgArray(numElements);
+		VTEST_CHECK_RESULT((!msgArray), 0);
+		if (!msgArray)
+			goto fail_msg;
+	}
+
+	/* Generate hash to sign */
+	hashArray = createHashArray(numElements, msgArray);
+	VTEST_CHECK_RESULT((!hashArray), 0);
 	if (!hashArray)
 		goto fail_hash;
 
@@ -384,7 +457,7 @@ static uint32_t populateTestData(uint32_t testType)
 
 	/* Generate signatures to verify */
 	sigArray = createSigArray(numElements, hashArray, NUM_KEYS_PERF_TESTS);
-	VTEST_CHECK_RESULT((sigArray == 0), 0);
+	VTEST_CHECK_RESULT((!sigArray), 0);
 	if (!sigArray)
 		goto fail_sig;
 
@@ -392,6 +465,8 @@ static uint32_t populateTestData(uint32_t testType)
 	/* Reverse endianness for ECDSA sig verification */
 	reversePubKeyEndianness(pubKeyArray, NUM_KEYS_PERF_TESTS,
 						V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	/* TODO, if needed: */
+	reverseMsgEndianness(msgArray, ...);
 	reverseHashEndianness(hashArray, numElements,
 						V2XSE_256_EC_HASH_SIZE);
 	reverseSigEndianness(sigArray, numElements, V2XSE_256_EC_R_SIGN);
@@ -401,6 +476,10 @@ static uint32_t populateTestData(uint32_t testType)
 fail_sig:
 	free(hashArray);
 fail_hash:
+	free(msgArray);
+	msgArray = NULL;
+fail_msg:
+fail_num:
 	deletePubKeyArray(pubKeyArray, NUM_KEYS_PERF_TESTS);
 fail:
 	retVal = VTEST_FAIL;
@@ -423,8 +502,11 @@ static void freeTestData(uint32_t testType)
 		free(hashArray);
 	}
 	if ((testType == TEST_TYPE_SIG_VERIF_RATE) ||
-			(testType == TEST_TYPE_SIG_VERIF_LATENCY))
+			(testType == TEST_TYPE_SIG_VERIF_LATENCY)) {
 		free(sigArray);
+		free(msgArray);
+		msgArray = NULL;
+	}
 }
 
 /**
@@ -446,8 +528,8 @@ static void signatureVerificationCallback_rate(void *sequence_number,
 		SETUP_ECDSA_SIG_VERIF_PTRS(loopCount);
 		/* Launch next loop */
 		VTEST_CHECK_RESULT_ASYNC_INC(
-			ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
-				verif_hash, verif_sig, 0,
+			ecdsa_verify_signature_of_message(ECDSA_CURVE_NISTP256,
+				verif_pubkey, verif_msg, verif_msgLen, verif_sig, 0,
 				signatureVerificationCallback_rate,
 				(void *)0),
 			ECDSA_NO_ERROR, count_async);
@@ -501,8 +583,8 @@ static void signatureVerificationCallback_latency(void *sequence_number,
 			return;
 		}
 		VTEST_CHECK_RESULT_ASYNC_INC(
-			ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
-				verif_hash, verif_sig, 0,
+			ecdsa_verify_signature_of_message(ECDSA_CURVE_NISTP256,
+				verif_pubkey, verif_msg, verif_msgLen, verif_sig, 0,
 				signatureVerificationCallback_latency, (void *)0),
 			ECDSA_NO_ERROR, count_async);
 	}
@@ -566,8 +648,8 @@ void test_sigVerifRate(void)
 
 	/* Start verification loops */
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
-			verif_hash, verif_sig, 0,
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_NISTP256,
+			verif_pubkey, verif_msg, verif_msgLen, verif_sig, 0,
 			signatureVerificationCallback_rate, (void *)0),
 		ECDSA_NO_ERROR, count_async);
 	/* Wait for end of loop */
@@ -704,8 +786,8 @@ void test_sigVerifLatency(uint32_t testType)
 
 	/* Start verification loops */
 	VTEST_CHECK_RESULT_ASYNC_INC(
-		ecdsa_verify_signature(ECDSA_CURVE_NISTP256, verif_pubkey,
-			verif_hash, verif_sig, 0,
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_NISTP256,
+			verif_pubkey, verif_msg, verif_msgLen, verif_sig, 0,
 			signatureVerificationCallback_latency, (void *)0),
 		ECDSA_NO_ERROR, count_async);
 

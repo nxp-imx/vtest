@@ -76,6 +76,8 @@ void test_sigGenLatencyUnloaded(void);
 #define SIG_RATE_VERIF_NUM 5000l
 /** Signature verification rate pass/fail threshold */
 #define SIG_VERIF_RATE_THRESHOLD	2500
+/** Number of bytes used for the message for the verification rate test */
+#define SIG_VERIF_RATE_MSG_SIZE		300
 
 /** Number of signatures generated during signature generation rate test */
 #define SIG_RATE_GEN_NUM 400l
@@ -114,7 +116,8 @@ void test_sigGenLatencyUnloaded(void);
 do {									\
 	verif_pubkey.x = pubKeyArray[(loop - 1) % NUM_KEYS_PERF_TESTS].x;\
 	verif_pubkey.y = pubKeyArray[(loop - 1) % NUM_KEYS_PERF_TESTS].y;\
-	verif_hash = hashArray[loop - 1].data;				\
+	verif_msg = msgArray[loop - 1].data;				\
+	verif_msgLen = sizeof(msgArray[loop - 1].data);			\
 	verif_sig.r = sigArray[loop - 1].r;				\
 	verif_sig.s = sigArray[loop - 1].s;				\
 } while (0)
@@ -128,3 +131,10 @@ do {									\
 } while (0)
 
 #endif
+
+/** This structure holds plain text data (input message) */
+typedef struct
+{
+	/** Plain text data */
+	uint8_t data[SIG_VERIF_RATE_MSG_SIZE];
+} TypePlainTextMsg_t;
