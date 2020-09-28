@@ -61,6 +61,8 @@
 		"Test latency of signature generation")\
 	VTEST_DEFINE_TEST(130502, &test_sigGenLatencyUnloaded, \
 		"Test latency of signature generation")\
+	VTEST_DEFINE_TEST(140201, &test_sigGenVerifRate, \
+		"Test rate of parallel signature verifications / generations")\
 
 void test_sigVerifRate(void);
 void test_sigGenRate(void);
@@ -68,6 +70,7 @@ void test_sigVerifLatencyLoaded(void);
 void test_sigVerifLatencyUnloaded(void);
 void test_sigGenLatencyLoaded(void);
 void test_sigGenLatencyUnloaded(void);
+void test_sigGenVerifRate(void);
 
 /** Number of keys to use for signing in performance tests */
 #define NUM_KEYS_PERF_TESTS	5
@@ -96,6 +99,9 @@ void test_sigGenLatencyUnloaded(void);
 #define SIG_VERIF_LATENCY_THRESHOLD	10.0f
 /** Signature generation latency pass/fail threshold */
 #define SIG_GEN_LATENCY_THRESHOLD	10.0f
+
+/** Time duration of parallel signature generation / verification test */
+#define SIG_GEN_VERIF_TIME_SECONDS 10
 
 /** Test type - sig verif rate */
 #define TEST_TYPE_SIG_VERIF_RATE	0

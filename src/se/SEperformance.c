@@ -37,13 +37,14 @@
  *
  * @file SEperformance.c
  *
- * @brief Tests for SE Performance (requirements R13.*)
+ * @brief Tests for SE Performance (requirements R13.* and R14.*)
  *
  */
 
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include <v2xSe.h>
 #include "vtest.h"
 #include "SEmisc.h"
@@ -1008,4 +1009,228 @@ void test_sigGenLatencyLoaded(void)
 void test_sigGenLatencyUnloaded(void)
 {
 	test_sigGenLatency(UNLOADED_TEST);
+}
+
+
+static uint8_t *message = (uint8_t *)
+"To be, or not to be, that is the question,\n"
+"Whether 'tis nobler in the mind to suffer\n"
+"The slings and arrows of outrageous fortune,\n"
+"Or to take arms against a sea of troubles,\n"
+"And by opposing end them? To die: to sleep;\n"
+"No more; and by a sleep to say we end\n"
+"The heart-ache and the thousand natural shoc\n";
+/** Length of message used for performance tests */
+#define MESSAGE_LEN strlen((char *)message)
+
+static TypeHash_t testHash;
+static uint8_t ecdsa_x[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+static uint8_t ecdsa_y[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+static uint8_t ecdsa_r[V2XSE_384_EC_R_SIGN];
+static uint8_t ecdsa_s[V2XSE_384_EC_S_SIGN];
+static long nVerifs;	/* number of sig verifs performed */
+static long nsSpentVerifs; /* elapsed time since begining of verif test */
+
+/**
+ * @brief Test rate of signature verification
+ *
+ * @param[in]  sequence_number       sequence operation id (not used)
+ * @param[out] ret                   returned value by the ECDSA dispatcher
+ * @param[out] verification_result   verification result
+ *
+ */
+static void signatureVerificationCallback(void *sequence_number,
+	int ret,
+	ecdsa_verification_result_t verification_result)
+{
+	struct timespec currTime;
+
+	/* One more signature verification performed */
+	nVerifs++;
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+
+	/* Check correctness of the verification operation */
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
+
+	/* Check if test duration has been reached */
+	if (clock_gettime(CLOCK_BOOTTIME, &currTime) == -1)
+		return;
+	CALCULATE_TIME_DIFF_NS(startTime, currTime, nsSpentVerifs);
+	if (nsSpentVerifs >= SIG_GEN_VERIF_TIME_SECONDS * 1e9) {
+		/* Test is over: set loopCount to 0 to terminate the loop */
+		loopCount = 0;
+		return;
+	}
+
+	/* Perform another signature verification */
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_NISTP256,
+			verif_pubkey, message, MESSAGE_LEN, verif_sig, 0,
+			signatureVerificationCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+}
+
+/**
+ * @brief Test rate of signature verification
+ *
+ * @param ptr not used
+ *
+ */
+static void *verif_thread(void *ptr)
+{
+	long sigVerifRate;
+
+	/*
+	 * Count the number of signature verifications that can be perfomed
+	 * during the test duration.
+	 * Counter variable is incremented in the callback function.
+	 */
+	nVerifs = 0;
+	loopCount = 100000000;
+	/*
+	 * loopCount: number of signatures high enough not to be reached.
+	 *            Time elapsed will be used to stop the verification loop.
+	 */
+	/* Perform signature verification */
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_NISTP256,
+			verif_pubkey, message, MESSAGE_LEN, verif_sig, 0,
+			signatureVerificationCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+
+	/* Wait for signature verification loop completion */
+	VTEST_CHECK_RESULT_ASYNC_LOOP(count_async, loopCount);
+
+	VTEST_LOG("Elapsed time for %ld signature verifications: %ld ms\n",
+			nVerifs, nsSpentVerifs / 1000000);
+	sigVerifRate = nVerifs * 1000000000 / nsSpentVerifs;
+	VTEST_LOG("Signature verification rate: %ld verifs/sec (expect %d)\n",
+			sigVerifRate, SIG_VERIF_RATE_THRESHOLD);
+
+	/* Compare to signature verification requirement */
+	VTEST_CHECK_RESULT(sigVerifRate < SIG_VERIF_RATE_THRESHOLD, 0);
+
+	return NULL;
+}
+
+/**
+ *
+ * @brief Test rate of signature generation / verification
+ *
+ * This function starts a thread to test the following in parallel:
+ * o signature generation rate
+ * o signature verification rate
+ *
+ */
+void test_sigGenVerifRate(void)
+{
+	int ret;
+	long n, nsSpent, sigGenRate;
+	pthread_t thread_verif;
+	TypeSW_t hsmStatusCode;
+	TypePublicKey_t pubKey;
+	TypeSignature_t signature;
+	struct timespec currTime;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Set up pub key and signature structures for ECDSA verifications */
+	verif_pubkey.x = ecdsa_x;
+	verif_pubkey.y = ecdsa_y;
+	verif_sig.r    = ecdsa_r;
+	verif_sig.s    = ecdsa_s;
+
+	/* Use ECDSA to verify signature */
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+
+	/* Move to ACTIVATED state, normal operating mode */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_EU), VTEST_PASS);
+
+	/* Generate ECC key pair */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(SLOT_ZERO,
+			V2XSE_CURVE_NISTP256, &hsmStatusCode, &pubKey),
+		V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert public key for ECSDA verification */
+	convertEndianness(pubKey.x, ecdsa_x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	convertEndianness(pubKey.y, ecdsa_y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#else
+	memcpy(ecdsa_x, pubKey.x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	memcpy(ecdsa_y, pubKey.y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#endif
+
+	/* Calculate digest value of test message */
+	VTEST_CHECK_RESULT(ecdsa_sha256(message, MESSAGE_LEN, testHash.data),
+			ECDSA_NO_ERROR);
+
+	/* Calculate a signature to feed the verification thread */
+	VTEST_CHECK_RESULT(v2xSe_createRtSign(SLOT_ZERO,
+			&testHash, &hsmStatusCode, &signature),
+			V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert signature for ECDSA verification */
+	convertEndianness(signature.r, ecdsa_r, V2XSE_256_EC_R_SIGN);
+	convertEndianness(signature.s, ecdsa_s, V2XSE_256_EC_S_SIGN);
+#else
+	memcpy(ecdsa_r, signature.r, V2XSE_256_EC_R_SIGN);
+	memcpy(ecdsa_s, signature.s, V2XSE_256_EC_S_SIGN);
+#endif
+
+	/* Get test starting time */
+	if (clock_gettime(CLOCK_BOOTTIME, &startTime) == -1) {
+		VTEST_FLAG_CONF();
+		goto end;
+	}
+
+	/* Create signature verification thread */
+	ret = pthread_create(&thread_verif, NULL, verif_thread, NULL);
+	if (ret) {
+		VTEST_LOG("Could not create thread for signature verification\n");
+		VTEST_FLAG_CONF();
+		goto end;
+	}
+
+	/*
+	 * Count the number of signature generations that can be perfomed during
+	 * the test duration.
+	 */
+	n = 0;
+	do {
+		/* Perform a signature generation */
+		VTEST_CHECK_RESULT(v2xSe_createRtSign(SLOT_ZERO,
+				&testHash, &hsmStatusCode, &signature),
+				V2XSE_SUCCESS);
+		n++;
+
+		if (clock_gettime(CLOCK_BOOTTIME, &currTime) == -1) {
+			VTEST_FLAG_CONF();
+			goto end;
+		}
+		CALCULATE_TIME_DIFF_NS(startTime, currTime, nsSpent);
+	} while (nsSpent < SIG_GEN_VERIF_TIME_SECONDS * 1e9);
+
+	VTEST_LOG("Elapsed time for %ld signature generations: %ld ms\n",
+			n, nsSpent / 1000000);
+	sigGenRate = n * 1000000000 / nsSpent;
+	VTEST_LOG("Signature generation rate: %ld gens/sec (expect %d)\n",
+			sigGenRate, SIG_GEN_RATE_THRESHOLD);
+
+	/* Compare to signature generation requirement */
+	VTEST_CHECK_RESULT(sigGenRate < SIG_GEN_RATE_THRESHOLD, 0);
+
+	/* Wait for verification thread's completion */
+	pthread_join(thread_verif, NULL);
+
+end:
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO,
+				&hsmStatusCode), V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+	/* Close ecdsa session */
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
