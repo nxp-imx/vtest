@@ -526,6 +526,72 @@ void test_generateRtEccKeyPair_empty_sm2(void)
 
 /**
  *
+ * @brief Test v2xSe_generateRtEccKeyPair for SM4 keys in empty slots
+ *
+ * This function tests v2xSe_generateRtEccKeyPair for keys in empty slots
+ * The following behaviours are tested:
+ *  - Rt key can be generated and retrieved for CN applet
+ *  - Rt key can be generated and retrieved in slot 0
+ *  - Rt key can be generated and retrieved in non-zero slot
+ *  - Rt key can be generated and retrieved in max slot
+ *
+ */
+void test_generateRtEccKeyPair_empty_sm4(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey_dummy;
+	TypeSymmetricKeyId_t symmetricKeyId;
+	TypeInformation_t seInfo;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+/* Test Rt key can be generated and retrieved for CN applet */
+/* Test Rt key for curve V2XSE_SYMMK_SM4_128 can be generated and retrieved */
+/* Test Rt key can be generated and retrieved in slot 0 */
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+	/* Get SE info, to know max data slot available */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo), V2XSE_SUCCESS);
+	/* Check that test constant is in correct range */
+	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
+	/* Create Rt key */
+	VTEST_CHECK_RESULT(v2xSe_generateRtSymmetricKey(SLOT_ZERO,
+				V2XSE_SYMMK_SM4_128, &statusCode), V2XSE_SUCCESS);
+	/* Ensure that Rt public key does not exist */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
+				&symmetricKeyId, &pubKey_dummy), V2XSE_FAILURE);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtSymmetricKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+
+/* Test Rt key can be generated and retrieved in non-zero slot */
+	/* Create Rt key */
+	VTEST_CHECK_RESULT(v2xSe_generateRtSymmetricKey(NON_ZERO_SLOT,
+				V2XSE_SYMMK_SM4_128, &statusCode), V2XSE_SUCCESS);
+	/* Ensure that Rt public key does not exist */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(NON_ZERO_SLOT, &statusCode,
+				&symmetricKeyId, &pubKey_dummy), V2XSE_FAILURE);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtSymmetricKey(NON_ZERO_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Test Rt key can be generated and retrieved in max slot */
+	/* Create Rt key */
+	VTEST_CHECK_RESULT(v2xSe_generateRtSymmetricKey(MAX_RT_SLOT,
+				V2XSE_SYMMK_SM4_128, &statusCode), V2XSE_SUCCESS);
+	/* Ensure that Rt public key does not exist */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
+				&symmetricKeyId, &pubKey_dummy), V2XSE_FAILURE);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtSymmetricKey(MAX_RT_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
  * @brief Test v2xSe_generateRtEccKeyPair for keys in full slots
  *
  * This function tests v2xSe_generateRtEccKeyPair for keys in full slots

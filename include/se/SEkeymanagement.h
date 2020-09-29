@@ -65,6 +65,8 @@
 		"Test speed of run time key creation")\
 	VTEST_DEFINE_TEST(60305, &test_generateRtEccKeyPair_empty_sm2, \
 		"Test v2xSe_generateRtEccKeyPair for SM2 keys in empty slots")\
+	VTEST_DEFINE_TEST(60306, &test_generateRtEccKeyPair_empty_sm4, \
+		"Test v2xSe_generateRtSymmetricKey for SM4 keys in empty slots")\
 	VTEST_DEFINE_TEST(60401, &test_deleteRtEccPrivateKey, \
 		"Test v2xSe_deleteRtEccPrivateKey for existing keys")\
 	VTEST_DEFINE_TEST(60501, &test_getRtEccPublicKey, \
@@ -98,6 +100,7 @@ void test_getMaEccPublicKey(void);
 void test_getMaEccPublicKey_sm2(void);
 void test_generateRtEccKeyPair_empty(void);
 void test_generateRtEccKeyPair_empty_sm2(void);
+void test_generateRtEccKeyPair_empty_sm4(void);
 void test_generateRtEccKeyPair_overwrite(void);
 void test_deleteRtEccPrivateKey(void);
 void test_getRtEccPublicKey(void);
