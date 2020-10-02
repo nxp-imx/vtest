@@ -510,6 +510,8 @@ void ecc_test_sm2_signature_verification(void)
 	ecdsa_hash_t hash;
 	ecdsa_sig_t sig;
 
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
 	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 
 	/* Positive verification test SM2 256 */
@@ -536,6 +538,8 @@ void ecc_test_sm2_signature_verification_message(void)
 {
 	ecdsa_pubkey_t pubKey;
 	ecdsa_sig_t sig;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 
@@ -564,6 +568,8 @@ void ecc_test_sm2_signature_verification_negative(void)
 	ecdsa_pubkey_t pubKey;
 	ecdsa_hash_t hash;
 	ecdsa_sig_t sig;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 
@@ -638,6 +644,8 @@ void ecc_test_pubkey_decompression_sm2(void)
 	ecdsa_pubkey_t pubKey;
 	ecdsa_curveid_t curveID;
 
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
 	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 
 	/* Positive key decompression test SM2 */
@@ -707,6 +715,8 @@ void ecc_test_pubkey_decompression_sm2_negative(void)
 {
 	ecdsa_pubkey_t pubKey;
 	ecdsa_curveid_t curveID;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 
@@ -968,6 +978,8 @@ void ecc_test_sm3(void)
 {
 	uint8_t sm3_got[LENGTH_DOMAIN_PARAMS_256];
 
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
 	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(ecdsa_sm3((const void *) test_hash_msg,
 		HASH_MSG_SIZE, sm3_got), ECDSA_NO_ERROR);
@@ -986,6 +998,8 @@ void ecc_test_sm3_negative(void)
 {
 	uint8_t sm3_got[LENGTH_DOMAIN_PARAMS_256];
 
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
 	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(ecdsa_sm3((const void *) test_hash_msg_neg,
 		HASH_MSG_SIZE, sm3_got), ECDSA_NO_ERROR);
@@ -1003,6 +1017,8 @@ void ecc_test_sm3_negative(void)
 void ecc_test_sm3_invalid(void)
 {
 	uint8_t sm3_got[LENGTH_DOMAIN_PARAMS_256];
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	/* Invalid state test */
 	VTEST_CHECK_RESULT(ecdsa_sm3((const void *) test_hash_msg,

@@ -44,6 +44,8 @@
 #ifndef VTEST_H
 #define VTEST_H
 
+#include <stdint.h>
+
 #define BEFORE_FIRST_TEST	(0)
 #define AFTER_LAST_TEST		(1000000)
 
@@ -145,5 +147,21 @@ typedef struct {
 } testEntry_t;
 
 #define ECC_PATTERNS_BIG_ENDIAN
+
+/**
+ * @brief seco-libs function to determine if V2X HW is present
+ *
+ * @return 1 if V2X HW is present, 0 otherwise
+ */
+uint32_t seco_os_abs_has_v2x_hw(void);
+/* Flag CONF and exit test if V2X HW is not present in SoC */
+#define VTEST_RETURN_CONF_IF_NO_V2X_HW()	\
+    do {					\
+        if (!seco_os_abs_has_v2x_hw()) {	\
+            VTEST_LOG("CONF: No V2X HW found");	\
+            VTEST_FLAG_CONF();			\
+            return;				\
+        }					\
+    } while (0)
 
 #endif
