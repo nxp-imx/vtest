@@ -212,7 +212,7 @@ static TypeHash_t *createHashArray(uint32_t numHash, TypePlainTextMsg_t *msgArra
 		/* Compute hash value from message */
 
 		/* Set up system for hash computation */
-		if (ecdsa_open_SMx()) {
+		if (ecdsa_open()) {
 			VTEST_FLAG_CONF();
 			return NULL;
 		}
@@ -632,7 +632,7 @@ void test_sigVerifRate(void)
 		return;
 
 	/* Set up system for signature verification */
-	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 	loopCount = SIG_RATE_VERIF_NUM;
 
 	/* Setup ECDSA variables to point to first data to verify */
@@ -769,7 +769,7 @@ void test_sigVerifLatency(uint32_t testType)
 	}
 
 	/* Set up system for signature verification */
-	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 	loopCount = SIG_LATENCY_VERIF_NUM;
 
 	/* Setup ECDSA variables to point to first data to verify */
@@ -898,7 +898,7 @@ void test_sigGenLatency(uint32_t testType)
 
 	if (testType == LOADED_TEST) {
 		/* Set up for parallel signature verification */
-		VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+		VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 		/*
 		 * Assume sig verif is not 10 times faster than sig gen,
 		 * so loop count below will keep the verifs running during

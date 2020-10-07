@@ -512,7 +512,7 @@ void ecc_test_sm2_signature_verification(void)
 
 	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
-	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Positive verification test SM2 256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_sm2;
@@ -541,7 +541,7 @@ void ecc_test_sm2_signature_verification_message(void)
 
 	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
-	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Positive verification test SM2 256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_sm2;
@@ -571,7 +571,7 @@ void ecc_test_sm2_signature_verification_negative(void)
 
 	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
-	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Negative verification test SM2 256 */
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_sm2;
@@ -646,7 +646,7 @@ void ecc_test_pubkey_decompression_sm2(void)
 
 	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
-	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Positive key decompression test SM2 */
 	curveID = ECDSA_CURVE_SM2P256;
@@ -718,7 +718,7 @@ void ecc_test_pubkey_decompression_sm2_negative(void)
 
 	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
-	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 
 	/* Negative key decompression test SM2 */
 	curveID = ECDSA_CURVE_SM2P256;
@@ -980,7 +980,7 @@ void ecc_test_sm3(void)
 
 	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
-	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(ecdsa_sm3((const void *) test_hash_msg,
 		HASH_MSG_SIZE, sm3_got), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(memcmp((const void *) test_sm3_exp,
@@ -1000,7 +1000,7 @@ void ecc_test_sm3_negative(void)
 
 	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
-	VTEST_CHECK_RESULT(ecdsa_open_SMx(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(ecdsa_sm3((const void *) test_hash_msg_neg,
 		HASH_MSG_SIZE, sm3_got), ECDSA_NO_ERROR);
 	VTEST_CHECK_RESULT(!memcmp((const void *) test_sm3_exp,
