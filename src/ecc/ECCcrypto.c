@@ -270,7 +270,7 @@ static void my_ecdsa_ReconPubKeyCallback_negative(void *callbackData,
 	/* Use callback data to store curve id */
 	curveID = *(ecdsa_curveid_t *) callbackData;
 
-	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_EXECUTER_ERROR, count_async);
 
 	switch (curveID) {
 
