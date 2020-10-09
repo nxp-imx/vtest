@@ -154,14 +154,18 @@ typedef struct {
  * @return 1 if V2X HW is present, 0 otherwise
  */
 uint32_t seco_os_abs_has_v2x_hw(void);
-/* Flag CONF and exit test if V2X HW is not present in SoC */
-#define VTEST_RETURN_CONF_IF_NO_V2X_HW()	\
+/* Flag CONF and exit test whether the V2X HW is present or not in SoC */
+#define VTEST_RETURN_CONF_IF_V2X_HW_IS(present)	\
     do {					\
-        if (!seco_os_abs_has_v2x_hw()) {	\
-            VTEST_LOG("CONF: No V2X HW found");	\
+        if (!(present) == !seco_os_abs_has_v2x_hw()) {	\
+            VTEST_LOG("CONF: wrong V2X HW configuration");	\
             VTEST_FLAG_CONF();			\
             return;				\
         }					\
     } while (0)
+/* Flag CONF and exit test if V2X HW is not present in SoC */
+#define VTEST_RETURN_CONF_IF_NO_V2X_HW()	VTEST_RETURN_CONF_IF_V2X_HW_IS(0)
+/* Flag CONF and exit test if V2X HW is present in SoC */
+#define VTEST_RETURN_CONF_IF_V2X_HW()	VTEST_RETURN_CONF_IF_V2X_HW_IS(1)
 
 #endif

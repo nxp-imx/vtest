@@ -455,6 +455,8 @@ void test_getKek(void)
 	uint16_t kekSize;
 	TypeSW_t statusCode;
 
+	VTEST_RETURN_CONF_IF_V2X_HW();
+
 	/* Move to ACTIVATED state */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
@@ -531,7 +533,11 @@ void test_injectMaEccPrivateKey(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
-	enum soc_commonKek_idx k = get_soc_commonKek_idx();
+	enum soc_commonKek_idx k;
+
+	VTEST_RETURN_CONF_IF_V2X_HW();
+
+	k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -601,7 +607,11 @@ void test_injectRtEccPrivateKey_empty(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
-	enum soc_commonKek_idx k = get_soc_commonKek_idx();
+	enum soc_commonKek_idx k;
+
+	VTEST_RETURN_CONF_IF_V2X_HW();
+
+	k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -669,7 +679,11 @@ void test_injectRtEccPrivateKey_overwrite(void)
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
-	enum soc_commonKek_idx k = get_soc_commonKek_idx();
+	enum soc_commonKek_idx k;
+
+	VTEST_RETURN_CONF_IF_V2X_HW();
+
+	k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -759,7 +773,11 @@ void test_injectBaEccPrivateKey_empty(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
-	enum soc_commonKek_idx k = get_soc_commonKek_idx();
+	enum soc_commonKek_idx k;
+
+	VTEST_RETURN_CONF_IF_V2X_HW();
+
+	k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -829,7 +847,11 @@ void test_injectBaEccPrivateKey_overwrite(void)
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
-	enum soc_commonKek_idx k = get_soc_commonKek_idx();
+	enum soc_commonKek_idx k;
+
+	VTEST_RETURN_CONF_IF_V2X_HW();
+
+	k = get_soc_commonKek_idx();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
