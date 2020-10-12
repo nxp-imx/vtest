@@ -628,6 +628,8 @@ void test_sigVerifRate(void)
 	long nsTimeDiff;
 	long sigVerifRate;
 
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
 	/* Populate data for test */
 	if (populateTestData(TEST_TYPE_SIG_VERIF_RATE))
 		return;
@@ -690,6 +692,8 @@ void test_sigGenRate(void)
 	int i;
 	long nsTimeDiff;
 	long sigGenRate;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	/* Populate data for test */
 	if (populateTestData(TEST_TYPE_SIG_GEN_RATE))
@@ -755,6 +759,8 @@ void test_sigVerifLatency(uint32_t testType)
 	TypeSW_t statusCode;
 	TypePublicKey_t gen_pubKey;
 	TypeSignature_t gen_signature;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	/* Populate data for test */
 	if (populateTestData(TEST_TYPE_SIG_VERIF_LATENCY))
@@ -889,6 +895,8 @@ void test_sigGenLatency(uint32_t testType)
 	float sigGenMinLatencyMs;
 	float sigGenMaxLatencyMs;
 	long nsLatency;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	/* Populate data for test */
 	if (populateTestData(TEST_TYPE_SIG_GEN_LATENCY))
