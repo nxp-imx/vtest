@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.4)
 
 project (vtest)
 
-set (vtest_VERSION 0.2)
+set (vtest_VERSION 0.3)
 
 find_package(v2xsehsm REQUIRED)
 
