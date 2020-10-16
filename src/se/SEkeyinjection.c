@@ -51,9 +51,6 @@
 #include "SEmisc.h"
 #include "SEkeyinjection.h"
 
-/** Computes the number of elements that an array contains */
-#define NB_ELEM(array) (sizeof((array)) / sizeof((array)[0]))
-
 /**
  * Name of the file containing the signed message used for the
  * KEK key exchange operation
@@ -64,254 +61,23 @@
 /** Length in bytes of the signed message for the KEK key exchange operation */
 #define SIGNED_MESSAGE_KEY_EXCHANGE_SIZE 0x360
 
-/** Length in bytes of the root kek. Must be 32 bytes for HSM */
-#define COMMON_KEK_SIZE		32
-
 /**
  * Length in bytes of the input key area ; it is equal to the size of:
  *  IV (12 bytes) + ciphertext + Tag (16 bytes).
  */
 #define ENCRYPTED_KEY_SIZE	60
 
-/**
- * Known KEK corresponding to the index of the kek_patterns[] array.
- */
-enum soc_commonKek_idx {
-	SOC_COMMON_KEK_QXP = 0,
-	SOC_COMMON_KEK_DXL,
-	SOC_COMMON_KEK_DXL_A1,
-	SOC_COMMON_KEK_DXLPHANTOM,
+/** Common IV used to encrypt keys to be injectedected */
+#define ENCRYPTED_KEY_IV	0x00, 0x01, 0x02, 0x03, \
+				0x04, 0x05, 0x06, 0x07, \
+				0x08, 0x09, 0x0a, 0x0b
 
-	SOC_COMMON_KEK_MAX,
-	SOC_COMMON_KEK_UNKOWN = SOC_COMMON_KEK_MAX
-};
-
-/**
- * Structure describing test key patterns that can be injected in HSM.
- *
- * To securely inject a key in the HSM key store, the latter is encrypted with
- * a Key Encryption Key (KEK). This KEK can either be common or chip unique.
- * For simplicity of testing, the common KEK is used here. Note that this common
- * KEK is different from a SoC family to another (e.g.: i.MX 8DXL vs. i.MX 8QXP).
- *
- * How to add a new common KEK and associated encrypted keys for a new SoC?
- *
- * 1. Common KEK are retrieved using the test_getKek() function (printed out when
- * 'vtest 110902' fails).
- * 2. This common KEK shall be populated in util/v2xEncryptKey.py to be added
- * in the --kek parameter list.
- * 3. Running the tool with this new KEK generates a couple of encrypted keys.
- * 4. Both these encrypted keys as well as the common KEK shall then be added to
- * the kek_patterns[] table to make 'vtest 11' (key injection tests) successful
- * for this new SoC.
- */
-typedef struct {
-	/** common KEK retrieved with the above method for a specific SoC */
-	uint8_t expectedCommonKek[COMMON_KEK_SIZE];
-	/** test key #1 encrypted with expectedCommonKek (NIST-P256, refPubKey1 match) */
-	uint8_t encryptedKey1[ENCRYPTED_KEY_SIZE];
-	/** test key #2 encrypted with expectedCommonKek (NIST-P256, refPubKey2 match) */
-	uint8_t encryptedKey2[ENCRYPTED_KEY_SIZE];
-	/** test key #3 encrypted with expectedCommonKek (BP256R1, refPubKey3 match) */
-	uint8_t encryptedKey3[ENCRYPTED_KEY_SIZE];
-} testKeyInjection_t;
-
-/**
- * kek_patterns[] contains the KEK and the encrypted test keys for known SoCs.
- * It is possible to add new patterns for new SoCs by following the method
- * described in testKeyInjection_t description.
- */
-static testKeyInjection_t kek_patterns[SOC_COMMON_KEK_MAX] = {
-	{ /* i.MX8 QXP common kek */
-		.expectedCommonKek = {
-			0x10, 0x2b, 0xcb, 0xe5, 0x4d, 0xd7, 0xb2, 0x33,
-			0x94, 0x6a, 0xd9, 0xb0, 0xa8, 0x54, 0x27, 0xaf,
-			0xd5, 0x16, 0xf1, 0x8e, 0x6e, 0xa4, 0xf7, 0x4b,
-			0xb8, 0x35, 0x1c, 0x37, 0x26, 0x48, 0xc7, 0xfe
-		},
-		.encryptedKey1 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0x35, 0xf6, 0xd2, 0xa2, 0xda, 0x4c, 0x01, 0xb5,
-			0x3d, 0x5f, 0xd4, 0x8a, 0xba, 0x80, 0x07, 0xe1,
-			0x20, 0x9f, 0xa3, 0x8d, 0x78, 0x2e, 0xee, 0x9c,
-			0xc7, 0x5d, 0x1d, 0xcf, 0x94, 0xc5, 0xba, 0x97,
-			/* Tag Length: 16 */
-			0x75, 0xd7, 0x2a, 0x90, 0xc7, 0x77, 0xaa, 0x4d,
-			0x5f, 0x46, 0x3c, 0x09, 0x9e, 0xc3, 0x45, 0x22,
-		},
-		.encryptedKey2 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0x31, 0x80, 0x73, 0xf8, 0xc5, 0x75, 0x7d, 0xef,
-			0xde, 0x09, 0x23, 0x6a, 0xad, 0x23, 0x42, 0x36,
-			0x5d, 0x31, 0x2c, 0xce, 0xde, 0xc7, 0x68, 0x09,
-			0xf1, 0x4a, 0x5c, 0x9c, 0x5e, 0x28, 0x00, 0x63,
-			/* Tag Length: 16 */
-			0xf3, 0xa5, 0x75, 0x8d, 0xef, 0x16, 0x26, 0x2e,
-			0x4a, 0x52, 0xac, 0x96, 0x21, 0x08, 0x1e, 0x6c
-		},
-		.encryptedKey3 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0xfe, 0xa2, 0x4f, 0xe5, 0xa6, 0x5a, 0x53, 0x27,
-			0x5a, 0x5e, 0x1d, 0xbf, 0x27, 0x33, 0x94, 0x3,
-			0xb2, 0x41, 0x96, 0x7b, 0x67, 0x6f, 0x81, 0xbf,
-			0x1e, 0x47, 0xdd, 0x3f, 0x95, 0x92, 0x9a, 0x99,
-			/* Tag Length: 16 */
-			0xbe, 0x3, 0x50, 0x86, 0x1e, 0xb8, 0xe5, 0xf6,
-			0x81, 0x32, 0x6e, 0x47, 0xf, 0x63, 0x71, 0x70,
-		}
-	},
-	{ /* i.MX8 DXL common kek */
-		.expectedCommonKek = {
-			0xda, 0xec, 0x80, 0xc0, 0x0b, 0xbb, 0x02, 0xba,
-			0xc8, 0x23, 0x1f, 0x72, 0x40, 0x54, 0x5c, 0x5e,
-			0xa4, 0xa8, 0x1d, 0xd9, 0x7d, 0x66, 0x68, 0xf0,
-			0x4e, 0x64, 0x41, 0xe1, 0xb1, 0x93, 0x72, 0x8f
-		},
-		.encryptedKey1 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0x83, 0xf, 0x8, 0x37, 0xfb, 0x9, 0x81, 0xbd,
-			0x8a, 0xd9, 0xfb, 0x21, 0x3b, 0x5a, 0xd6, 0x8a,
-			0x70, 0x51, 0xf1, 0x63, 0xb1, 0xb1, 0xd4, 0xd6,
-			0x5a, 0x4c, 0xdf, 0x5d, 0x64, 0x9f, 0x5e, 0x42,
-			/* Tag Length: 16 */
-			0x15, 0xb3, 0xed, 0xe2, 0x98, 0xe9, 0xf3, 0x2e,
-			0xc4, 0xe4, 0x50, 0xb2, 0xfc, 0x17, 0x17, 0x52,
-		},
-		.encryptedKey2 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0x87, 0x79, 0xa9, 0x6d, 0xe4, 0x30, 0xfd, 0xe7,
-			0x69, 0x8f, 0xc, 0xc1, 0x2c, 0xf9, 0x93, 0x5d,
-			0xd, 0xff, 0x7e, 0x20, 0x17, 0x58, 0x52, 0x43,
-			0x6c, 0x5b, 0x9e, 0xe, 0xae, 0x72, 0xe4, 0xb6,
-			/* Tag Length: 16 */
-			0xcc, 0x36, 0x8b, 0x64, 0x7f, 0x58, 0xb9, 0x70,
-			0xbf, 0xb6, 0xba, 0x1c, 0xa0, 0xf5, 0x27, 0x32
-		},
-		.encryptedKey3 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0x48, 0x5b, 0x95, 0x70, 0x87, 0x1f, 0xd3, 0x2f,
-			0xed, 0xd8, 0x32, 0x14, 0xa6, 0xe9, 0x45, 0x68,
-			0xe2, 0x8f, 0xc4, 0x95, 0xae, 0xf0, 0xbb, 0xf5,
-			0x83, 0x56, 0x1f, 0xad, 0x65, 0xc8, 0x7e, 0x4c,
-			/* Tag Length: 16 */
-			0x7b, 0x67, 0x30, 0xd3, 0x7f, 0x55, 0x2a, 0x74,
-			0xd3, 0xb1, 0x15, 0xa3, 0x3a, 0xd3, 0xed, 0x20,
-		}
-	},
-	{ /* i.MX8 DXL A1 common kek */
-		.expectedCommonKek = {
-			0xb9, 0xf2, 0x0e, 0xce, 0x04, 0x86, 0x51, 0x88,
-			0xa8, 0x1b, 0x8d, 0xd1, 0x34, 0x78, 0x8b, 0x60,
-			0x40, 0x22, 0xe0, 0x64, 0x37, 0xef, 0x8a, 0x6f,
-			0xa3, 0x2e, 0xe0, 0xec, 0xba, 0xcb, 0xef, 0x62
-		},
-		.encryptedKey1 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0xff, 0xdb, 0x13, 0xc1, 0x1c, 0x7f, 0xc6, 0xbe,
-			0x79, 0xba, 0x78, 0xd9, 0x83, 0x36, 0x46, 0xe8,
-			0xcc, 0xfd, 0x0b, 0x3e, 0xec, 0x71, 0x6f, 0x1f,
-			0x69, 0x5d, 0x04, 0x5e, 0x95, 0x7c, 0xf3, 0x7a,
-			/* Tag Length: 16 */
-			0x85, 0x3b, 0x44, 0xae, 0x6f, 0xd2, 0x8e, 0x47,
-			0x75, 0x7d, 0x15, 0x79, 0x7f, 0xc9, 0x56, 0xc8
-
-		},
-		.encryptedKey2 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0xfb, 0xad, 0xb2, 0x9b, 0x03, 0x46, 0xba, 0xe4,
-			0x9a, 0xec, 0x8f, 0x39, 0x94, 0x95, 0x03, 0x3f,
-			0xb1, 0x53, 0x84, 0x7d, 0x4a, 0x98, 0xe9, 0x8a,
-			0x5f, 0x4a, 0x45, 0x0d, 0x5f, 0x91, 0x49, 0x8e,
-			/* Tag Length: 16 */
-			0xca, 0xf4, 0xa4, 0x7d, 0x40, 0x9d, 0xf8, 0x8b,
-			0x77, 0xf9, 0x61, 0x31, 0x90, 0x7f, 0x49, 0x63
-		},
-		.encryptedKey3 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0x34, 0x8f, 0x8e, 0x86, 0x60, 0x69, 0x94, 0x2c,
-			0x1e, 0xbb, 0xb1, 0xec, 0x1e, 0x85, 0xd5, 0x0a,
-			0x5e, 0x23, 0x3e, 0xc8, 0xf3, 0x30, 0x00, 0x3c,
-			0xb0, 0x47, 0xc4, 0xae, 0x94, 0x2b, 0xd3, 0x74,
-			/* Tag Length: 16 */
-			0xfc, 0xac, 0x84, 0x47, 0x8, 0x2d, 0x4d, 0xe1,
-			0x80, 0x66, 0x4b, 0x1c, 0x70, 0xf, 0xe7, 0xb7,
-		}
-	},
-	{ /* i.MX8 DXL EMU C0 common kek */
-		.expectedCommonKek = {
-			0x07, 0xa0, 0xbe, 0x6a, 0x9b, 0xcc, 0xd9, 0x54,
-			0xcf, 0xc7, 0x48, 0xb5, 0xa0, 0xf2, 0x59, 0x2c,
-			0x7d, 0x94, 0xb7, 0xa6, 0x1d, 0xf4, 0x9a, 0x8a,
-			0xdc, 0x2f, 0x53, 0xc5, 0xbd, 0x1d, 0x34, 0xc6
-		},
-		.encryptedKey1 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0xea, 0xae, 0x64, 0x73, 0x51, 0x6a, 0x33, 0xcd,
-			0x13, 0x4c, 0xe4, 0x70, 0x8e, 0x16, 0x01, 0x43,
-			0x67, 0x64, 0x03, 0x19, 0x47, 0x90, 0x9d, 0x8c,
-			0x53, 0x3e, 0x9a, 0x4d, 0xbc, 0xb0, 0xcc, 0x25,
-			/* Tag Length: 16 */
-			0xa3, 0x2d, 0x82, 0x90, 0x0a, 0x2b, 0xdb, 0x3d,
-			0x88, 0xf2, 0x96, 0xc4, 0x21, 0x1b, 0x2e, 0x69
-		},
-		.encryptedKey2 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0xee, 0xd8, 0xc5, 0x29, 0x4e, 0x53, 0x4f, 0x97,
-			0xf0, 0x1a, 0x13, 0x90, 0x99, 0xb5, 0x44, 0x94,
-			0x1a, 0xca, 0x8c, 0x5a, 0xe1, 0x79, 0x1b, 0x19,
-			0x65, 0x29, 0xdb, 0x1e, 0x76, 0x5d, 0x76, 0xd1,
-			/* Tag Length: 16 */
-			0x85, 0xd9, 0x0d, 0x0f, 0xed, 0xdc, 0xbd, 0x84,
-			0x2e, 0xe0, 0x5d, 0x82, 0xb1, 0x3c, 0x8c, 0xe1
-		},
-		.encryptedKey3 = {
-			/* IV */
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b,
-			/* CT Length: 32 */
-			0x21, 0xfa, 0xf9, 0x34, 0x2d, 0x7c, 0x61, 0x5f,
-			0x74, 0x4d, 0x2d, 0x45, 0x13, 0xa5, 0x92, 0xa1,
-			0xf5, 0xba, 0x36, 0xef, 0x58, 0xd1, 0xf2, 0xaf,
-			0x8a, 0x24, 0x5a, 0xbd, 0xbd, 0xe7, 0xec, 0x2b,
-			/* Tag Length: 16 */
-			0xd4, 0x82, 0x2c, 0x7f, 0x83, 0xc5, 0xb1, 0xcc,
-			0x76, 0x52, 0x5b, 0x3f, 0xad, 0x5d, 0xef, 0x6c,
-
-		}
-	},
+/* NIST-P256 */
+static uint8_t refPrivKey1[] = {
+	0x5d, 0xc4, 0x91, 0xfa, 0x8b, 0xd7, 0xbe, 0x62,
+	0xaa, 0x83, 0xa4, 0x2e, 0xf1, 0x1d, 0x80, 0xd8,
+	0x47, 0x2c, 0x5d, 0xe1, 0xbb, 0x76, 0x72, 0xef,
+	0x5d, 0x54, 0x10, 0xb2, 0x17, 0xd5, 0x8f, 0x78
 };
 
 static TypePublicKey_t refPubKey1 = {
@@ -333,6 +99,14 @@ static TypePublicKey_t refPubKey1 = {
 	}
 };
 
+/* NIST-P256 */
+static uint8_t refPrivKey2[] = {
+	0x59, 0xb2, 0x30, 0xa0, 0x94, 0xee, 0xc2, 0x38,
+	0x49, 0xd5, 0x53, 0xce, 0xe6, 0xbe, 0xc5, 0x0f,
+	0x3a, 0x82, 0xd2, 0xa2, 0x1d, 0x9f, 0xf4, 0x7a,
+	0x6b, 0x43, 0x51, 0xe1, 0xdd, 0x38, 0x35, 0x8c
+};
+
 static TypePublicKey_t refPubKey2 = {
 	.x = {
 		0xc8, 0x91, 0xa4, 0x9a, 0xa3, 0x4f, 0xef, 0x2c,
@@ -350,6 +124,14 @@ static TypePublicKey_t refPubKey2 = {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	}
+};
+
+/* BP256R1 */
+static uint8_t refPrivKey3[] = {
+	0x96, 0x90, 0x0c, 0xbd, 0xf7, 0xc1, 0xec, 0xf0,
+	0xcd, 0x82, 0x6d, 0x1b, 0x6c, 0xae, 0x13, 0x3a,
+	0xd5, 0xf2, 0x68, 0x17, 0xa4, 0x37, 0x1d, 0xcc,
+	0x84, 0x4e, 0xd0, 0x42, 0x16, 0x82, 0xaf, 0x76
 };
 
 static TypePublicKey_t refPubKey3 = {
@@ -574,25 +356,6 @@ void test_endKeyInjection(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
-static enum soc_commonKek_idx which_commonKek(uint8_t kek[], uint16_t kekSize)
-{
-	enum soc_commonKek_idx k;
-
-	if (kekSize != COMMON_KEK_SIZE)
-		return SOC_COMMON_KEK_UNKOWN;
-
-	for (k = 0; k < NB_ELEM(kek_patterns); k++)
-		if (!memcmp(kek_patterns[k].expectedCommonKek, kek, kekSize))
-			break;
-
-	return k;
-}
-
-static bool is_a_valid_commonKek(uint8_t kek[], uint16_t kekSize)
-{
-	return SOC_COMMON_KEK_UNKOWN != which_commonKek(kek, kekSize);
-}
-
 /*
  * @brief do_createKek Use key exchange to compute a shared KEK on both sides
  *
@@ -760,29 +523,33 @@ void test_createKek(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
-static enum soc_commonKek_idx get_soc_commonKek_idx(void)
+/*
+ * @brief do_encrypt_key Perform a AES-256 encryption
+ *
+ * This function performs a AES-256 encryption of some data using a AES
+ * key encryption key (KEK).
+ *
+ * @param[in]  kek AES-256 key to be used for the encryption
+ * @param[in]  data Pointer to data to be encrypted (key to inject)
+ * @param[out] out Pointer to a buffer to store the encrypted data
+ * @param[in]  len Pointer to the data lentgh
+ */
+static void do_encrypt_key(uint8_t *kek, uint8_t *data, uint8_t *out, int *len)
 {
-	uint8_t signedMessage[32] = {13};
-	uint8_t commonKek[32];
-	uint16_t kekSize;
-	TypeSW_t statusCode;
+	EVP_CIPHER_CTX *cipher_ctx = NULL;
 
-	/* Move to ACTIVATED state */
-	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
+	/* 256-bit keys for now */
+	VTEST_CHECK_RESULT(*len, 32);
 
-/* Test retrieved common KEK matches expected value */
-	/* Get common KEK */
-	kekSize = sizeof(commonKek);
-	VTEST_CHECK_RESULT(v2xSe_getKek(KEK_TYPE_COMMON, signedMessage,
-		sizeof(signedMessage), commonKek, &kekSize, &statusCode),
-							V2XSE_SUCCESS);
-	/* Verify common KEK is valid */
-	VTEST_CHECK_RESULT(is_a_valid_commonKek(commonKek, kekSize), true);
+/* Encrypt key using KEK passed in parameter */
+	cipher_ctx = EVP_CIPHER_CTX_new();
+	VTEST_CHECK_RESULT(EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_gcm(), NULL, kek, out), 1);
+	VTEST_CHECK_RESULT(EVP_EncryptUpdate(cipher_ctx, &out[12], len, data, *len), 1);
+	VTEST_CHECK_RESULT(EVP_EncryptFinal_ex(cipher_ctx, &out[44], len), 1);
+	VTEST_CHECK_RESULT(EVP_CIPHER_CTX_ctrl(cipher_ctx, EVP_CTRL_GCM_GET_TAG, 16, &out[44]), 1);
 
-/* Go back to init to leave system in known state after test */
-	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
-
-	return which_commonKek(commonKek, kekSize);
+/* Clean up SSL objects and contexts */
+	EVP_CIPHER_CTX_free(cipher_ctx);
 }
 
 /**
@@ -799,11 +566,9 @@ void test_injectMaEccPrivateKey(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
-	enum soc_commonKek_idx k;
-
-	VTEST_RETURN_CONF_IF_V2X_HW();
-
-	k = get_soc_commonKek_idx();
+	uint8_t kek[32];
+	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
+	int enc_len;
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -812,12 +577,16 @@ void test_injectMaEccPrivateKey(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
-	/* Inject MA key (NIST-P256) */
+	/* Create a KEK to encrypt keys to be injectected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
+	/* Encrypt and inject MA key (NIST-P256) */
+	enc_len = sizeof(refPrivKey1);
+	do_encrypt_key(kek, refPrivKey1, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectMaEccPrivateKey(V2XSE_CURVE_NISTP256,
 					&statusCode, &pubKey,
-					kek_patterns[k].encryptedKey1,
-					sizeof(kek_patterns[k].encryptedKey1),
-					KEK_TYPE_COMMON), V2XSE_SUCCESS);
+					enc_key, sizeof(enc_key),
+					KEK_SLOT), V2XSE_SUCCESS);
 
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
@@ -836,12 +605,16 @@ void test_injectMaEccPrivateKey(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
-	/* Inject MA key (BP256R1) */
+	/* Create a KEK to encrypt keys to be injectected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
+	/* Encrypt and inject MA key (BP256R1) */
+	enc_len = sizeof(refPrivKey3);
+	do_encrypt_key(kek, refPrivKey3, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectMaEccPrivateKey(V2XSE_CURVE_BP256R1,
 					&statusCode, &pubKey,
-					kek_patterns[k].encryptedKey3,
-					sizeof(kek_patterns[k].encryptedKey3),
-					KEK_TYPE_COMMON), V2XSE_SUCCESS);
+					enc_key, sizeof(enc_key),
+					KEK_SLOT), V2XSE_SUCCESS);
 
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey3,
@@ -873,11 +646,9 @@ void test_injectRtEccPrivateKey_empty(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
-	enum soc_commonKek_idx k;
-
-	VTEST_RETURN_CONF_IF_V2X_HW();
-
-	k = get_soc_commonKek_idx();
+	uint8_t kek[32];
+	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
+	int enc_len;
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -886,16 +657,19 @@ void test_injectRtEccPrivateKey_empty(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
-	/* Inject RT key (NISTP-256) */
+	/* Create a KEK to encrypt keys to be injectected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
+	/* Encrypt and inject RT key (NISTP-256) */
+	enc_len = sizeof(refPrivKey1);
+	do_encrypt_key(kek, refPrivKey1, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey1,
-		sizeof(kek_patterns[k].encryptedKey1),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
+
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
-
 	/* Retrieve stored RT public key */
 	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
 					&curveId, &pubKey), V2XSE_SUCCESS);
@@ -906,12 +680,12 @@ void test_injectRtEccPrivateKey_empty(void)
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
 								V2XSE_SUCCESS);
 
-	/* Inject RT key (BP256R1) */
+	/* Encrypt and inject RT key (BP256R1) */
+	enc_len = sizeof(refPrivKey3);
+	do_encrypt_key(kek, refPrivKey3, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(SLOT_ZERO,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey3,
-		sizeof(kek_patterns[k].encryptedKey3),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey3,
 						sizeof(TypePublicKey_t)), 0);
@@ -945,11 +719,9 @@ void test_injectRtEccPrivateKey_overwrite(void)
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
-	enum soc_commonKek_idx k;
-
-	VTEST_RETURN_CONF_IF_V2X_HW();
-
-	k = get_soc_commonKek_idx();
+	uint8_t kek[32];
+	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
+	int enc_len;
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -964,22 +736,25 @@ void test_injectRtEccPrivateKey_overwrite(void)
 	/* Check that test constant is in correct range */
 	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
 
+	/* Create a KEK to encrypt keys to be injectected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
 	/* Inject key to overwrite - same type as injected */
+	enc_len = sizeof(refPrivKey1);
+	do_encrypt_key(kek, refPrivKey1, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(NON_ZERO_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey1,
-		sizeof(kek_patterns[k].encryptedKey1),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 	/* Verify public key contents doesn't match ref value */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey, &refPubKey2,
 						sizeof(TypePublicKey_t)), 0);
 
 	/* Inject RT key */
+	enc_len = sizeof(refPrivKey2);
+	do_encrypt_key(kek, refPrivKey2, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(NON_ZERO_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey2,
-		sizeof(kek_patterns[k].encryptedKey2),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey2,
 						sizeof(TypePublicKey_t)), 0);
@@ -991,21 +766,18 @@ void test_injectRtEccPrivateKey_overwrite(void)
 						sizeof(TypePublicKey_t)), 0);
 
 	/* Inject key to overwrite - different type to injected */
+	enc_len = sizeof(refPrivKey1);
+	do_encrypt_key(kek, refPrivKey1, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(MAX_RT_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey2,
-		sizeof(kek_patterns[k].encryptedKey2),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 	/* Verify public key contents doesn't match ref value */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
 	/* Inject RT key */
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(MAX_RT_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey1,
-		sizeof(kek_patterns[k].encryptedKey1),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
-	/* Verify public key contents match expected values */
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
 	/* Retrieve stored RT public key */
@@ -1039,11 +811,9 @@ void test_injectBaEccPrivateKey_empty(void)
 	TypeSW_t statusCode;
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
-	enum soc_commonKek_idx k;
-
-	VTEST_RETURN_CONF_IF_V2X_HW();
-
-	k = get_soc_commonKek_idx();
+	uint8_t kek[32];
+	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
+	int enc_len;
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -1052,12 +822,15 @@ void test_injectBaEccPrivateKey_empty(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
+	/* Create a KEK to encrypt keys to be injectected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
 	/* Inject BA key (NIST-P256) */
+	enc_len = sizeof(refPrivKey1);
+	do_encrypt_key(kek, refPrivKey1, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(SLOT_ZERO,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey1,
-		sizeof(kek_patterns[k].encryptedKey1),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
@@ -1073,11 +846,11 @@ void test_injectBaEccPrivateKey_empty(void)
 								V2XSE_SUCCESS);
 
 	/* Inject RT key (BP256R1) */
+	enc_len = sizeof(refPrivKey3);
+	do_encrypt_key(kek, refPrivKey3, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(SLOT_ZERO,
 		V2XSE_CURVE_BP256R1, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey3,
-		sizeof(kek_patterns[k].encryptedKey3),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey3,
@@ -1113,11 +886,9 @@ void test_injectBaEccPrivateKey_overwrite(void)
 	TypePublicKey_t pubKey;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
-	enum soc_commonKek_idx k;
-
-	VTEST_RETURN_CONF_IF_V2X_HW();
-
-	k = get_soc_commonKek_idx();
+	uint8_t kek[32];
+	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
+	int enc_len;
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -1126,6 +897,9 @@ void test_injectBaEccPrivateKey_overwrite(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
+	/* Create a KEK to encrypt keys to be injectected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
 	/* Get SE info, to know max data slot available */
 	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
 								V2XSE_SUCCESS);
@@ -1133,20 +907,20 @@ void test_injectBaEccPrivateKey_overwrite(void)
 	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
 
 	/* Inject key to overwrite - same type as injected */
+	enc_len = sizeof(refPrivKey1);
+	do_encrypt_key(kek, refPrivKey1, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(NON_ZERO_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey1,
-		sizeof(kek_patterns[k].encryptedKey1),
-		 KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 	/* Verify public key contents doesn't match ref value */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey, &refPubKey2,
 						sizeof(TypePublicKey_t)), 0);
 	/* Inject BA key */
+	enc_len = sizeof(refPrivKey2);
+	do_encrypt_key(kek, refPrivKey2, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(NON_ZERO_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey2,
-		sizeof(kek_patterns[k].encryptedKey2),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey2,
 						sizeof(TypePublicKey_t)), 0);
@@ -1158,20 +932,20 @@ void test_injectBaEccPrivateKey_overwrite(void)
 						sizeof(TypePublicKey_t)), 0);
 
 	/* Inject key to overwrite - different type to injected */
+	enc_len = sizeof(refPrivKey2);
+	do_encrypt_key(kek, refPrivKey2, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(MAX_BA_SLOT,
 		V2XSE_CURVE_BP256T1, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey2,
-		sizeof(kek_patterns[k].encryptedKey2),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 	/* Verify public key contents doesn't match ref value */
 	VTEST_CHECK_RESULT(!memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
 	/* Inject BA key */
+	enc_len = sizeof(refPrivKey1);
+	do_encrypt_key(kek, refPrivKey1, enc_key, &enc_len);
 	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(MAX_BA_SLOT,
 		V2XSE_CURVE_NISTP256, &statusCode, &pubKey,
-		kek_patterns[k].encryptedKey1,
-		sizeof(kek_patterns[k].encryptedKey1),
-		KEK_TYPE_COMMON), V2XSE_SUCCESS);
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
 	/* Verify public key contents match expected values */
 	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey1,
 						sizeof(TypePublicKey_t)), 0);
