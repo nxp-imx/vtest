@@ -134,6 +134,15 @@ seFunctionNameDictionary = {
 	int(0x012C) : "v2xSe_injectMaEccPrivateKey",
 	int(0x012D) : "v2xSe_injectRtEccPrivateKey",
 	int(0x012E) : "v2xSe_injectBaEccPrivateKey",
+	int(0x012F) : "v2xSe_generateRtSymmetricKey",
+	int(0x0130) : "v2xSe_deleteRtSymmetricKey",
+	int(0x0131) : "v2xSe_encryptUsingRtCipher",
+	int(0x0132) : "v2xSe_decryptUsingRtCipher",
+	int(0x0133) : "v2xSe_encryptUsingSm2Eces",
+	int(0x0134) : "v2xSe_decryptUsingRtSm2Eces",
+	int(0x0135) : "v2xSe_decryptUsingMaSm2Eces",
+	int(0x0136) : "v2xSe_decryptUsingBaSm2Eces",
+	int(0x0137) : "v2xSe_sm2_get_z",
 }
 
 ecdsaFunctionNameDictionary = {
@@ -146,7 +155,8 @@ ecdsaFunctionNameDictionary = {
 	int(0x0107) : "ecdsa_reconstruct_public_key",
 	int(0x0108) : "ecdsa_sha256",
 	int(0x0109) : "ecdsa_sha384",
-	int(0x010a) : "ecdsa_sha512",
+	int(0x010A) : "ecdsa_sha512",
+	int(0x010B) : "ecdsa_sm3",
 }
 
 hsmFunctionNameDictionary = {
@@ -183,6 +193,10 @@ hsmFunctionNameDictionary = {
 	int(0x021F) : "hsm_ecies_encryption",
 	int(0x0220) : "hsm_pub_key_recovery",
 	int(0x0221) : "hsm_export_root_key_encryption_key",
+	int(0x0222) : "hsm_open_sm2_eces_service",
+	int(0x0223) : "hsm_close_sm2_eces_service",
+	int(0x0224) : "hsm_sm2_eces_encryption",
+	int(0x0225) : "hsm_sm2_eces_decryption",
 }
 
 systemFunctionNameDictionary = {
