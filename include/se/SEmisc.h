@@ -58,6 +58,8 @@
 #define SLOT_ZERO	0
 /** Index of a non-zero nvm slot */
 #define NON_ZERO_SLOT	87
+/** Index of an nvm slot used for a KEK */
+#define KEK_SLOT	66
 /** Index of last data nvm slot */
 #define MAX_DATA_SLOT	(seInfo.maxDataSlots - 1)
 /** Index of last RT nvm slot */

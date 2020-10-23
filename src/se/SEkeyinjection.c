@@ -41,6 +41,8 @@
  *
  */
 
+#include <openssl/ec.h>
+#include <openssl/evp.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -51,6 +53,16 @@
 
 /** Computes the number of elements that an array contains */
 #define NB_ELEM(array) (sizeof((array)) / sizeof((array)[0]))
+
+/**
+ * Name of the file containing the signed message used for the
+ * KEK key exchange operation
+ */
+#define SIGNED_MESSAGE_KEY_EXCHANGE_FILENAME \
+	"/etc/seco_hsm/key_exchange_kek_gen_en_sign_msg.bin"
+
+/** Length in bytes of the signed message for the KEK key exchange operation */
+#define SIGNED_MESSAGE_KEY_EXCHANGE_SIZE 0x360
 
 /** Length in bytes of the root kek. Must be 32 bytes for HSM */
 #define COMMON_KEK_SIZE		32
@@ -360,6 +372,150 @@ static TypePublicKey_t refPubKey3 = {
 };
 
 /**
+ * This structure describes the format that OpenSLL uses to encode
+ * public keys for 256 bit curves for POINT_CONVERSION_UNCOMPRESSED/HYBRID
+ * formats
+ */
+typedef struct
+{
+	/** Z octet */
+	uint8_t z;
+	/** X coordinate of public key */
+	uint8_t x[V2XSE_256_EC_PUB_KEY_XY_SIZE];
+	/** Y coordinate of public key */
+	uint8_t y[V2XSE_256_EC_PUB_KEY_XY_SIZE];
+} sslPubKey256_t;
+
+/**
+ *
+ * @brief Check whether curveId is 256 bits
+ *
+ * This function checks whether the ECC curve corresponding the the keyType
+ * passed as parameter is 256 bits or not.
+ *
+ * @param curveId ECC curve identifier
+ *
+ * @return 1 if ECC curve is 256 bits, 0 if invalid or not 256 bits
+ *
+ */
+static int32_t is256bitCurve(TypeCurveId_t curveId)
+{
+	int32_t retval = 0;
+
+	switch (curveId) {
+		case V2XSE_CURVE_NISTP256:
+		case V2XSE_CURVE_BP256R1:
+		case V2XSE_CURVE_BP256T1:
+		case V2XSE_CURVE_SM2_256:
+			retval = 1;
+	}
+	return retval;
+}
+
+/**
+ *
+ * @brief Convert public key from OpenSSL to v2xSe API format
+ *
+ * This function converts a public key from OpenSSL to v2xSe API format.
+ * The OpenSSL API format is as follows:
+ *    - POINT_CONVERSION_COMPRESSED:
+ *      the point is encoded as z||x, where the octet z specifies
+ *      which solution of the quadratic equation y is
+ *    - POINT_CONVERSION_UNCOMPRESSED:
+ *      the point is encoded as z||x||y, where z is the octet signifying
+ *      the UNCOMPRESSED form has been used
+ *    - POINT_CONVERSION_HYBRID:
+ *      the point is encoded as z||x||y, where the octet z specifies
+ *      which solution of the quadratic equation y is
+ * The v2xSe API format is as follows for all curve sizes:
+ *  - x in bits 0 - 47, y in bits 48 - 95
+ *  - in case of 256 bit curves, bits 32 - 47 of x and y unused
+ *
+ * @param curveId ECC curve type in V2X SE API format
+ * @param pPublicKeyPlain location of the public key in v2xSe API format
+ * @param pSslKey location of buffer to place public key in OpenSSL API format
+ * @param ssl_conversion controls how an EC_POINT data is encoded
+ *
+ */
+static void convertPublicKeyToV2xApi(TypeCurveId_t curveId,
+		TypePublicKey_t *pPublicKeyPlain, uint8_t *pSslKey,
+		point_conversion_form_t ssl_conversion)
+{
+	sslPubKey256_t *sslApiPtr = (sslPubKey256_t*)pSslKey;
+	int is_not_supported = -1;
+
+	/* TODO Eventually add support for other algo */
+	VTEST_CHECK_RESULT(is256bitCurve(curveId), 1);
+
+	switch (ssl_conversion) {
+		case POINT_CONVERSION_UNCOMPRESSED:
+			VTEST_CHECK_RESULT(sslApiPtr->z,
+						 POINT_CONVERSION_UNCOMPRESSED);
+			/* fall through */
+		case POINT_CONVERSION_HYBRID:
+			memcpy(pPublicKeyPlain->x, sslApiPtr->x,
+						sizeof(sslApiPtr->x));
+			memcpy(pPublicKeyPlain->y, sslApiPtr->y,
+						sizeof(sslApiPtr->y));
+			break;
+		default:
+			/* TODO Eventually add support for compressed point */
+			VTEST_CHECK_RESULT(ssl_conversion, is_not_supported);
+			break;
+	}
+}
+
+/**
+ *
+ * @brief Convert public key from v2xSe to OpenSSL API format
+ *
+ * This function converts a public key from v2xSe to OpenSSL API format.
+ * The v2xSe API format is as follows for all curve sizes:
+ *  - x in bits 0 - 47, y in bits 48 - 95
+ *  - in case of 256 bit curves, bits 32 - 47 of x and y unused
+ * The OpenSSL API format is as follows:
+ *    - POINT_CONVERSION_COMPRESSED:
+ *      the point is encoded as z||x, where the octet z specifies
+ *      which solution of the quadratic equation y is
+ *    - POINT_CONVERSION_UNCOMPRESSED:
+ *      the point is encoded as z||x||y, where z is the octet signifying
+ *      the UNCOMPRESSED form has been used
+ *    - POINT_CONVERSION_HYBRID:
+ *      the point is encoded as z||x||y, where the octet z specifies
+ *      which solution of the quadratic equation y is
+ *
+ * @param curveId ECC curve type in V2X SE API format
+ * @param pPublicKeyPlain location of the public key in v2xSe API format
+ * @param pSslKey location of buffer to place public key in OpenSSL API format
+ * @param ssl_conversion controls how an EC_POINT data is encoded
+ *
+ */
+static void convertPublicKeyToSslApi(TypeCurveId_t curveId,
+		TypePublicKey_t *pPublicKeyPlain, uint8_t *pSslKey,
+		point_conversion_form_t ssl_conversion)
+{
+	sslPubKey256_t *sslApiPtr = (sslPubKey256_t*)pSslKey;
+	int is_not_supported = -1;
+
+	/* TODO Eventually add support for other algo */
+	VTEST_CHECK_RESULT(is256bitCurve(curveId), 1);
+
+	switch (ssl_conversion) {
+		case POINT_CONVERSION_UNCOMPRESSED:
+			sslApiPtr->z = POINT_CONVERSION_UNCOMPRESSED;
+			memcpy(sslApiPtr->x, pPublicKeyPlain->x,
+						sizeof(sslApiPtr->x));
+			memcpy(sslApiPtr->y, pPublicKeyPlain->y,
+						sizeof(sslApiPtr->y));
+			break;
+		default:
+			/* TODO Eventually add support for other conversion forms */
+			VTEST_CHECK_RESULT(ssl_conversion, is_not_supported);
+			break;
+	}
+}
+
+/**
  *
  * @brief Test v2xSe_endKeyInjection for expected behaviour
  *
@@ -437,58 +593,168 @@ static bool is_a_valid_commonKek(uint8_t kek[], uint16_t kekSize)
 	return SOC_COMMON_KEK_UNKOWN != which_commonKek(kek, kekSize);
 }
 
-/**
+/*
+ * @brief do_createKek Use key exchange to compute a shared KEK on both sides
  *
- * @brief Test v2xSe_getKek for expected behaviour
+ * This function performs a key exchange operation between the test application
+ * (initiator) and the HSM (responder) for the Key Exchange Key generation use
+ * case, as described in the seco_libs HSM API.
  *
- * This function tests v2xSe_getKek for expected behaviour
- * The following behaviours are tested:
- *  - common KEK can be retrieved and matches expected value
- *  - unique KEK can be retrieved and does not match common KEK
+ * The KEK is computed on the HSM side and stored in the @kekId RT key slot.
+ * The same KEK is computed as well on the test application side in order to
+ * encrypt keys to be injected in the HSM.
  *
+ * @param[in]  kekId RT slot in which the KEK is saved in the HSM key store
+ * @param[out] kek Pointer to the location where the computed KEK
+ *             must be stored
+ * @param[in]  kek_size Size of the above pointer, in bytes
  */
-void test_getKek(void)
+static void do_createKek(TypeRtKeyId_t kekId,
+			uint8_t *kek, uint32_t kek_size)
 {
-	uint8_t signedMessage[32] = {13};
-	uint8_t commonKek[32] = {0,};
-	uint8_t uniqueKek[32];
-	uint16_t kekSize;
 	TypeSW_t statusCode;
-
-	VTEST_RETURN_CONF_IF_V2X_HW();
+	BN_CTX *bn_ctx = NULL;
+	const EC_GROUP *curve_group = NULL;
+	EC_KEY *local_key = NULL;
+	uint8_t *local_pub_key = NULL;
+	size_t local_pub_key_len;
+	TypePublicKey_t localPubKey = {0, };
+	TypePublicKey_t remotePubKey = {0, };
+	uint8_t remote_pub_key[65];
+	EC_POINT *remote_point = NULL;
+	uint8_t *signed_message;
+	char *file = SIGNED_MESSAGE_KEY_EXCHANGE_FILENAME;
+	FILE *fd;
+	int32_t l = 0;
+	uint8_t *pSignedMessage = NULL;
+	uint16_t signedMessageLength = 0;
+	uint8_t shared_secret[32];
+	uint8_t kdf_input[63];
+	EVP_MD_CTX *kdf_context = NULL;
+	char fixedInput[] = "NXP HSM USER KEY DERIVATION";
+	uint32_t key_size;
 
 	/* Move to ACTIVATED state */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
-/* Test retrieved common KEK matches expected value */
-	/* Get common KEK */
-	kekSize = sizeof(commonKek);
-	VTEST_CHECK_RESULT(v2xSe_getKek(KEK_TYPE_COMMON, signedMessage,
-		sizeof(signedMessage), commonKek, &kekSize, &statusCode),
-							V2XSE_SUCCESS);
-	/* Verify key contents as expected */
-	VTEST_CHECK_RESULT(is_a_valid_commonKek(commonKek, kekSize), true);
-	/* Otherwise print it so it can be easily added for future SoC */
-	if (!is_a_valid_commonKek(commonKek, kekSize)) {
-		int i;
-		printf("ERROR: %s:%d Unknown common KEK (%d bytes):\n",
-			       __FILE__, __LINE__, kekSize);
-			for (i = 0 ; i < kekSize; i++)
-				printf("0x%02x%s", commonKek[i],
-						(i + 1) % 8 ? ", " : "\n");
-		printf("ERROR: If this test is run on a new SoC revision, please"
-			" check testKeyInjection_t comment to add a new KEK and" \
-			" encrypted keys in kek_patterns[].\n");
-	}
+/* Create initiator's keypair with OpenSSL */
+	/* Allocate BIGNUM */
+	bn_ctx = BN_CTX_new();
+	VTEST_CHECK_RESULT(!bn_ctx, 0);
+	/* Create NIST P256 ECC key */
+	local_key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+	VTEST_CHECK_RESULT(!local_key, 0);
+	/* Get curve group */
+	curve_group = EC_KEY_get0_group(local_key);
+	VTEST_CHECK_RESULT(!curve_group, 0);
+	/* Generate initiator's P256 key pair */
+	VTEST_CHECK_RESULT(EC_KEY_generate_key(local_key), 1);
 
-/* Test retrieved unique KEK different from common KEK */
-	/* Get unique KEK */
-	kekSize = sizeof(uniqueKek);
-	VTEST_CHECK_RESULT(v2xSe_getKek(KEK_TYPE_UNIQUE, signedMessage,
-		sizeof(signedMessage)-1, uniqueKek, &kekSize, &statusCode),
+/* Get initiator's public key */
+	/* Get public key length */
+	local_pub_key_len = EC_KEY_key2buf(local_key,
+		       POINT_CONVERSION_UNCOMPRESSED, &local_pub_key, bn_ctx);
+	VTEST_CHECK_RESULT(local_pub_key_len, 65);
+	convertPublicKeyToV2xApi(V2XSE_CURVE_NISTP256, &localPubKey,
+		local_pub_key, POINT_CONVERSION_UNCOMPRESSED);
+
+/* Fetch signed message, if present */
+	signed_message = malloc(SIGNED_MESSAGE_KEY_EXCHANGE_SIZE);
+	VTEST_CHECK_RESULT(!signed_message , 0);
+	fd = fopen(file, "r");
+	if (!fd) {
+		perror("Error reading signed message from file");
+	} else {
+		l = (int32_t)fread(signed_message, 1, SIGNED_MESSAGE_KEY_EXCHANGE_SIZE, fd);
+		if (l != SIGNED_MESSAGE_KEY_EXCHANGE_SIZE) {
+			fprintf(stderr, "%s has the wrong length (%d != %d): ignoring signed message\n",
+					file, l, SIGNED_MESSAGE_KEY_EXCHANGE_SIZE);
+		} else {
+			pSignedMessage = signed_message;
+			signedMessageLength = SIGNED_MESSAGE_KEY_EXCHANGE_SIZE;
+		}
+		VTEST_CHECK_RESULT(fclose(fd), 0);
+	}
+	if (!pSignedMessage)
+		printf("Signed message not sent\n");
+
+/* Perform key exchange with HSM (responder) to get KEK */
+	/*
+	 * Send out initiator's pubkey and retrieve responder's pubkey,
+	 * along with the KEK id that got computed by HSM
+	 */
+	VTEST_CHECK_RESULT(v2xSe_createKek(pSignedMessage, signedMessageLength,
+				&localPubKey, &remotePubKey, kekId, &statusCode),
 							V2XSE_SUCCESS);
-	/* Verify key contents does not match common KEK */
-	VTEST_CHECK_RESULT(is_a_valid_commonKek(uniqueKek, kekSize), false);
+
+/* Create SSL object for HSM public key */
+	/* Convert HSM public key to OpenSSL format */
+	convertPublicKeyToSslApi(V2XSE_CURVE_NISTP256, &remotePubKey,
+		remote_pub_key, POINT_CONVERSION_UNCOMPRESSED);
+	/* Create remote point */
+	remote_point = EC_POINT_new(curve_group);
+	VTEST_CHECK_RESULT(!remote_point, 0);
+	/* Set remote point */
+	VTEST_CHECK_RESULT(EC_POINT_oct2point(curve_group, remote_point,
+					remote_pub_key, 65, bn_ctx), 1);
+
+/* Compute KEK locally */
+	/* Perform ECDH */
+	VTEST_CHECK_RESULT(ECDH_compute_key(shared_secret, sizeof(shared_secret),
+					remote_point, local_key, NULL), 32);
+
+	/*
+	 * Perform KDF to generate the KEK, using the formula:
+	 *
+	 *     kek = SHA_256(counter || Z || fixedInput), where:
+	 *          - counter is the value 1 expressed in 32 bit and in big endian format
+	 *          - Z is the shared secret generated by the DH key-establishment scheme
+	 *          - fixedInput is the literral 'NXP HSM USER KEY DERIVATION'
+	 *            (27 bytes, no null termination).
+	 */
+	kdf_context = EVP_MD_CTX_new();
+	VTEST_CHECK_RESULT(!kdf_context, 0);
+	/* counter: */
+	kdf_input[0] = 0;
+	kdf_input[1] = 0;
+	kdf_input[2] = 0;
+	kdf_input[3] = 1;
+	/* Z: */
+	memcpy(&kdf_input[4], shared_secret, 32);
+	/* fixedInput: */
+	memcpy(&kdf_input[36], fixedInput, 27);
+	/* kek: */
+	key_size = kek_size;
+	VTEST_CHECK_RESULT(EVP_DigestInit_ex(kdf_context, EVP_sha256(), NULL), 1);
+	VTEST_CHECK_RESULT(EVP_DigestUpdate(kdf_context, kdf_input, sizeof(kdf_input)), 1);
+	VTEST_CHECK_RESULT(EVP_DigestFinal_ex(kdf_context, kek, &key_size), 1);
+	VTEST_CHECK_RESULT(key_size, kek_size);
+
+/* Clean up SSL objects and contexts */
+	EVP_MD_CTX_free(kdf_context);
+	EC_POINT_free(remote_point);
+	OPENSSL_free(local_pub_key);
+	BN_CTX_free(bn_ctx);
+	EC_KEY_free(local_key);
+	free(signed_message);
+}
+
+/**
+ *
+ * @brief Test v2xSe_createKek for expected behaviour
+ *
+ * This function tests v2xSe_createKek for expected behaviour
+ * The following behaviours are tested:
+ *  - perform a key exchange with HSM to get a KEK
+ *  - KEK can be computed based on shared secret
+ *
+ */
+void test_createKek(void)
+{
+	uint8_t kek[32];
+
+/* Create a KEK to encrypt and inject desired KEK */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);

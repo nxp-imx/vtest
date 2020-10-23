@@ -61,6 +61,7 @@ target_link_libraries (vtest
 	rt
 	${LTTNG_LIB}
 	dl
+	crypto
 	)
 
 target_compile_options(vtest PRIVATE -Werror -Wall)
