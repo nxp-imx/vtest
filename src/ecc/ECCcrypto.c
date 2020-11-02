@@ -495,7 +495,7 @@ void ecc_test_signature_verification_invalid(void)
 	VTEST_CHECK_RESULT(
 		ecdsa_verify_signature(ECDSA_CURVE_NOT_SUPP, pubKey, hash,
 			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
-		ECDSA_EXECUTER_UNSUPPORTED_FUNCTION);
+		ECDSA_INVALID_CALL);
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
@@ -757,7 +757,7 @@ void ecc_test_pubkey_decompression_invalid(void)
 	VTEST_CHECK_RESULT(
 		ecdsa_decompress_public_key(ECDSA_CURVE_NOT_SUPP, pubKey, 0,
 			my_ecdsa_DecompressPubKeyCallback, (void *)0),
-		ECDSA_EXECUTER_UNSUPPORTED_FUNCTION);
+		ECDSA_INVALID_CALL);
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
@@ -964,7 +964,7 @@ void ecc_test_pubkey_reconstruction_invalid(void)
 		ecdsa_reconstruct_public_key(ECDSA_CURVE_NOT_SUPP, hash,
 			rec_data, caPubKey, 0, my_ecdsa_ReconPubKeyCallback,
 			(void *)0),
-		ECDSA_EXECUTER_UNSUPPORTED_FUNCTION);
+		ECDSA_INVALID_CALL);
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
