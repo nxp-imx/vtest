@@ -55,6 +55,78 @@ static volatile int count_async = ASYNC_COUNT_RESET;
 #define ECDSA_CURVE_NOT_SUPP   ((ecdsa_curveid_t)0xFF)
 
 /**
+ * @brief   Signature verification with compressed key callback
+ *
+ * @param[in]  sequence_number          sequence operation id (not used?)
+ * @param[out] ret                      returned value by the dispatcher
+ * @param[out] decompressed_public_key  public key in decompressed form
+ * @param[out] verification_result      verification result
+ *
+ */
+void ecdsa_VerifSigCompOfHashNistP256Callback(void *sequence_number,
+	int ret,
+	ecdsa_pubkey_t *decompressed_public_key,
+	ecdsa_verification_result_t verification_result)
+{
+	/* Check signature verification is correct */
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
+
+	/* Check decompressed public key is correct */
+	VTEST_CHECK_RESULT(memcmp((const void *)decompressed_public_key->y,
+			(const void *)test_ver_pubKey_y_nistp256,
+		LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+}
+
+/**
+ * @brief   Signature verification with compressed key callback
+ *
+ * @param[in]  sequence_number          sequence operation id (not used?)
+ * @param[out] ret                      returned value by the dispatcher
+ * @param[out] decompressed_public_key  public key in decompressed form
+ * @param[out] verification_result      verification result
+ *
+ */
+void ecdsa_VerifSigCompOfHashBP256R1Callback(void *sequence_number,
+	int ret,
+	ecdsa_pubkey_t *decompressed_public_key,
+	ecdsa_verification_result_t verification_result)
+{
+	/* Check signature verification is correct */
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
+
+	/* Check decompressed public key is correct */
+	VTEST_CHECK_RESULT(memcmp((const void *)decompressed_public_key->y,
+			(const void *)test_ver_pubKey_y_bp256r1,
+		LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+}
+
+/**
+ * @brief   Signature verification with compressed key callback
+ *
+ * @param[in]  sequence_number          sequence operation id (not used?)
+ * @param[out] ret                      returned value by the dispatcher
+ * @param[out] decompressed_public_key  public key in decompressed form
+ * @param[out] verification_result      verification result
+ *
+ */
+void ecdsa_VerifSigCompOfHashBP384R1Callback(void *sequence_number,
+	int ret,
+	ecdsa_pubkey_t *decompressed_public_key,
+	ecdsa_verification_result_t verification_result)
+{
+	/* Check signature verification is correct */
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
+
+	/* Check decompressed public key is correct */
+	VTEST_CHECK_RESULT(memcmp((const void *)decompressed_public_key->y,
+			(const void *)test_ver_pubKey_y_bp384r1,
+		LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
+}
+
+/**
  * @brief   Signature verification callback: positive test
  *
  * @param[in]  sequence_number       sequence operation id (not used?)
@@ -583,6 +655,112 @@ void ecc_test_sm2_signature_verification_negative(void)
 	VTEST_CHECK_RESULT_ASYNC_INC(
 		ecdsa_verify_signature(ECDSA_CURVE_SM2P256, pubKey, hash,
 			sig, 0, ecdsa_VerifSigOfHashCallback_negative, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Positive test of ecdsa_decompress_and_verify_signature
+ *
+ */
+void ecc_test_ecdsa_decompress_and_verify_signature(void)
+{
+	ecdsa_compressed_pubkey_t pubKey;
+	ecdsa_hash_t hash;
+	ecdsa_sig_t sig;
+
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+
+	/* Positive verification test NISTP256 */
+	pubKey.x = (uint8_t *)test_ver_pubKey_x_nistp256;
+	pubKey.y = (uint8_t []){ 1 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *)test_ver_sign_r_nistp256;
+	sig.s    = (uint8_t *)test_ver_sign_s_nistp256;
+	hash     = (ecdsa_hash_t)test_ver_hash_256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature(ECDSA_CURVE_NISTP256,
+			pubKey, hash, sig, 0, ecdsa_VerifSigCompOfHashNistP256Callback,
+			(void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL256R1 */
+	pubKey.x = (uint8_t *)test_ver_pubKey_x_bp256r1;
+	pubKey.y = (uint8_t []){ 0 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *)test_ver_sign_r_bp256r1;
+	sig.s    = (uint8_t *)test_ver_sign_s_bp256r1;
+	hash     = (ecdsa_hash_t)test_ver_hash_256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature(ECDSA_CURVE_BP256R1,
+			pubKey, hash, sig, 0, ecdsa_VerifSigCompOfHashBP256R1Callback,
+			(void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL384R1 */
+	pubKey.x = (uint8_t *)test_ver_pubKey_x_bp384r1;
+	pubKey.y = (uint8_t []){ 0 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *)test_ver_sign_r_bp384r1;
+	sig.s    = (uint8_t *)test_ver_sign_s_bp384r1;
+	hash     = (ecdsa_hash_t)test_ver_hash_384;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature(ECDSA_CURVE_BP384R1,
+			pubKey, hash, sig, 0, ecdsa_VerifSigCompOfHashBP384R1Callback,
+			(void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+/**
+ *
+ * @brief Positive test of ecdsa_verify_signature_of_message
+ *
+ */
+void ecc_test_ecdsa_decompress_and_verify_signature_of_message(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_sig_t sig;
+
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+
+	/* Positive verification test NISTP256 */
+	pubKey.x = (uint8_t *)test_ver_pubKey_x_nistp256;
+	pubKey.y = (uint8_t []){ 1 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *)test_ver_sign_r_nistp256;
+	sig.s    = (uint8_t *)test_ver_sign_s_nistp256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature_of_message(ECDSA_CURVE_NISTP256, pubKey,
+			(const void *)test_ver_msg, HASH_MSG_SIZE, sig, 0,
+			ecdsa_VerifSigCompOfHashNistP256Callback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL256R1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp256r1;
+	pubKey.y = (uint8_t []){ 0 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *) test_ver_sign_r_bp256r1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp256r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature_of_message(ECDSA_CURVE_BP256R1, pubKey,
+			(const void *)test_ver_msg, HASH_MSG_SIZE, sig, 0,
+			ecdsa_VerifSigCompOfHashBP256R1Callback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL384R1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp384r1;
+	pubKey.y = (uint8_t []){ 0 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *) test_ver_sign_r_bp384r1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp384r1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature_of_message(ECDSA_CURVE_BP384R1, pubKey,
+			(const void *)test_ver_msg, HASH_MSG_SIZE, sig, 0,
+			ecdsa_VerifSigCompOfHashBP384R1Callback, (void *)0),
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 

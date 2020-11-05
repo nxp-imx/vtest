@@ -80,6 +80,10 @@
 		"Test public key reconstruction failure")                     \
 	VTEST_DEFINE_TEST(30603, &ecc_test_pubkey_reconstruction_invalid,     \
 		"Test public key reconstruction with invalid params/state")   \
+	VTEST_DEFINE_TEST(30701, &ecc_test_ecdsa_decompress_and_verify_signature, \
+		"Test signature verification with compressed key")            \
+	VTEST_DEFINE_TEST(30801, &ecc_test_ecdsa_decompress_and_verify_signature_of_message, \
+		"Test signature verification of a message with compressed key") \
 	VTEST_DEFINE_TEST(40101, &ecc_test_hash,                              \
 		"Test hash functions")                                        \
 	VTEST_DEFINE_TEST(40102, &ecc_test_hash_negative,                     \
@@ -108,6 +112,8 @@ void ecc_test_pubkey_decompression_invalid(void);
 void ecc_test_pubkey_reconstruction(void);
 void ecc_test_pubkey_reconstruction_negative(void);
 void ecc_test_pubkey_reconstruction_invalid(void);
+void ecc_test_ecdsa_decompress_and_verify_signature(void);
+void ecc_test_ecdsa_decompress_and_verify_signature_of_message(void);
 void ecc_test_hash(void);
 void ecc_test_hash_negative(void);
 void ecc_test_hash_invalid(void);
