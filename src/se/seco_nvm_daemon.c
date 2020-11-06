@@ -42,6 +42,9 @@
  */
 
 #include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <stdlib.h>
 #include "seco_nvm.h"
 
 /**
@@ -55,6 +58,21 @@ uint32_t seco_os_abs_has_v2x_hw(void);
 
 /** Status variable required by seco_nvm_manager call */
 static uint32_t nvm_status;
+
+/**
+ *
+ * @brief Close the NVM session and exit process
+ *
+ * This function is called when the process receives a SIGTERM signal.
+ * It closes the NVM session before exiting.
+ *
+ */
+void kill_daemon()
+{
+	printf("calling seco_nvm_close_session()...\n");
+	seco_nvm_close_session();
+	exit(0);
+}
 
 /**
  *
@@ -73,6 +91,14 @@ static uint32_t nvm_status;
 
 int main(int argc, char *argv[])
 {
+	struct sigaction action;
+
+	/* Register handler to close NVM session upon daemon's closure */
+	memset(&action, 0, sizeof(struct sigaction));
+	action.sa_handler = kill_daemon;
+	sigaction(SIGTERM, &action, NULL); /* handle kill signal */
+	sigaction(SIGINT, &action, NULL);  /* handle ctrl-c */
+
 	if (seco_os_abs_has_v2x_hw()) {
 		printf("calling seco_nvm_manager for V2X\n");
 		seco_nvm_manager(NVM_FLAGS_V2X | NVM_FLAGS_HSM, &nvm_status);
