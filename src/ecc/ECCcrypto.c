@@ -58,9 +58,9 @@ static volatile int count_async = ASYNC_COUNT_RESET;
  * @brief   Signature verification with compressed key callback
  *
  * @param[in]  sequence_number          sequence operation id (not used?)
- * @param[out] ret                      returned value by the dispatcher
- * @param[out] decompressed_public_key  public key in decompressed form
- * @param[out] verification_result      verification result
+ * @param[in] ret                      returned value by the dispatcher
+ * @param[in] decompressed_public_key  public key in decompressed form
+ * @param[in] verification_result      verification result
  *
  */
 void ecdsa_VerifSigCompOfHashNistP256Callback(void *sequence_number,
@@ -82,9 +82,33 @@ void ecdsa_VerifSigCompOfHashNistP256Callback(void *sequence_number,
  * @brief   Signature verification with compressed key callback
  *
  * @param[in]  sequence_number          sequence operation id (not used?)
- * @param[out] ret                      returned value by the dispatcher
- * @param[out] decompressed_public_key  public key in decompressed form
- * @param[out] verification_result      verification result
+ * @param[in] ret                      returned value by the dispatcher
+ * @param[in] decompressed_public_key  public key in decompressed form
+ * @param[in] verification_result      verification result
+ *
+ */
+void ecdsa_VerifSigCompOfHashBP256T1Callback(void *sequence_number,
+	int ret,
+	ecdsa_pubkey_t *decompressed_public_key,
+	ecdsa_verification_result_t verification_result)
+{
+	/* Check signature verification is correct */
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
+
+	/* Check decompressed public key is correct */
+	VTEST_CHECK_RESULT(memcmp((const void *)decompressed_public_key->y,
+			(const void *)test_ver_pubKey_y_bp256t1,
+		LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+}
+
+/**
+ * @brief   Signature verification with compressed key callback
+ *
+ * @param[in]  sequence_number          sequence operation id (not used?)
+ * @param[in] ret                      returned value by the dispatcher
+ * @param[in] decompressed_public_key  public key in decompressed form
+ * @param[in] verification_result      verification result
  *
  */
 void ecdsa_VerifSigCompOfHashBP256R1Callback(void *sequence_number,
@@ -106,9 +130,9 @@ void ecdsa_VerifSigCompOfHashBP256R1Callback(void *sequence_number,
  * @brief   Signature verification with compressed key callback
  *
  * @param[in]  sequence_number          sequence operation id (not used?)
- * @param[out] ret                      returned value by the dispatcher
- * @param[out] decompressed_public_key  public key in decompressed form
- * @param[out] verification_result      verification result
+ * @param[in] ret                      returned value by the dispatcher
+ * @param[in] decompressed_public_key  public key in decompressed form
+ * @param[in] verification_result      verification result
  *
  */
 void ecdsa_VerifSigCompOfHashBP384R1Callback(void *sequence_number,
@@ -127,11 +151,35 @@ void ecdsa_VerifSigCompOfHashBP384R1Callback(void *sequence_number,
 }
 
 /**
+ * @brief   Signature verification with compressed key callback
+ *
+ * @param[in]  sequence_number          sequence operation id (not used?)
+ * @param[in] ret                      returned value by the dispatcher
+ * @param[in] decompressed_public_key  public key in decompressed form
+ * @param[in] verification_result      verification result
+ *
+ */
+void ecdsa_VerifSigCompOfHashBP384T1Callback(void *sequence_number,
+	int ret,
+	ecdsa_pubkey_t *decompressed_public_key,
+	ecdsa_verification_result_t verification_result)
+{
+	/* Check signature verification is correct */
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT(verification_result, ECDSA_VERIFICATION_SUCCESS);
+
+	/* Check decompressed public key is correct */
+	VTEST_CHECK_RESULT(memcmp((const void *)decompressed_public_key->y,
+			(const void *)test_ver_pubKey_y_bp384t1,
+		LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
+}
+
+/**
  * @brief   Signature verification callback: positive test
  *
  * @param[in]  sequence_number       sequence operation id (not used?)
- * @param[out] ret                   returned value by the dispatcher
- * @param[out] verification_result   verification result
+ * @param[in] ret                   returned value by the dispatcher
+ * @param[in] verification_result   verification result
  *
  */
 
@@ -147,8 +195,8 @@ void ecdsa_VerifSigOfHashCallback(void *sequence_number,
  * @brief   Signature verification callback: negative test
  *
  * @param[in]  sequence_number       sequence operation id (not used?)
- * @param[out] ret                   returned value by the dispatcher
- * @param[out] verification_result   verification result
+ * @param[in] ret                   returned value by the dispatcher
+ * @param[in] verification_result   verification result
  *
  */
 void ecdsa_VerifSigOfHashCallback_negative(void *sequence_number,
@@ -164,8 +212,8 @@ void ecdsa_VerifSigOfHashCallback_negative(void *sequence_number,
  * @brief   Public key decompression callback: positive test
  *
  * @param[in]  callbackData          the curve id
- * @param[out] ret                   returned value by the dispatcher
- * @param[out] pubKey_decompressed   decompressed public key
+ * @param[in] ret                   returned value by the dispatcher
+ * @param[in] pubKey_decompressed   decompressed public key
  *
  */
 void my_ecdsa_DecompressPubKeyCallback(void *callbackData,
@@ -198,6 +246,16 @@ void my_ecdsa_DecompressPubKeyCallback(void *callbackData,
 			(const void *) test_dec_pubKey_y_exp_bp384r1,
 			LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
 		break;
+	case ECDSA_CURVE_BP256T1:
+		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_bp256t1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	case ECDSA_CURVE_BP384T1:
+		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_bp384t1,
+			LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
+		break;
 	case ECDSA_CURVE_SM2P256:
 		VTEST_CHECK_RESULT(memcmp((const void *) pubKey_decompressed->y,
 			(const void *) test_dec_pubKey_y_exp_sm2,
@@ -218,8 +276,8 @@ void my_ecdsa_DecompressPubKeyCallback(void *callbackData,
  * @brief   Public key decompression callback: negative test
  *
  * @param[in]  callbackData          the curve id
- * @param[out] ret                   returned value by the dispatcher
- * @param[out] pubKey_decompressed   decompressed public key
+ * @param[in] ret                   returned value by the dispatcher
+ * @param[in] pubKey_decompressed   decompressed public key
  *
  */
 void my_ecdsa_DecompressPubKeyCallback_negative(void *callbackData,
@@ -256,6 +314,18 @@ void my_ecdsa_DecompressPubKeyCallback_negative(void *callbackData,
 			(const void *) test_dec_pubKey_y_exp_bp384r1,
 			LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
 		break;
+	case ECDSA_CURVE_BP256T1:
+		VTEST_CHECK_RESULT(
+			!memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_bp256t1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
+	case ECDSA_CURVE_BP384T1:
+		VTEST_CHECK_RESULT(
+			!memcmp((const void *) pubKey_decompressed->y,
+			(const void *) test_dec_pubKey_y_exp_bp384t1,
+			LENGTH_DOMAIN_PARAMS_384), MEMCMP_IDENTICAL);
+		break;
 	case ECDSA_CURVE_SM2P256:
 		VTEST_CHECK_RESULT(
 			!memcmp((const void *) pubKey_decompressed->y,
@@ -277,8 +347,8 @@ void my_ecdsa_DecompressPubKeyCallback_negative(void *callbackData,
  * @brief   Public key reconstruction callback: positive test
  *
  * @param[in]  callback data              the curve id
- * @param[out] ret                        returned value by the dispatcher
- * @param[out] reconstructed_public_key   reconstructed public key
+ * @param[in] ret                        returned value by the dispatcher
+ * @param[in] reconstructed_public_key   reconstructed public key
  *
  */
 static void my_ecdsa_ReconPubKeyCallback(void *callbackData,
@@ -315,6 +385,17 @@ static void my_ecdsa_ReconPubKeyCallback(void *callbackData,
 			(const void *) test_rec_pubKey_y_exp_bp256r1,
 			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
 		break;
+	case ECDSA_CURVE_BP256T1:
+		VTEST_CHECK_RESULT(memcmp(
+			(const void *) reconstructed_public_key->x,
+			(const void *) test_rec_pubKey_x_exp_bp256t1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+
+		VTEST_CHECK_RESULT(memcmp(
+			(const void *) reconstructed_public_key->y,
+			(const void *) test_rec_pubKey_y_exp_bp256t1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
 	default:
 		/*
 		 * This should be never executed.
@@ -330,8 +411,8 @@ static void my_ecdsa_ReconPubKeyCallback(void *callbackData,
  * @brief   Public key reconstruction callback: negative test
  *
  * @param[in]  callback data              the curve id
- * @param[out] ret                        returned value by the dispatcher
- * @param[out] reconstructed_public_key   reconstructed public key
+ * @param[in] ret                        returned value by the dispatcher
+ * @param[in] reconstructed_public_key   reconstructed public key
  *
  */
 static void my_ecdsa_ReconPubKeyCallback_negative(void *callbackData,
@@ -368,6 +449,17 @@ static void my_ecdsa_ReconPubKeyCallback_negative(void *callbackData,
 			(const void *) test_rec_pubKey_y_exp_bp256r1,
 			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
 		break;
+	case ECDSA_CURVE_BP256T1:
+		VTEST_CHECK_RESULT(!memcmp(
+			(const void *) reconstructed_public_key->x,
+			(const void *) test_rec_pubKey_x_exp_bp256t1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+
+		VTEST_CHECK_RESULT(!memcmp(
+			(const void *) reconstructed_public_key->y,
+			(const void *) test_rec_pubKey_y_exp_bp256t1,
+			LENGTH_DOMAIN_PARAMS_256), MEMCMP_IDENTICAL);
+		break;
 	default:
 		/*
 		 * This should be never executed.
@@ -377,6 +469,37 @@ static void my_ecdsa_ReconPubKeyCallback_negative(void *callbackData,
 		VTEST_CHECK_RESULT(curveID, ECDSA_CURVE_NOT_SUPP);
 		break;
 	}
+}
+
+static void ecc_test_signature_verification_t1(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_hash_t hash;
+	ecdsa_sig_t sig;
+
+	/* Positive verification test BRAINPOOL256T1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp256t1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp256t1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp256t1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp256t1;
+	hash     = (ecdsa_hash_t) test_ver_hash_bp256t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_BP256T1, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL384T1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp384t1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp384t1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp384t1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp384t1;
+	hash     = (ecdsa_hash_t) test_ver_hash_bp384t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_BP384T1, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 }
 
 /**
@@ -428,7 +551,43 @@ void ecc_test_signature_verification(void)
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
+	/* Test BRAINPOOL T1 curves */
+	if (seco_os_abs_has_v2x_hw())
+		ecc_test_signature_verification_t1();
+
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+static void ecc_test_signature_verification_message_t1(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_sig_t sig;
+
+	/* Positive verification test BRAINPOOL256T1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp256t1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp256t1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp256t1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp256t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_BP256T1, pubKey,
+			(const void *)test_ver_msg_bp256t1,
+			sizeof (test_ver_msg_bp256t1), sig, 0,
+			ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL384T1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp384t1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp384t1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp384t1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp384t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature_of_message(ECDSA_CURVE_BP384T1, pubKey,
+			(const void *)test_ver_msg_bp384t1,
+			sizeof (test_ver_msg_bp384t1), sig, 0,
+			ecdsa_VerifSigOfHashCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 }
 
 /**
@@ -479,7 +638,44 @@ void ecc_test_signature_verification_message(void)
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
+	/* Test BRAINPOOL T1 curves */
+	if (seco_os_abs_has_v2x_hw())
+		ecc_test_signature_verification_message_t1();
+
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+static void ecc_test_signature_verification_negative_t1(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_hash_t hash;
+	ecdsa_sig_t sig;
+
+	/* Negative verification test BRAINPOOL256T1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp256t1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp256t1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp256t1;
+	/* Using twice r: giving (r,r) instead of (r,s) */
+	sig.s    = (uint8_t *) test_ver_sign_r_bp256t1;
+	hash     = (ecdsa_hash_t) test_ver_hash_256;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_BP256T1, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback_negative, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Negative verification test BRAINPOOL384T1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp384t1;
+	pubKey.y = (uint8_t *) test_ver_pubKey_y_bp384t1;
+	sig.r    = (uint8_t *) test_ver_sign_r_bp384t1;
+	/* Using twice r: giving (r,r) instead of (r,s) */
+	sig.s    = (uint8_t *) test_ver_sign_r_bp384t1;
+	hash     = (ecdsa_hash_t) test_ver_hash_384;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_BP384T1, pubKey, hash,
+			sig, 0, ecdsa_VerifSigOfHashCallback_negative, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 }
 
 /**
@@ -534,6 +730,10 @@ void ecc_test_signature_verification_negative(void)
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
+	/* Test BRAINPOOL T1 curves */
+	if (seco_os_abs_has_v2x_hw())
+		ecc_test_signature_verification_negative_t1();
+
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
@@ -548,7 +748,6 @@ void ecc_test_signature_verification_invalid(void)
 	ecdsa_pubkey_t pubKey;
 	ecdsa_hash_t hash;
 	ecdsa_sig_t sig;
-
 
 	pubKey.x = (uint8_t *) test_ver_pubKey_x_nistp256;
 	pubKey.y = (uint8_t *) test_ver_pubKey_y_nistp256;
@@ -661,6 +860,39 @@ void ecc_test_sm2_signature_verification_negative(void)
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
+static void ecc_test_ecdsa_decompress_and_verify_signature_t1(void)
+{
+	ecdsa_compressed_pubkey_t pubKey;
+	ecdsa_hash_t hash;
+	ecdsa_sig_t sig;
+
+	/* Positive verification test BRAINPOOL256T1 */
+	pubKey.x = (uint8_t *)test_ver_pubKey_x_bp256t1;
+	pubKey.y = (uint8_t []){ 0 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *)test_ver_sign_r_bp256t1;
+	sig.s    = (uint8_t *)test_ver_sign_s_bp256t1;
+	hash     = (ecdsa_hash_t)test_ver_hash_bp256t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature(ECDSA_CURVE_BP256T1,
+			pubKey, hash, sig, 0, ecdsa_VerifSigCompOfHashBP256T1Callback,
+			(void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL384T1 */
+	pubKey.x = (uint8_t *)test_ver_pubKey_x_bp384t1;
+	pubKey.y = (uint8_t []){ 1 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *)test_ver_sign_r_bp384t1;
+	sig.s    = (uint8_t *)test_ver_sign_s_bp384t1;
+	hash     = (ecdsa_hash_t)test_ver_hash_bp384t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature(ECDSA_CURVE_BP384T1,
+			pubKey, hash, sig, 0, ecdsa_VerifSigCompOfHashBP384T1Callback,
+			(void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+}
+
 /**
  *
  * @brief Positive test of ecdsa_decompress_and_verify_signature
@@ -713,7 +945,43 @@ void ecc_test_ecdsa_decompress_and_verify_signature(void)
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
+	/* Test BRAINPOOL T1 curves */
+	if (seco_os_abs_has_v2x_hw())
+		ecc_test_ecdsa_decompress_and_verify_signature_t1();
+
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+static void ecc_test_ecdsa_decompress_and_verify_signature_of_message_t1(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_sig_t sig;
+
+	/* Positive verification test BRAINPOOL256T1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp256t1;
+	pubKey.y = (uint8_t []){ 0 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *) test_ver_sign_r_bp256t1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp256t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature_of_message(ECDSA_CURVE_BP256T1, pubKey,
+			(const void *)test_ver_msg_bp256t1,
+			sizeof (test_ver_msg_bp256t1), sig, 0,
+			ecdsa_VerifSigCompOfHashBP256T1Callback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive verification test BRAINPOOL384T1 */
+	pubKey.x = (uint8_t *) test_ver_pubKey_x_bp384t1;
+	pubKey.y = (uint8_t []){ 1 }; /* compressed y of the public key */
+	sig.r    = (uint8_t *) test_ver_sign_r_bp384t1;
+	sig.s    = (uint8_t *) test_ver_sign_s_bp384t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_and_verify_signature_of_message(ECDSA_CURVE_BP384T1, pubKey,
+			(const void *)test_ver_msg_bp384t1,
+			sizeof (test_ver_msg_bp384t1), sig, 0,
+			ecdsa_VerifSigCompOfHashBP384T1Callback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 }
 
 /**
@@ -764,7 +1032,37 @@ void ecc_test_ecdsa_decompress_and_verify_signature_of_message(void)
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
+	/* Test BRAINPOOL T1 curves */
+	if (seco_os_abs_has_v2x_hw())
+		ecc_test_ecdsa_decompress_and_verify_signature_of_message_t1();
+
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+static void ecc_test_pubkey_decompression_t1(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_curveid_t curveID;
+
+	/* Positive key decompression test BP256T1 */
+	curveID = ECDSA_CURVE_BP256T1;
+	pubKey.x = test_dec_pubKey_x_bp256t1;
+	pubKey.y = test_dec_pubKey_y_bp256t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Positive key decompression test BP384T1 */
+	curveID = ECDSA_CURVE_BP384T1;
+	pubKey.x = test_dec_pubKey_x_bp384t1;
+	pubKey.y = test_dec_pubKey_y_bp384t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 }
 
 /**
@@ -809,6 +1107,10 @@ void ecc_test_pubkey_decompression(void)
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
+	/* Test BRAINPOOL T1 curves */
+	if (seco_os_abs_has_v2x_hw())
+		ecc_test_pubkey_decompression_t1();
+
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
 
@@ -837,6 +1139,32 @@ void ecc_test_pubkey_decompression_sm2(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+static void ecc_test_pubkey_decompression_negative_t1(void)
+{
+	ecdsa_pubkey_t pubKey;
+	ecdsa_curveid_t curveID;
+
+	/* Negative key decompression test BP256T1 */
+	curveID = ECDSA_CURVE_BP256T1;
+	pubKey.x = test_dec_pubKey_x_bp256t1;
+	pubKey.y = test_dec_pubKey_y_neg_bp256t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback_negative, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Negative key decompression test BP384T1 */
+	curveID = ECDSA_CURVE_BP384T1;
+	pubKey.x = test_dec_pubKey_x_bp384t1;
+	pubKey.y = test_dec_pubKey_y_neg_bp384t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_decompress_public_key(curveID, pubKey, 0,
+			my_ecdsa_DecompressPubKeyCallback_negative, (void *)&curveID),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 }
 
 /**
@@ -880,6 +1208,10 @@ void ecc_test_pubkey_decompression_negative(void)
 			my_ecdsa_DecompressPubKeyCallback_negative, (void *)&curveID),
 		ECDSA_NO_ERROR, count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Test BRAINPOOL T1 curves */
+	if (seco_os_abs_has_v2x_hw())
+		ecc_test_pubkey_decompression_negative_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }
@@ -1019,6 +1351,28 @@ void ecc_test_hash_invalid(void)
 		HASH_MSG_SIZE, sha512_hash_got), ECDSA_NOT_INITIALIZED);
 }
 
+static void ecc_test_pubkey_reconstruction_t1(void)
+{
+	ecdsa_hash_t hash;
+	ecdsa_point_t rec_data;
+	ecdsa_point_t caPubKey;
+	ecdsa_curveid_t curveID;
+
+	/* Positive reconstruction test BP256T1 */
+	curveID    = ECDSA_CURVE_BP256T1;
+	hash       = (uint8_t *) test_rec_hash_bp256t1;
+	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_bp256t1;
+	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_bp256t1;
+	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_x_bp256t1;
+	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_bp256t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_reconstruct_public_key(curveID, hash, rec_data,
+			caPubKey, 0, my_ecdsa_ReconPubKeyCallback,
+			(void *)&curveID), ECDSA_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+}
+
 /**
  *
  * @brief Positive test of ecdsa_reconstruct_public_key
@@ -1061,7 +1415,34 @@ void ecc_test_pubkey_reconstruction(void)
 		count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
+	/* Test BRAINPOOL T1 curves */
+	if (seco_os_abs_has_v2x_hw())
+		ecc_test_pubkey_reconstruction_t1();
+
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+}
+
+static void ecc_test_pubkey_reconstruction_negative_t1(void)
+{
+	ecdsa_hash_t hash;
+	ecdsa_point_t rec_data;
+	ecdsa_point_t caPubKey;
+	ecdsa_curveid_t curveID;
+
+	/* Negative reconstruction test BP256T1 */
+	curveID    = ECDSA_CURVE_BP256T1;
+	hash       = (uint8_t *) test_rec_hash_bp256t1;
+	rec_data.x = (uint8_t *) test_rec_pubKey_data_x_bp256t1;
+	rec_data.y = (uint8_t *) test_rec_pubKey_data_y_bp256t1;
+	/* Using y coordinate twice for CA public key */
+	caPubKey.x = (uint8_t *) test_rec_ca_pubKey_y_bp256t1;
+	caPubKey.y = (uint8_t *) test_rec_ca_pubKey_y_bp256t1;
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_reconstruct_public_key(curveID, hash, rec_data,
+			caPubKey, 0, my_ecdsa_ReconPubKeyCallback_negative,
+			(void *)&curveID), ECDSA_NO_ERROR,
+		count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 }
 
 /**
@@ -1107,6 +1488,10 @@ void ecc_test_pubkey_reconstruction_negative(void)
 			(void *)&curveID), ECDSA_NO_ERROR,
 		count_async);
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+
+	/* Test BRAINPOOL T1 curves */
+	if (seco_os_abs_has_v2x_hw())
+		ecc_test_pubkey_reconstruction_negative_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
 }

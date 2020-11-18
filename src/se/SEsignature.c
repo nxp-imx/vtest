@@ -711,6 +711,79 @@ void test_createRtSignLowLatency_sm2(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
+static void test_createRtSign_t1(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	TypeSignature_t signature;
+	TypeInformation_t seInfo;
+	ecdsa_pubkey_t pubKey_ecdsa;
+	ecdsa_sig_t sig_ecdsa;
+	uint8_t ecdsa_hash[V2XSE_384_EC_HASH_SIZE];
+	uint8_t ecdsa_x[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+	uint8_t ecdsa_y[V2XSE_384_EC_PUB_KEY_XY_SIZE];
+	uint8_t ecdsa_r[V2XSE_384_EC_R_SIGN];
+	uint8_t ecdsa_s[V2XSE_384_EC_S_SIGN];
+
+	/* Set up pub key and signature structures for ECDSA verification */
+	pubKey_ecdsa.x = ecdsa_x;
+	pubKey_ecdsa.y = ecdsa_y;
+	sig_ecdsa.r    = ecdsa_r;
+	sig_ecdsa.s    = ecdsa_s;
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert hash data for ECSDA verification - 256 bit curves */
+	convertEndianness(testHash.data, ecdsa_hash, V2XSE_256_EC_HASH_SIZE);
+#else
+	memcpy(ecdsa_hash, testHash.data, V2XSE_256_EC_HASH_SIZE);
+#endif
+
+	/* Get SE info, to know max data slot available */
+	VTEST_CHECK_RESULT(v2xSe_getSeInfo(&statusCode, &seInfo),
+								V2XSE_SUCCESS);
+
+/* Test Valid signature for curve V2XSE_CURVE_BP256T1 can be generated */
+/* Test Valid signature can be generated using key in non-zero slot */
+	/* Create Rt key in max slot */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
+		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert public key for ECSDA verification */
+	convertEndianness(pubKey.x, ecdsa_x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	convertEndianness(pubKey.y, ecdsa_y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#else
+	memcpy(ecdsa_x, pubKey.x, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+	memcpy(ecdsa_y, pubKey.y, V2XSE_256_EC_PUB_KEY_XY_SIZE);
+#endif
+
+	/* Create signature */
+	VTEST_CHECK_RESULT(v2xSe_createRtSign(MAX_RT_SLOT, &testHash,
+				&statusCode, &signature), V2XSE_SUCCESS);
+
+#ifndef ECC_PATTERNS_BIG_ENDIAN
+	/* Convert signature for ECDSA verification */
+	convertEndianness(signature.r, ecdsa_r, V2XSE_256_EC_R_SIGN);
+	convertEndianness(signature.s, ecdsa_s, V2XSE_256_EC_S_SIGN);
+#else
+	memcpy(ecdsa_r, signature.r, V2XSE_256_EC_R_SIGN);
+	memcpy(ecdsa_s, signature.s, V2XSE_256_EC_S_SIGN);
+#endif
+
+	/* Use ECDSA to verify signature */
+	VTEST_CHECK_RESULT(ecdsa_open(), ECDSA_NO_ERROR);
+	VTEST_CHECK_RESULT_ASYNC_INC(
+		ecdsa_verify_signature(ECDSA_CURVE_BP256T1, pubKey_ecdsa,
+			ecdsa_hash, sig_ecdsa, 0,
+			signatureVerificationCallback, (void *)0),
+		ECDSA_NO_ERROR, count_async);
+	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
+	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
+						&statusCode), V2XSE_SUCCESS);
+}
+
 /**
  *
  * @brief Test v2xSe_createRtSign for expected behaviour
@@ -818,17 +891,8 @@ void test_createRtSign(void)
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
 						&statusCode), V2XSE_SUCCESS);
 
-/* Test Valid signature for curve V2XSE_CURVE_BP256T1 can be generated */
-/* Test Valid signature can be generated using key in non-zero slot */
-	/* Create Rt key in max slot */
-	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(MAX_RT_SLOT,
-		V2XSE_CURVE_BP256T1, &statusCode, &pubKey), V2XSE_SUCCESS);
-	/* Create signature */
-	VTEST_CHECK_RESULT(v2xSe_createRtSign(MAX_RT_SLOT, &testHash,
-				&statusCode, &signature), V2XSE_SUCCESS);
-	/* Delete key after use */
-	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
-						&statusCode), V2XSE_SUCCESS);
+	if (seco_os_abs_has_v2x_hw())
+		test_createRtSign_t1();
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
