@@ -157,6 +157,8 @@ ecdsaFunctionNameDictionary = {
 	int(0x0109) : "ecdsa_sha384",
 	int(0x010A) : "ecdsa_sha512",
 	int(0x010B) : "ecdsa_sm3",
+	int(0x010C) : "ecdsa_decompress_and_verify_signature",
+	int(0x010D) : "ecdsa_decompress_and_verify_signature_of_message",
 }
 
 hsmFunctionNameDictionary = {
