@@ -143,6 +143,7 @@ seFunctionNameDictionary = {
 	int(0x0135) : "v2xSe_decryptUsingMaSm2Eces",
 	int(0x0136) : "v2xSe_decryptUsingBaSm2Eces",
 	int(0x0137) : "v2xSe_sm2_get_z",
+	int(0x0138) : "v2xSe_createKek",
 }
 
 ecdsaFunctionNameDictionary = {
@@ -199,6 +200,7 @@ hsmFunctionNameDictionary = {
 	int(0x0223) : "hsm_close_sm2_eces_service",
 	int(0x0224) : "hsm_sm2_eces_encryption",
 	int(0x0225) : "hsm_sm2_eces_decryption",
+	int(0x0226) : "hsm_key_exchange",
 }
 
 systemFunctionNameDictionary = {
