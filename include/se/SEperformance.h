@@ -77,8 +77,10 @@ void test_sigGenVerifRate(void);
 
 /** Number of signatures verified during signature verification rate test */
 #define SIG_RATE_VERIF_NUM 5000l
-/** Signature verification rate pass/fail threshold */
-#define SIG_VERIF_RATE_THRESHOLD	2500
+/** Signature verification rate pass/fail threshold for V2X HSM */
+#define SIG_VERIF_RATE_THRESHOLD_V2XFW	2500
+/** Signature verification rate pass/fail threshold for SECO HSM */
+#define SIG_VERIF_RATE_THRESHOLD_SECOFW	600
 /** Number of bytes used for the message for the verification rate test */
 #define SIG_VERIF_RATE_MSG_SIZE		300
 

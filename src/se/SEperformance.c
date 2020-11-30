@@ -627,6 +627,12 @@ void test_sigVerifRate(void)
 {
 	long nsTimeDiff;
 	long sigVerifRate;
+	long threshold;
+
+	if (seco_os_abs_has_v2x_hw())
+		threshold = SIG_VERIF_RATE_THRESHOLD_V2XFW;
+	else
+		threshold = SIG_VERIF_RATE_THRESHOLD_SECOFW;
 
 	/* Populate data for test */
 	if (populateTestData(TEST_TYPE_SIG_VERIF_RATE))
@@ -666,10 +672,10 @@ void test_sigVerifRate(void)
 		sigVerifRate = SIG_RATE_VERIF_NUM * 1000000000 / nsTimeDiff;
 		VTEST_LOG("Signature verification rate: %ld verifs/sec"
 			" (expect %d)\n", sigVerifRate,
-			SIG_VERIF_RATE_THRESHOLD);
+			threshold);
 
 		/* Compare to requirement */
-		VTEST_CHECK_RESULT(sigVerifRate < SIG_VERIF_RATE_THRESHOLD, 0);
+		VTEST_CHECK_RESULT(sigVerifRate < threshold, 0);
 	}
 
 	/* Free allocated data */
@@ -1079,6 +1085,12 @@ static void signatureVerificationCallback(void *sequence_number,
 static void *verif_thread(void *ptr)
 {
 	long sigVerifRate;
+	long threshold;
+
+	if (seco_os_abs_has_v2x_hw())
+		threshold = SIG_VERIF_RATE_THRESHOLD_V2XFW;
+	else
+		threshold = SIG_VERIF_RATE_THRESHOLD_SECOFW;
 
 	/*
 	 * Count the number of signature verifications that can be perfomed
@@ -1105,10 +1117,10 @@ static void *verif_thread(void *ptr)
 			nVerifs, nsSpentVerifs / 1000000);
 	sigVerifRate = nVerifs * 1000000000 / nsSpentVerifs;
 	VTEST_LOG("Signature verification rate: %ld verifs/sec (expect %d)\n",
-			sigVerifRate, SIG_VERIF_RATE_THRESHOLD);
+			sigVerifRate, threshold);
 
 	/* Compare to signature verification requirement */
-	VTEST_CHECK_RESULT(sigVerifRate < SIG_VERIF_RATE_THRESHOLD, 0);
+	VTEST_CHECK_RESULT(sigVerifRate < threshold, 0);
 
 	return NULL;
 }
