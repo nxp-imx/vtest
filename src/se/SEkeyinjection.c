@@ -516,6 +516,8 @@ void test_createKek(void)
 {
 	uint8_t kek[32];
 
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
 /* Create a KEK to encrypt and inject desired KEK */
 	do_createKek(KEK_SLOT, kek, sizeof(kek));
 
@@ -569,6 +571,8 @@ void test_injectMaEccPrivateKey(void)
 	uint8_t kek[32];
 	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
 	int enc_len;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -650,6 +654,8 @@ void test_injectRtEccPrivateKey_empty(void)
 	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
 	int enc_len;
 
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force key injection mode */
@@ -722,6 +728,8 @@ void test_injectRtEccPrivateKey_overwrite(void)
 	uint8_t kek[32];
 	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
 	int enc_len;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -815,6 +823,8 @@ void test_injectBaEccPrivateKey_empty(void)
 	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
 	int enc_len;
 
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force key injection mode */
@@ -889,6 +899,8 @@ void test_injectBaEccPrivateKey_overwrite(void)
 	uint8_t kek[32];
 	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
 	int enc_len;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
 	/* Move to INIT state */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
