@@ -55,21 +55,30 @@
 		"Test v2xSe_createKek for expected behaviour")\
 	VTEST_DEFINE_TEST(110301, &test_injectMaEccPrivateKey, \
 		"Test v2xSe_injectMaEccPrivateKey for expected behaviour")\
+	VTEST_DEFINE_TEST(110303, &test_injectMaEccPrivateKey_sm2, \
+		"Test v2xSe_injectMaEccPrivateKey with SM2 for expected behaviour")\
 	VTEST_DEFINE_TEST(110401, &test_injectRtEccPrivateKey_empty, \
 		"Test v2xSe_injectRtEccPrivateKey for keys in empty slots")\
 	VTEST_DEFINE_TEST(110402, &test_injectRtEccPrivateKey_overwrite, \
 		"Test v2xSe_injectRtEccPrivateKey for keys in full slots")\
+	VTEST_DEFINE_TEST(110404, &test_injectRtEccPrivateKey_empty_sm2, \
+		"Test v2xSe_injectRtEccPrivateKey with SM2 for expected behaviour")\
 	VTEST_DEFINE_TEST(110501, &test_injectBaEccPrivateKey_empty, \
 		"Test v2xSe_injectBaEccPrivateKey for keys in empty slots")\
 	VTEST_DEFINE_TEST(110502, &test_injectBaEccPrivateKey_overwrite, \
 		"Test v2xSe_injectBaEccPrivateKey for keys in full slots")\
+	VTEST_DEFINE_TEST(110504, &test_injectBaEccPrivateKey_empty_sm2, \
+		"Test v2xSe_injectBaEccPrivateKey with SM2 for expected behaviour")\
 
 void test_endKeyInjection(void);
 void test_createKek(void);
 void test_injectMaEccPrivateKey(void);
+void test_injectMaEccPrivateKey_sm2(void);
 void test_injectRtEccPrivateKey_empty(void);
 void test_injectRtEccPrivateKey_overwrite(void);
+void test_injectRtEccPrivateKey_empty_sm2(void);
 void test_injectBaEccPrivateKey_empty(void);
 void test_injectBaEccPrivateKey_overwrite(void);
+void test_injectBaEccPrivateKey_empty_sm2(void);
 
 #endif

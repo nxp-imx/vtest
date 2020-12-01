@@ -153,6 +153,33 @@ static TypePublicKey_t refPubKey3 = {
 	}
 };
 
+/* SM2 */
+static uint8_t refPrivKey4[] = {
+	0x39, 0x45, 0x20, 0x8f, 0x7b, 0x21, 0x44, 0xb1,
+	0x3f, 0x36, 0xe3, 0x8a, 0xc6, 0xd3, 0x9f, 0x95,
+	0x88, 0x93, 0x93, 0x69, 0x28, 0x60, 0xb5, 0x1a,
+	0x42, 0xfb, 0x81, 0xef, 0x4d, 0xf7, 0xc5, 0xb8
+};
+
+static TypePublicKey_t refPubKey4 = {
+	.x = {
+		0x09, 0xf9, 0xdf, 0x31, 0x1e, 0x54, 0x21, 0xa1,
+		0x50, 0xdd, 0x7d, 0x16, 0x1e, 0x4b, 0xc5, 0xc6,
+		0x72, 0x17, 0x9f, 0xad, 0x18, 0x33, 0xfc, 0x07,
+		0x6b, 0xb0, 0x8f, 0xf3, 0x56, 0xf3, 0x50, 0x20,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	},
+	.y = {
+		0xcc, 0xea, 0x49, 0x0c, 0xe2, 0x67, 0x75, 0xa5,
+		0x2d, 0xc6, 0xea, 0x71, 0x8c, 0xc1, 0xaa, 0x60,
+		0x0a, 0xed, 0x05, 0xfb, 0xf3, 0x5e, 0x08, 0x4a,
+		0x66, 0x32, 0xf6, 0x07, 0x2d, 0xa9, 0xad, 0x13,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	}
+};
+
 /**
  * This structure describes the format that OpenSLL uses to encode
  * public keys for 256 bit curves for POINT_CONVERSION_UNCOMPRESSED/HYBRID
@@ -397,9 +424,6 @@ static void do_createKek(TypeRtKeyId_t kekId,
 	char fixedInput[] = "NXP HSM USER KEY DERIVATION";
 	uint32_t key_size;
 
-	/* Move to ACTIVATED state */
-	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
-
 /* Create initiator's keypair with OpenSSL */
 	/* Allocate BIGNUM */
 	bn_ctx = BN_CTX_new();
@@ -518,6 +542,11 @@ void test_createKek(void)
 
 	VTEST_RETURN_CONF_IF_NO_V2X_HW();
 
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Move to ACTIVATED state, EU applet */
+	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
+
 /* Create a KEK to encrypt and inject desired KEK */
 	do_createKek(KEK_SLOT, kek, sizeof(kek));
 
@@ -581,7 +610,7 @@ void test_injectMaEccPrivateKey(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
-	/* Create a KEK to encrypt keys to be injectected */
+	/* Create a KEK to encrypt keys to be injected */
 	do_createKek(KEK_SLOT, kek, sizeof(kek));
 
 	/* Encrypt and inject MA key (NIST-P256) */
@@ -609,7 +638,7 @@ void test_injectMaEccPrivateKey(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
-	/* Create a KEK to encrypt keys to be injectected */
+	/* Create a KEK to encrypt keys to be injected */
 	do_createKek(KEK_SLOT, kek, sizeof(kek));
 
 	/* Encrypt and inject MA key (BP256R1) */
@@ -631,6 +660,63 @@ void test_injectMaEccPrivateKey(void)
 						sizeof(TypePublicKey_t)), 0);
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test v2xSe_injectMaEccPrivateKey with SM2 key for expected behaviour
+ *
+ * This function tests v2xSe_injectMaEccPrivateKey with SM2 key for expected
+ * behaviour
+ * The following behaviours are tested:
+ *  - MA key can be injected, and queried public key matches expected value
+ *
+ */
+void test_injectMaEccPrivateKey_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	TypeCurveId_t curveId;
+	uint8_t kek[32];
+	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
+	int enc_len;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedState(e_CN), VTEST_PASS);
+
+	/* Create a KEK to encrypt keys to be injected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
+	/* Encrypt and inject MA key (SM2) */
+	enc_len = sizeof(refPrivKey4);
+	do_encrypt_key(kek, refPrivKey4, enc_key, &enc_len);
+	VTEST_CHECK_RESULT(v2xSe_injectMaEccPrivateKey(V2XSE_CURVE_SM2_256,
+					&statusCode, &pubKey,
+					enc_key, sizeof(enc_key),
+					KEK_SLOT), V2XSE_SUCCESS);
+
+	/* Verify public key contents match expected values */
+	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey4,
+						sizeof(TypePublicKey_t)), 0);
+	/* Retrieve stored MA public key */
+	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode, &curveId,
+						&pubKey), V2XSE_SUCCESS);
+	/* Verify public key contents match expected values */
+	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey4,
+						sizeof(TypePublicKey_t)), 0);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
 }
 
 /**
@@ -663,7 +749,7 @@ void test_injectRtEccPrivateKey_empty(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
-	/* Create a KEK to encrypt keys to be injectected */
+	/* Create a KEK to encrypt keys to be injected */
 	do_createKek(KEK_SLOT, kek, sizeof(kek));
 
 	/* Encrypt and inject RT key (NISTP-256) */
@@ -712,6 +798,61 @@ void test_injectRtEccPrivateKey_empty(void)
 
 /**
  *
+ * @brief Test v2xSe_injectRtEccPrivateKey with SM2 keys in empty slots
+ *
+ * This function tests v2xSe_injectRtEccPrivateKey for keys in empty slots
+ * The following behaviours are tested:
+ *  - RT key SM2 can be injected in slot 0, public key matches
+ *    expected value
+ *
+ */
+void test_injectRtEccPrivateKey_empty_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	TypeCurveId_t curveId;
+	uint8_t kek[32];
+	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
+	int enc_len;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force key injection mode */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedState(e_CN), VTEST_PASS);
+
+	/* Create a KEK to encrypt keys to be injected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
+	/* Encrypt and inject RT key (SM2) */
+	enc_len = sizeof(refPrivKey4);
+	do_encrypt_key(kek, refPrivKey4, enc_key, &enc_len);
+	VTEST_CHECK_RESULT(v2xSe_injectRtEccPrivateKey(SLOT_ZERO,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey,
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
+
+	/* Verify public key contents match expected values */
+	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey4,
+						sizeof(TypePublicKey_t)), 0);
+	/* Retrieve stored RT public key */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(SLOT_ZERO, &statusCode,
+					&curveId, &pubKey), V2XSE_SUCCESS);
+	/* Verify public key contents match expected values */
+	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey4,
+						sizeof(TypePublicKey_t)), 0);
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
  * @brief Test v2xSe_injectRtEccPrivateKey for keys in full slots
  *
  * This function tests v2xSe_injectRtEccPrivateKey for keys in full slots
@@ -744,7 +885,7 @@ void test_injectRtEccPrivateKey_overwrite(void)
 	/* Check that test constant is in correct range */
 	VTEST_CHECK_RESULT(seInfo.maxRtKeysAllowed <= NON_ZERO_SLOT, 0);
 
-	/* Create a KEK to encrypt keys to be injectected */
+	/* Create a KEK to encrypt keys to be injected */
 	do_createKek(KEK_SLOT, kek, sizeof(kek));
 
 	/* Inject key to overwrite - same type as injected */
@@ -832,7 +973,7 @@ void test_injectBaEccPrivateKey_empty(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
-	/* Create a KEK to encrypt keys to be injectected */
+	/* Create a KEK to encrypt keys to be injected */
 	do_createKek(KEK_SLOT, kek, sizeof(kek));
 
 	/* Inject BA key (NIST-P256) */
@@ -882,6 +1023,61 @@ void test_injectBaEccPrivateKey_empty(void)
 
 /**
  *
+ * @brief Test v2xSe_injectBaEccPrivateKey with SM2 keys in empty slots
+ *
+ * This function tests v2xSe_injectBaEccPrivateKey for keys in empty slots
+ * The following behaviours are tested:
+ *  - BA key can be injected in slot 0, pub key matches expected value
+ *
+ */
+void test_injectBaEccPrivateKey_empty_sm2(void)
+{
+	TypeSW_t statusCode;
+	TypePublicKey_t pubKey;
+	TypeCurveId_t curveId;
+	uint8_t kek[32];
+	uint8_t enc_key[12 + 48] = { ENCRYPTED_KEY_IV, };
+	int enc_len;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force key injection mode */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedState(e_CN), VTEST_PASS);
+
+	/* Create a KEK to encrypt keys to be injected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
+	/* Inject BA key (SM2) */
+	enc_len = sizeof(refPrivKey4);
+	do_encrypt_key(kek, refPrivKey4, enc_key, &enc_len);
+	VTEST_CHECK_RESULT(v2xSe_injectBaEccPrivateKey(SLOT_ZERO,
+		V2XSE_CURVE_SM2_256, &statusCode, &pubKey,
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
+
+	/* Verify public key contents match expected values */
+	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey4,
+						sizeof(TypePublicKey_t)), 0);
+	/* Retrieve stored BA public key */
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(SLOT_ZERO, &statusCode,
+					&curveId, &pubKey), V2XSE_SUCCESS);
+	/* Verify public key contents match expected values */
+	VTEST_CHECK_RESULT(memcmp(&pubKey, &refPubKey4,
+						sizeof(TypePublicKey_t)), 0);
+
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
  * @brief Test v2xSe_injectBaEccPrivateKey for keys in full slots
  *
  * This function tests v2xSe_injectBaEccPrivateKey for keys in full slots
@@ -909,7 +1105,7 @@ void test_injectBaEccPrivateKey_overwrite(void)
 	/* Move to ACTIVATED state, EU applet */
 	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
 
-	/* Create a KEK to encrypt keys to be injectected */
+	/* Create a KEK to encrypt keys to be injected */
 	do_createKek(KEK_SLOT, kek, sizeof(kek));
 
 	/* Get SE info, to know max data slot available */
