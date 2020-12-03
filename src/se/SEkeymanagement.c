@@ -48,6 +48,65 @@
 #include "SEmisc.h"
 #include "SEkeymanagement.h"
 
+/** Initiator's static public key used for SM2 key exchange */
+static TypePublicKey_t localStaticPubKey_sm2 = {
+	.x = {
+		0x09, 0xF9, 0xDF, 0x31, 0x1E, 0x54, 0x21, 0xA1,
+		0x50, 0xDD, 0x7D, 0x16, 0x1E, 0x4B, 0xC5, 0xC6,
+		0x72, 0x17, 0x9F, 0xAD, 0x18, 0x33, 0xFC, 0x07,
+		0x6B, 0xB0, 0x8F, 0xF3, 0x56, 0xF3, 0x50, 0x20,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	},
+
+	.y = {
+		0xCC, 0xEA, 0x49, 0x0C, 0xE2, 0x67, 0x75, 0xA5,
+		0x2D, 0xC6, 0xEA, 0x71, 0x8C, 0xC1, 0xAA, 0x60,
+		0x0A, 0xED, 0x05, 0xFB, 0xF3, 0x5E, 0x08, 0x4A,
+		0x66, 0x32, 0xF6, 0x07, 0x2D, 0xA9, 0xAD, 0x13,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	}
+};
+
+/** Expected SM2 ZA for tests */
+static const TypeSM2ZA_t localStaticZa_sm2 = {
+	.data = {
+		0xB2, 0xE1, 0x4C, 0x5C, 0x79, 0xC6, 0xDF, 0x5B,
+		0x85, 0xF4, 0xFE, 0x7E, 0xD8, 0xDB, 0x7A, 0x26,
+		0x2B, 0x9D, 0xA7, 0xE0, 0x7C, 0xCB, 0x0E, 0xA9,
+		0xF4, 0x74, 0x7B, 0x8C, 0xCD, 0xA8, 0xA4, 0xF3
+	}
+};
+
+/** Initiator's epehemeral public key used for SM2 key exchange */
+static TypePublicKey_t localEphemerPubKey_sm2 = {
+	.x = {
+		0x16, 0x0E, 0x12, 0x89, 0x7D, 0xF4, 0xED, 0xB6,
+		0x1D, 0xD8, 0x12, 0xFE, 0xB9, 0x67, 0x48, 0xFB,
+		0xD3, 0xCC, 0xF4, 0xFF, 0xE2, 0x6A, 0xA6, 0xF6,
+		0xDB, 0x95, 0x40, 0xAF, 0x49, 0xC9, 0x42, 0x32,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	},
+	.y = {
+		0x4A, 0x7D, 0xAD, 0x08, 0xBB, 0x9A, 0x45, 0x95,
+		0x31, 0x69, 0x4B, 0xEB, 0x20, 0xAA, 0x48, 0x9D,
+		0x66, 0x49, 0x97, 0x5E, 0x1B, 0xFC, 0xF8, 0xC4,
+		0x74, 0x1B, 0x78, 0xB4, 0xB2, 0x23, 0x00, 0x7F,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	}
+};
+
+/** SM2 identifier used for tests */
+static const TypeSM2Identifier_t sm2_identifier = {
+	.data = {
+		0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
+		0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38
+	}
+};
+
 /**
  *
  * @brief Test v2xSe_generateMaEccKeyPair for expected behaviour
@@ -349,6 +408,90 @@ void test_getMaEccPublicKey_sm2(void)
 								V2XSE_SUCCESS);
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test v2xSe_exchangeMaPrivateKey to generate a shared SM2 key
+ *
+ * This function tests v2xSe_exchangeMaPrivateKey for SM2 key (CN applet)
+ * The following behaviours are tested:
+ *  - Static SM2 remote Rt key can be generated in non-zero slot
+ *  - Static SM2 remote Z value can be retrieved
+ *  - Shared SM2 Ma key can be generated through SM2 key exchange
+ *  - Shared SM2 Ma key can be retrieved
+ */
+void test_exchangeMaPrivateKey_sm2(void)
+{
+	TypeSW_t statusCode;
+	/* Initiator's keys (user): */
+	/* Responder's keys (HSM): */
+	TypeRtKeyId_t responderKeySlot = NON_ZERO_SLOT;
+	TypePublicKey_t remoteStaticPubKey = {0, };
+	TypePublicKey_t remoteEphemerPubKey = {0, };
+	/* shared key issued from user/HSM key exchange) */
+	TypePublicKey_t sharedPubKey = {0, };
+	TypeKeyExchange_t keyXchg;
+	TypeCurveId_t curveId;
+	/*
+	 * SM2 ZA data for both local and remote static keys:
+	 * 	(localStaticZa_sm2 || remoteStaticZa_sm2)
+	 */
+	uint8_t sm2_za_values[2 * V2XSE_SM2_ZA_SIZE] = {0, };
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+
+	/* Create responder's static Rt key for the key exchange operation */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(responderKeySlot,
+		V2XSE_CURVE_SM2_256, &statusCode, &remoteStaticPubKey),
+								V2XSE_SUCCESS);
+	/* Fetch both local and remote ZA value in one buffer */
+	memcpy(sm2_za_values, localStaticZa_sm2.data, sizeof(localStaticZa_sm2.data));
+	VTEST_CHECK_RESULT(v2xSe_sm2_get_z(remoteStaticPubKey, sm2_identifier,
+			(TypeSM2ZA_t *)&sm2_za_values[V2XSE_SM2_ZA_SIZE]),
+								V2XSE_SUCCESS);
+
+/* Perform SM2 key exchange between local user (initiator) and HSM (responder) */
+	/*
+	 * Send out initiator's pubkeys and retrieve responder's pubkeys,
+	 * along with the KDF data
+	 */
+	keyXchg.pInitiatorPublicKey2 = &localEphemerPubKey_sm2;
+	keyXchg.useResponderKeyId = 1;
+	keyXchg.responderKeyId = responderKeySlot;
+	keyXchg.pResponderPublicKey2 = &remoteEphemerPubKey;
+	keyXchg.kdfAlgo = V2XSE_KDF_ALGO_FOR_SM2;
+	keyXchg.kdfInputLen = 32 * 2;
+	keyXchg.kdfInput = sm2_za_values;
+	keyXchg.kdfOutputLen = 0;
+	keyXchg.kdfOutput = NULL;
+	VTEST_CHECK_RESULT(v2xSe_exchangeMaPrivateKey(V2XSE_CURVE_SM2_256,
+				&localStaticPubKey_sm2, &remoteStaticPubKey,
+				&keyXchg, V2XSE_CURVE_SM2_256,
+				&statusCode),
+							V2XSE_SUCCESS);
+
+	/* Retrieve Shared Ma key stored in HSM key store */
+	VTEST_CHECK_RESULT(v2xSe_getMaEccPublicKey(&statusCode,
+				&curveId, &sharedPubKey), V2XSE_SUCCESS);
+	/* Verify curveId is correct */
+	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_SM2_256);
+
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(responderKeySlot, &statusCode),
+								V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force reset of all keys */
+	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
 }
 
 /**
@@ -687,6 +830,87 @@ void test_generateRtEccKeyPair_overwrite(void)
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
 						&statusCode), V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test v2xSe_exchangeRtPrivateKey to generate a shared SM2 key
+ *
+ * This function tests v2xSe_exchangeRtPrivateKey for SM2 key (CN applet)
+ * The following behaviours are tested:
+ *  - Static SM2 remote Rt key can be generated in non-zero slot
+ *  - Static SM2 remote Z value can be retrieved
+ *  - Shared SM2 Rt key can be generated in slot 0 through SM2 key exchange
+ *  - Shared SM2 Rt key can be retrieved in slot 0
+ */
+void test_exchangeRtPrivateKey_sm2(void)
+{
+	TypeSW_t statusCode;
+	/* Initiator's keys (user): */
+	/* Responder's keys (HSM): */
+	TypeRtKeyId_t responderKeySlot = NON_ZERO_SLOT;
+	TypePublicKey_t remoteStaticPubKey = {0, };
+	TypePublicKey_t remoteEphemerPubKey = {0, };
+	/* shared key issued from user/HSM key exchange) */
+	TypeRtKeyId_t sharedKeySlot = SLOT_ZERO;
+	TypePublicKey_t sharedPubKey = {0, };
+	TypeKeyExchange_t keyXchg;
+	TypeCurveId_t curveId;
+	/*
+	 * SM2 ZA data for both local and remote static keys:
+	 * 	(localStaticZa_sm2 || remoteStaticZa_sm2)
+	 */
+	uint8_t sm2_za_values[2 * V2XSE_SM2_ZA_SIZE] = {0, };
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+
+	/* Create responder's static Rt key for the key exchange operation */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(responderKeySlot,
+		V2XSE_CURVE_SM2_256, &statusCode, &remoteStaticPubKey),
+								V2XSE_SUCCESS);
+	/* Fetch both local and remote ZA value in one buffer */
+	memcpy(sm2_za_values, localStaticZa_sm2.data, sizeof(localStaticZa_sm2.data));
+	VTEST_CHECK_RESULT(v2xSe_sm2_get_z(remoteStaticPubKey, sm2_identifier,
+			(TypeSM2ZA_t *)&sm2_za_values[V2XSE_SM2_ZA_SIZE]),
+								V2XSE_SUCCESS);
+
+/* Perform SM2 key exchange between local user (initiator) and HSM (responder) */
+	/*
+	 * Send out initiator's pubkeys and retrieve responder's pubkeys,
+	 * along with the KDF data
+	 */
+	keyXchg.pInitiatorPublicKey2 = &localEphemerPubKey_sm2;
+	keyXchg.useResponderKeyId = 1;
+	keyXchg.responderKeyId = responderKeySlot;
+	keyXchg.pResponderPublicKey2 = &remoteEphemerPubKey;
+	keyXchg.kdfAlgo = V2XSE_KDF_ALGO_FOR_SM2;
+	keyXchg.kdfInputLen = 32 * 2;
+	keyXchg.kdfInput = sm2_za_values;
+	keyXchg.kdfOutputLen = 0;
+	keyXchg.kdfOutput = NULL;
+	VTEST_CHECK_RESULT(v2xSe_exchangeRtPrivateKey(V2XSE_CURVE_SM2_256,
+				&localStaticPubKey_sm2, &remoteStaticPubKey,
+				&keyXchg, V2XSE_CURVE_SM2_256, sharedKeySlot,
+				&statusCode),
+							V2XSE_SUCCESS);
+
+	/* Retrieve Shared Rt key stored in HSM key store */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(sharedKeySlot, &statusCode,
+				&curveId, &sharedPubKey), V2XSE_SUCCESS);
+	/* Verify curveId is correct */
+	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_SM2_256);
+
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(responderKeySlot, &statusCode),
+								V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(sharedKeySlot, &statusCode),
+								V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
@@ -1259,6 +1483,87 @@ void test_generateBaEccKeyPair_overwrite(void)
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_BP384T1);
 	/* Delete key after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+
+/* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+/**
+ *
+ * @brief Test v2xSe_exchangeBaPrivateKey to generate a shared SM2 key
+ *
+ * This function tests v2xSe_exchangeBaPrivateKey for SM2 key (CN applet)
+ * The following behaviours are tested:
+ *  - Static SM2 remote Rt key can be generated in non-zero slot
+ *  - Static SM2 remote Z value can be retrieved
+ *  - Shared SM2 Ba key can be generated in slot 0 through SM2 key exchange
+ *  - Shared SM2 Ba key can be retrieved in slot 0
+ */
+void test_exchangeBaPrivateKey_sm2(void)
+{
+	TypeSW_t statusCode;
+	/* Initiator's keys (user): */
+	/* Responder's keys (HSM): */
+	TypeRtKeyId_t responderKeySlot = NON_ZERO_SLOT;
+	TypePublicKey_t remoteStaticPubKey = {0, };
+	TypePublicKey_t remoteEphemerPubKey = {0, };
+	/* shared key issued from user/HSM key exchange) */
+	TypeBaseKeyId_t sharedKeySlot = SLOT_ZERO;
+	TypePublicKey_t sharedPubKey = {0, };
+	TypeKeyExchange_t keyXchg;
+	TypeCurveId_t curveId;
+	/*
+	 * SM2 ZA data for both local and remote static keys:
+	 * 	(localStaticZa_sm2 || remoteStaticZa_sm2)
+	 */
+	uint8_t sm2_za_values[2 * V2XSE_SM2_ZA_SIZE] = {0, };
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to ACTIVATED state, normal operating mode, CN applet */
+	VTEST_CHECK_RESULT(setupActivatedNormalState(e_CN), VTEST_PASS);
+
+	/* Create responder's static Rt key for the key exchange operation */
+	VTEST_CHECK_RESULT(v2xSe_generateRtEccKeyPair(responderKeySlot,
+		V2XSE_CURVE_SM2_256, &statusCode, &remoteStaticPubKey),
+								V2XSE_SUCCESS);
+	/* Fetch both local and remote ZA value in one buffer */
+	memcpy(sm2_za_values, localStaticZa_sm2.data, sizeof(localStaticZa_sm2.data));
+	VTEST_CHECK_RESULT(v2xSe_sm2_get_z(remoteStaticPubKey, sm2_identifier,
+			(TypeSM2ZA_t *)&sm2_za_values[V2XSE_SM2_ZA_SIZE]),
+								V2XSE_SUCCESS);
+
+/* Perform SM2 key exchange between local user (initiator) and HSM (responder) */
+	/*
+	 * Send out initiator's pubkeys and retrieve responder's pubkeys,
+	 * along with the KDF data
+	 */
+	keyXchg.pInitiatorPublicKey2 = &localEphemerPubKey_sm2;
+	keyXchg.useResponderKeyId = 1;
+	keyXchg.responderKeyId = responderKeySlot;
+	keyXchg.pResponderPublicKey2 = &remoteEphemerPubKey;
+	keyXchg.kdfAlgo = V2XSE_KDF_ALGO_FOR_SM2;
+	keyXchg.kdfInputLen = 32 * 2;
+	keyXchg.kdfInput = sm2_za_values;
+	keyXchg.kdfOutputLen = 0;
+	keyXchg.kdfOutput = NULL;
+	VTEST_CHECK_RESULT(v2xSe_exchangeBaPrivateKey(V2XSE_CURVE_SM2_256,
+				&localStaticPubKey_sm2, &remoteStaticPubKey,
+				&keyXchg, V2XSE_CURVE_SM2_256, sharedKeySlot,
+				&statusCode),
+							V2XSE_SUCCESS);
+
+	/* Retrieve Shared Ba key stored in HSM key store */
+	VTEST_CHECK_RESULT(v2xSe_getBaEccPublicKey(sharedKeySlot, &statusCode,
+				&curveId, &sharedPubKey), V2XSE_SUCCESS);
+	/* Verify curveId is correct */
+	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_SM2_256);
+
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(responderKeySlot, &statusCode),
+								V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(sharedKeySlot, &statusCode),
 								V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */

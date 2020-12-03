@@ -93,21 +93,30 @@
 		"Test v2xSe_deriveRtEccKeyPair for keys in full slots")\
 	VTEST_DEFINE_TEST(61001, &test_activateRtKeyForSigning, \
 		"Test v2xSe_activateRtKeyForSigning for normal operation")\
+	VTEST_DEFINE_TEST(190101, &test_exchangeMaPrivateKey_sm2, \
+		"Test v2xSe_exchangeMaPrivateKey for expected behaviour with SM2 key")\
+	VTEST_DEFINE_TEST(190201, &test_exchangeRtPrivateKey_sm2, \
+		"Test v2xSe_exchangeRtPrivateKey for expected behaviour with SM2 key")\
+	VTEST_DEFINE_TEST(190301, &test_exchangeBaPrivateKey_sm2, \
+		"Test v2xSe_exchangeBaPrivateKey for expected behaviour with SM2 key")\
 
 void test_generateMaEccKeyPair(void);
 void test_generateMaEccKeyPair_sm2(void);
 void test_getMaEccPublicKey(void);
 void test_getMaEccPublicKey_sm2(void);
+void test_exchangeMaPrivateKey_sm2(void);
 void test_generateRtEccKeyPair_empty(void);
 void test_generateRtEccKeyPair_empty_sm2(void);
 void test_generateRtEccKeyPair_empty_sm4(void);
 void test_generateRtEccKeyPair_overwrite(void);
+void test_exchangeRtPrivateKey_sm2(void);
 void test_deleteRtEccPrivateKey(void);
 void test_getRtEccPublicKey(void);
 void test_getRtEccPublicKey_sm2(void);
 void test_generateBaEccKeyPair_empty(void);
 void test_generateBaEccKeyPair_empty_sm2(void);
 void test_generateBaEccKeyPair_overwrite(void);
+void test_exchangeBaPrivateKey_sm2(void);
 void test_deleteBaEccPrivateKey(void);
 void test_getBaEccPublicKey(void);
 void test_getBaEccPublicKey_sm2(void);
