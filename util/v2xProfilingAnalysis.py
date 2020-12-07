@@ -144,6 +144,9 @@ seFunctionNameDictionary = {
 	int(0x0136) : "v2xSe_decryptUsingBaSm2Eces",
 	int(0x0137) : "v2xSe_sm2_get_z",
 	int(0x0138) : "v2xSe_createKek",
+	int(0x0139) : "v2xSe_exchangeMaPrivateKey",
+	int(0x013A) : "v2xSe_exchangeRtPrivateKey",
+	int(0x013B) : "v2xSe_exchangeBaPrivateKey",
 }
 
 ecdsaFunctionNameDictionary = {
