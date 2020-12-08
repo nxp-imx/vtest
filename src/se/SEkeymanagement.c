@@ -484,6 +484,14 @@ void test_exchangeMaPrivateKey_sm2(void)
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_SM2_256);
 
+	/*
+	 * Perform the KDF operation to compute the shared key from
+	 * the shared secret, on the user side (locally).
+	 * Once we have this, we can compare our computed shared key's
+	 * public key with the shared public key returned by the HSM.
+	 */
+	/* TODO */
+
 	/* Delete keys after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(responderKeySlot, &statusCode),
 								V2XSE_SUCCESS);
@@ -492,6 +500,9 @@ void test_exchangeMaPrivateKey_sm2(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force reset of all keys */
 	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }
 
 /**
@@ -559,6 +570,14 @@ void test_exchangeMaPrivateKey_sm4(void)
 				&keyXchg, V2XSE_SYMMK_SM4_128, &statusCode),
 							V2XSE_SUCCESS);
 
+	/*
+	 * Perform the KDF operation to compute the shared key from
+	 * the shared secret, on the user side (locally).
+	 * Once we have this, find some way to verify both SM4 keys
+	 * (computed locally and by HSM) do match.
+	 */
+	/* TODO */
+
 	/* Delete keys after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(responderKeySlot, &statusCode),
 								V2XSE_SUCCESS);
@@ -567,6 +586,9 @@ void test_exchangeMaPrivateKey_sm4(void)
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 	/* Remove NVM phase variable to force reset of all keys */
 	VTEST_CHECK_RESULT(removeNvmVariable(CN_PHASE_FILENAME), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }
 
 /**
@@ -981,6 +1003,14 @@ void test_exchangeRtPrivateKey_sm2(void)
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_SM2_256);
 
+	/*
+	 * Perform the KDF operation to compute the shared key from
+	 * the shared secret, on the user side (locally).
+	 * Once we have this, we can compare our computed shared key's
+	 * public key with the shared public key returned by the HSM.
+	 */
+	/* TODO */
+
 	/* Delete keys after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(responderKeySlot, &statusCode),
 								V2XSE_SUCCESS);
@@ -989,6 +1019,9 @@ void test_exchangeRtPrivateKey_sm2(void)
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }
 
 /**
@@ -1054,6 +1087,14 @@ void test_exchangeRtPrivateKey_sm4(void)
 				&statusCode),
 							V2XSE_SUCCESS);
 
+	/*
+	 * Perform the KDF operation to compute the shared key from
+	 * the shared secret, on the user side (locally).
+	 * Once we have this, find some way to verify both SM4 keys
+	 * (computed locally and by HSM) do match.
+	 */
+	/* TODO */
+
 	/* Delete keys after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(responderKeySlot, &statusCode),
 								V2XSE_SUCCESS);
@@ -1062,6 +1103,9 @@ void test_exchangeRtPrivateKey_sm4(void)
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }
 
 /**
@@ -1708,6 +1752,14 @@ void test_exchangeBaPrivateKey_sm2(void)
 	/* Verify curveId is correct */
 	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_SM2_256);
 
+	/*
+	 * Perform the KDF operation to compute the shared key from
+	 * the shared secret, on the user side (locally).
+	 * Once we have this, we can compare our computed shared key's
+	 * public key with the shared public key returned by the HSM.
+	 */
+	/* TODO */
+
 	/* Delete keys after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(responderKeySlot, &statusCode),
 								V2XSE_SUCCESS);
@@ -1716,6 +1768,9 @@ void test_exchangeBaPrivateKey_sm2(void)
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }
 
 /**
@@ -1781,6 +1836,14 @@ void test_exchangeBaPrivateKey_sm4(void)
 				&statusCode),
 							V2XSE_SUCCESS);
 
+	/*
+	 * Perform the KDF operation to compute the shared key from
+	 * the shared secret, on the user side (locally).
+	 * Once we have this, find some way to verify both SM4 keys
+	 * (computed locally and by HSM) do match.
+	 */
+	/* TODO */
+
 	/* Delete keys after use */
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(responderKeySlot, &statusCode),
 								V2XSE_SUCCESS);
@@ -1789,6 +1852,9 @@ void test_exchangeBaPrivateKey_sm4(void)
 
 /* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+
+/* Flag CONF as not all required tests implemented yet */
+	VTEST_FLAG_CONF();
 }
 
 /**
