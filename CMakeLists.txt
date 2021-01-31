@@ -5,7 +5,7 @@ project (vtest)
 
 set (vtest_VERSION 0.4)
 
-find_package(v2xsehsm REQUIRED)
+find_package(v2xsehsm CONFIG REQUIRED)
 
 configure_file (
 	${PROJECT_SOURCE_DIR}/version.h.in
