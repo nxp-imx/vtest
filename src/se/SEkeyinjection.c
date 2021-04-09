@@ -72,6 +72,8 @@
 				0x04, 0x05, 0x06, 0x07, \
 				0x08, 0x09, 0x0a, 0x0b
 
+#define ENCRYPTED_KEY_IV_SIZE 12
+
 /* NIST-P256 */
 static uint8_t refPrivKey1[] = {
 	0x5d, 0xc4, 0x91, 0xfa, 0x8b, 0xd7, 0xbe, 0x62,
@@ -563,22 +565,25 @@ void test_createKek(void)
  * @param[in]  kek AES-256 key to be used for the encryption
  * @param[in]  data Pointer to data to be encrypted (key to inject)
  * @param[out] out Pointer to a buffer to store the encrypted data
- * @param[in]  len Pointer to the data lentgh
+ * @param[inout]  len Pointer to the data lentgh
  */
 static void do_encrypt_key(uint8_t *kek, uint8_t *data, uint8_t *out, int *len)
 {
 	EVP_CIPHER_CTX *cipher_ctx = NULL;
 
-	/* 256-bit keys for now */
-	VTEST_CHECK_RESULT(*len, 32);
-
+	uint8_t *start = out;
 /* Encrypt key using KEK passed in parameter */
 	cipher_ctx = EVP_CIPHER_CTX_new();
 	VTEST_CHECK_RESULT(EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_gcm(), NULL, kek, out), 1);
-	VTEST_CHECK_RESULT(EVP_EncryptUpdate(cipher_ctx, &out[12], len, data, *len), 1);
-	VTEST_CHECK_RESULT(EVP_EncryptFinal_ex(cipher_ctx, &out[44], len), 1);
-	VTEST_CHECK_RESULT(EVP_CIPHER_CTX_ctrl(cipher_ctx, EVP_CTRL_GCM_GET_TAG, 16, &out[44]), 1);
+	out += ENCRYPTED_KEY_IV_SIZE;
+	VTEST_CHECK_RESULT(EVP_EncryptUpdate(cipher_ctx, out, len, data, *len), 1);
+	out += *len;
+	VTEST_CHECK_RESULT(EVP_EncryptFinal_ex(cipher_ctx, out, len), 1);
+	out += *len;
+	VTEST_CHECK_RESULT(EVP_CIPHER_CTX_ctrl(cipher_ctx, EVP_CTRL_GCM_GET_TAG, 16, out), 1);
+	out += 16;
 
+	*len = out - start;
 /* Clean up SSL objects and contexts */
 	EVP_CIPHER_CTX_free(cipher_ctx);
 }
