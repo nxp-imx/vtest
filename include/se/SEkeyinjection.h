@@ -69,6 +69,8 @@
 		"Test v2xSe_injectBaEccPrivateKey for keys in full slots")\
 	VTEST_DEFINE_TEST(110504, &test_injectBaEccPrivateKey_empty_sm2, \
 		"Test v2xSe_injectBaEccPrivateKey with SM2 for expected behaviour")\
+	VTEST_DEFINE_TEST(110701, &test_injectSymmetricKey_empty, \
+		"Test v2xSe_injectSymetricKey for keys in empty slots")\
 
 void test_endKeyInjection(void);
 void test_createKek(void);
@@ -80,5 +82,6 @@ void test_injectRtEccPrivateKey_empty_sm2(void);
 void test_injectBaEccPrivateKey_empty(void);
 void test_injectBaEccPrivateKey_overwrite(void);
 void test_injectBaEccPrivateKey_empty_sm2(void);
+void test_injectSymmetricKey_empty(void);
 
 #endif

@@ -182,6 +182,24 @@ static TypePublicKey_t refPubKey4 = {
 	}
 };
 
+static uint8_t refSymmetricKey[] =
+{
+	0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
+	0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C,
+};
+
+static uint8_t some_16byte_data_encrpt[16] = {
+	0x3A, 0xD7, 0x7B, 0xB4, 0x0D, 0x7A, 0x36, 0x60,
+	0xA8, 0x9E, 0xCA, 0xF3, 0x24, 0x66, 0xEF, 0x97,
+};
+
+static TypePlainText_t cipherMsg = {
+	.data = {
+		0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96,
+		0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A,
+	}
+};
+
 /**
  * This structure describes the format that OpenSLL uses to encode
  * public keys for 256 bit curves for POINT_CONVERSION_UNCOMPRESSED/HYBRID
@@ -1176,5 +1194,70 @@ void test_injectBaEccPrivateKey_overwrite(void)
 						&statusCode), V2XSE_SUCCESS);
 
 /* Go back to init to leave system in known state after test */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+}
+
+
+/**
+ *
+ * @brief Test v2xSe_injectSymmetricKey for keys in empty slots
+ *
+ * This function tests v2xSe_injectRtEccPrivateKey for keys in empty slots
+ * The following behaviours are tested:
+ *  - RT key NIST-P256 can be injected in slot 0, public key matches
+ *    expected value
+ *  - RT key BP256R1 can be injected in slot 0, public key matches
+ *    expected value
+ *
+ */
+void test_injectSymmetricKey_empty(void)
+{
+	TypeSW_t statusCode;
+	uint8_t kek[32];
+	uint8_t enc_key[12 + 16 + 16] = { ENCRYPTED_KEY_IV, };
+	int enc_len;
+
+	VTEST_RETURN_CONF_IF_NO_V2X_HW();
+
+	/* Move to INIT state */
+	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
+	/* Remove NVM phase variable to force key injection mode */
+	VTEST_CHECK_RESULT(removeNvmVariable(EU_PHASE_FILENAME), VTEST_PASS);
+	/* Move to ACTIVATED state, EU applet */
+	VTEST_CHECK_RESULT(setupActivatedState(e_EU), VTEST_PASS);
+
+	/* Create a KEK to encrypt keys to be injected */
+	do_createKek(KEK_SLOT, kek, sizeof(kek));
+
+	/* Encrypt and inject symmetric */
+	enc_len = sizeof(refSymmetricKey);
+
+	do_encrypt_key(kek, refSymmetricKey, enc_key, &enc_len);
+
+	VTEST_CHECK_RESULT(v2xSe_injectSymmetricKey(SLOT_ZERO,
+		V2XSE_SYMMK_AES_128, &statusCode,
+		enc_key, sizeof(enc_key), KEK_SLOT), V2XSE_SUCCESS);
+
+
+	TypeEncryptCipher_t enc_cipherData = {0, };
+	TypeVCTData_t vct;
+	TypeLen_t size;
+
+	enc_cipherData.ivLen = 0;
+	enc_cipherData.algoId = V2XSE_ALGO_AES_ECB;
+	enc_cipherData.msgLen = 16;
+	enc_cipherData.pMsgData = &cipherMsg;
+	size = 16;
+	/* Perform encryption */
+	VTEST_CHECK_RESULT(v2xSe_encryptUsingRtCipher(SLOT_ZERO, &enc_cipherData,
+		&statusCode, &size, &vct), V2XSE_SUCCESS);
+
+	VTEST_CHECK_RESULT(memcmp(vct.data, some_16byte_data_encrpt, 16), 0);
+
+	/* Delete key after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(SLOT_ZERO, &statusCode),
+								V2XSE_SUCCESS);
+
+	/* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
