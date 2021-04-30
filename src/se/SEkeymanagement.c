@@ -2073,6 +2073,7 @@ void test_deriveRtEccKeyPair_empty(void)
 	TypePublicKey_t pubKey_retrieve;
 	TypeCurveId_t curveId;
 	TypeInformation_t seInfo;
+	TypeInt128_t data0;
 	TypeInt256_t data1;
 	TypeInt256_t data2;
 	TypeInt256_t data3;
@@ -2164,7 +2165,54 @@ void test_deriveRtEccKeyPair_empty(void)
 	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
 						&statusCode), V2XSE_SUCCESS);
 
-/* Go back to init to leave system in known state after test */
+
+	/* Test Rt key for curve V2XSE_CURVE_NISTP256 can be derived and retrieved */
+	/* Test Rt key can be derived and retrieved in max slot */
+	/* Generate Ba key to use in derivation */
+	VTEST_CHECK_RESULT(v2xSe_generateBaEccKeyPair(SLOT_ZERO,
+			V2XSE_CURVE_NISTP256, &statusCode, &pubKey_create),
+                                                               V2XSE_SUCCESS);
+
+	VTEST_CHECK_RESULT(v2xSe_generateRtSymmetricKey(NON_ZERO_SLOT,
+			V2XSE_SYMMK_AES_128, &statusCode), V2XSE_SUCCESS);
+
+	/* Derive Rt key */
+	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair_st(SLOT_ZERO, NON_ZERO_SLOT,
+			V2XSE_ALGO_AES_ECB,
+			&data0, &data2,
+			&data3, MAX_RT_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode,
+			&curveId, &pubKey_create), V2XSE_SUCCESS);
+	/* Verify curveId is correct */
+	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
+	/* Retrieve Rt public key */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
+			&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+			sizeof(TypePublicKey_t)), 0);
+
+	/* Verify use  implicit certificate */
+	VTEST_CHECK_RESULT(v2xSe_deriveRtEccKeyPair_st(SLOT_ZERO, NON_ZERO_SLOT,
+			V2XSE_ALGO_AES_ECB,
+			&data0, NULL,
+			NULL, MAX_RT_SLOT, V2XSE_RSP_WITH_PUBKEY, &statusCode,
+			&curveId, &pubKey_create), V2XSE_SUCCESS);
+	/* Verify curveId is correct */
+	VTEST_CHECK_RESULT(curveId, V2XSE_CURVE_NISTP256);
+	/* Retrieve Rt public key */
+	VTEST_CHECK_RESULT(v2xSe_getRtEccPublicKey(MAX_RT_SLOT, &statusCode,
+			&curveId, &pubKey_retrieve), V2XSE_SUCCESS);
+
+	VTEST_CHECK_RESULT(memcmp(&pubKey_create, &pubKey_retrieve,
+			sizeof(TypePublicKey_t)), 0);
+
+	/* Delete keys after use */
+	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(MAX_RT_SLOT,
+				&statusCode), V2XSE_SUCCESS);
+	VTEST_CHECK_RESULT(v2xSe_deleteBaEccPrivateKey(SLOT_ZERO,
+				&statusCode), V2XSE_SUCCESS);
+
+	/* Go back to init to leave system in known state after test */
 	VTEST_CHECK_RESULT(setupInitState(), VTEST_PASS);
 }
 
