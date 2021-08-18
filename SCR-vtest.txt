@@ -1,6 +1,6 @@
 Software Content Register
 --------------------------------------------
-Package:                     vtest v0.4.0
+Package:                     vtest v0.5.0
 Outgoing License:            BSD-3-Clause
 License File:                BSD-3-Clause.txt
 Package Category:            Security
