@@ -52,6 +52,14 @@ static uint8_t some_16byte_data[16] = {
 	0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
 	0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38
 };
+
+static TypePlainText_t sm4_ccm_ptx = {
+	.data = {
+	0x03, 0x80, 0x14, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xA0, 0xA1, 0xA2,
+	0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9
+	}
+};
+
 static TypePlainText_t cipherMsg = {
 	.data = {	0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
 			0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF}
@@ -139,6 +147,7 @@ void test_decryptUsingRtCipher(void)
 	TypeInt256_t msg;
 	TypeEncryptCipher_t enc_cipherData;
 	uint8_t vct[16];
+	uint8_t vct_ccm[23+16+12];
 	TypeLen_t size;
 	TypeDecryptCipher_t dec_cipherData;
 
@@ -209,6 +218,30 @@ void test_decryptUsingRtCipher(void)
 	VTEST_CHECK_RESULT(size, 16);
 	VTEST_CHECK_RESULT(memcmp(cipherMsg.data, msg.data, 16), 0);
 	/* Delete key after use */
+
+	/* Test SM4-CCM  */
+	memset(enc_cipherData.iv, 0, sizeof(enc_cipherData.iv));
+	enc_cipherData.ivLen = 0;
+	enc_cipherData.algoId = V2XSE_ALGO_SM4_CCM;
+	enc_cipherData.msgLen = 23;
+	enc_cipherData.pMsgData = &sm4_ccm_ptx;
+	size = (uint8_t)sizeof(vct_ccm);
+	VTEST_CHECK_RESULT(v2xSe_encryptUsingRtCipher(NON_ZERO_SLOT, &enc_cipherData,
+                &statusCode, &size, (TypeVCTData_t*)(&vct_ccm)), V2XSE_SUCCESS);
+
+	memset(dec_cipherData.iv, 0, sizeof(enc_cipherData.iv));
+	dec_cipherData.algoId = V2XSE_ALGO_SM4_CCM;
+	dec_cipherData.vctLen = size;
+	dec_cipherData.pVctData = (TypeVCTData_t*)vct_ccm;
+	VTEST_CHECK_RESULT(v2xSe_decryptUsingRtCipher(NON_ZERO_SLOT, &dec_cipherData,
+                        &statusCode, &size, (TypePlainText_t*)(&(msg.data))),
+                                                                V2XSE_SUCCESS);
+
+
+	VTEST_CHECK_RESULT(size, 23);
+	VTEST_CHECK_RESULT(memcmp(msg.data, sm4_ccm_ptx.data, 23), 0);
+
+
 	VTEST_CHECK_RESULT(v2xSe_deleteRtSymmetricKey(NON_ZERO_SLOT, &statusCode),
 								V2XSE_SUCCESS);
 
