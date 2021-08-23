@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
 		return VTEST_FAIL;
 	} else if (overallTestStatus.numTestsConf ||
 					(overallTestStatus.numTestsRun == 0)) {
-		return VTEST_CONF;
+		return VTEST_PASS;
 	} else {
 		return VTEST_PASS;
 	}
