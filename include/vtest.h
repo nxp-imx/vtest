@@ -149,12 +149,17 @@ typedef struct {
 #define ECC_PATTERNS_BIG_ENDIAN
 
 /**
- * @brief seco-libs function to determine if V2X HW is present
+ * @brief libs function to determine if V2X HW is present
  *
  * @return 1 if V2X HW is present, 0 otherwise
  */
+#if LEGACY_SECO_LIBS
 uint32_t seco_os_abs_has_v2x_hw(void);
+#else
+uint32_t plat_os_abs_has_v2x_hw(void);
+#endif
 /* Flag CONF and exit test whether the V2X HW is present or not in SoC */
+#if LEGACY_SECO_LIBS
 #define VTEST_RETURN_CONF_IF_V2X_HW_IS(present)	\
     do {					\
         if (!(present) == !seco_os_abs_has_v2x_hw()) {	\
@@ -163,6 +168,16 @@ uint32_t seco_os_abs_has_v2x_hw(void);
             return;				\
         }					\
     } while (0)
+#else
+#define VTEST_RETURN_CONF_IF_V2X_HW_IS(present)	\
+    do {					\
+        if (!(present) == !plat_os_abs_has_v2x_hw()) {	\
+            VTEST_LOG("CONF: wrong V2X HW configuration");	\
+            VTEST_FLAG_CONF();			\
+            return;				\
+        }					\
+    } while (0)
+#endif
 /* Flag CONF and exit test if V2X HW is not present in SoC */
 #define VTEST_RETURN_CONF_IF_NO_V2X_HW()	VTEST_RETURN_CONF_IF_V2X_HW_IS(0)
 /* Flag CONF and exit test if V2X HW is present in SoC */

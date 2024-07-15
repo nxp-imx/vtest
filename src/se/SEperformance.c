@@ -629,7 +629,11 @@ void test_sigVerifRate(void)
 	long sigVerifRate;
 	long threshold;
 
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		threshold = SIG_VERIF_RATE_THRESHOLD_V2XFW;
 	else
 		threshold = SIG_VERIF_RATE_THRESHOLD_SECOFW;
@@ -1087,7 +1091,11 @@ static void *verif_thread(void *ptr)
 	long sigVerifRate;
 	long threshold;
 
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		threshold = SIG_VERIF_RATE_THRESHOLD_V2XFW;
 	else
 		threshold = SIG_VERIF_RATE_THRESHOLD_SECOFW;

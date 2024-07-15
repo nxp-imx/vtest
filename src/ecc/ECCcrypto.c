@@ -552,7 +552,11 @@ void ecc_test_signature_verification(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Test BRAINPOOL T1 curves */
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		ecc_test_signature_verification_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -639,7 +643,11 @@ void ecc_test_signature_verification_message(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Test BRAINPOOL T1 curves */
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		ecc_test_signature_verification_message_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -731,7 +739,11 @@ void ecc_test_signature_verification_negative(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Test BRAINPOOL T1 curves */
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		ecc_test_signature_verification_negative_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -946,7 +958,11 @@ void ecc_test_ecdsa_decompress_and_verify_signature(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Test BRAINPOOL T1 curves */
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		ecc_test_ecdsa_decompress_and_verify_signature_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -1033,7 +1049,11 @@ void ecc_test_ecdsa_decompress_and_verify_signature_of_message(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Test BRAINPOOL T1 curves */
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		ecc_test_ecdsa_decompress_and_verify_signature_of_message_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -1108,7 +1128,11 @@ void ecc_test_pubkey_decompression(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Test BRAINPOOL T1 curves */
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		ecc_test_pubkey_decompression_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -1210,7 +1234,11 @@ void ecc_test_pubkey_decompression_negative(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Test BRAINPOOL T1 curves */
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		ecc_test_pubkey_decompression_negative_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -1416,7 +1444,11 @@ void ecc_test_pubkey_reconstruction(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Test BRAINPOOL T1 curves */
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		ecc_test_pubkey_reconstruction_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);
@@ -1490,7 +1522,11 @@ void ecc_test_pubkey_reconstruction_negative(void)
 	VTEST_CHECK_RESULT_ASYNC_WAIT(count_async, TIME_UNIT_10_MS);
 
 	/* Test BRAINPOOL T1 curves */
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		ecc_test_pubkey_reconstruction_negative_t1();
 
 	VTEST_CHECK_RESULT(ecdsa_close(), ECDSA_NO_ERROR);

@@ -891,7 +891,11 @@ void test_createRtSign(void)
 	VTEST_CHECK_RESULT(v2xSe_deleteRtEccPrivateKey(NON_ZERO_SLOT,
 						&statusCode), V2XSE_SUCCESS);
 
+#if LEGACY_SECO_LIBS
 	if (seco_os_abs_has_v2x_hw())
+#else
+	if (plat_os_abs_has_v2x_hw())
+#endif
 		test_createRtSign_t1();
 
 /* Go back to init to leave system in known state after test */
