@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 NXP
+ * Copyright 2019-2020, 2024 NXP
  */
 
 /*
@@ -203,7 +203,12 @@ void ecdsa_VerifSigOfHashCallback_negative(void *sequence_number,
 	int ret,
 	ecdsa_verification_result_t verification_result)
 {
+#if LEGACY_SECO_LIBS
+
 	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_NO_ERROR, count_async);
+#else
+	VTEST_CHECK_RESULT_ASYNC_DEC(ret, ECDSA_EXECUTER_ERROR, count_async);
+#endif
 	VTEST_CHECK_RESULT(verification_result,
 		ECDSA_VERIFICATION_ERROR);
 }
